@@ -1,0 +1,6 @@
+FROM openjdk:17
+WORKDIR /app
+COPY . /app
+RUN ./gradlew build
+EXPOSE 9000
+CMD ["java", "-jar", "build/libs/executor.jar"]
