@@ -47,6 +47,18 @@ root/
 
 Add a brief description of each directory as the project grows.
 
+___
+
+## Pre-push hook
+
+To automatically run project tests before each push, copy the provided hook file and make it executable:
+
+```bash
+cp githooks/pre-push .git/hooks/pre-push
+chmod +x .git/hooks/pre-push
+```
+
+The hook runs `npm test`, `pytest`, and `mvn test`. If any of these fail, the push will be blocked and you'll see an error message in the console.
 ---
 
 ## License

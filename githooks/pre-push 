@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Pre-push hook to run project tests
+# Runs npm test, pytest, and mvn test
+# Stops push if any test fails
+
+failed=0
+
+if command -v npm >/dev/null 2>&1; then
+    echo "Running npm test..."
+    npm test
+    if [ $? -ne 0 ]; then
+        echo "npm test failed." >&2
+        failed=1
+    fi
+else
+    echo "npm not found. Skipping npm test."
+fi
+
+if command -v pytest >/dev/null 2>&1; then
+    echo "Running pytest..."
+    pytest
+    if [ $? -ne 0 ]; then
+        echo "pytest failed." >&2
+        failed=1
+    fi
+else
+    echo "pytest not found. Skipping pytest."
+fi
+
+if command -v mvn >/dev/null 2>&1; then
+    echo "Running mvn test..."
+    mvn test
+    if [ $? -ne 0 ]; then
+        echo "mvn test failed." >&2
+        failed=1
+    fi
+else
+    echo "mvn not found. Skipping mvn test."
+fi
+
+if [ $failed -ne 0 ]; then
+    echo "One or more tests failed. Push aborted." >&2
+    exit 1
+fi
+
+echo "All tests passed."
+exit 0
+
