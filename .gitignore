@@ -6,3 +6,10 @@ build/
 DerivedData/
 *.xcworkspace
 *.xcodeproj
+
+# Environment files
+.env
+
+# Log files
+logs/
+EOF
