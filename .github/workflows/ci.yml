@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
+
+      - name: Build containers
+        run: |
+          for dir in api dashboard analytics executor; do
+            if [ -d "$dir" ]; then
+              podman build "$dir"
+            else
+              echo "Directory $dir not found, skipping build"
+            fi
+          done
+
+      - name: Run API tests
+        run: npm test
+        working-directory: api
+
+      - name: Run Dashboard tests
+        run: npx jest
+        working-directory: dashboard
+
+      - name: Run Analytics tests
+        run: pytest
+        working-directory: analytics
+
+      - name: Run Executor tests
+        run: mvn test
+        working-directory: executor
