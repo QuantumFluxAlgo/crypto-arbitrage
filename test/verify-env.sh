@@ -20,10 +20,11 @@ pytest --version >/dev/null 2>&1 || {
   exit 1
 }
 
-# Check Maven
-mvn -v >/dev/null 2>&1 || {
-  echo "Error: Maven is not installed" >&2
-  exit 1
-}
+# Check Maven (optional)
+if mvn -v >/dev/null 2>&1; then
+  echo "Maven found"
+else
+  echo "Warning: Maven is not installed" >&2
+fi
 
 echo "Environment verified"
