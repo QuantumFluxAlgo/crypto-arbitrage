@@ -1,0 +1,93 @@
+[
+  {
+    "name": "executor",
+    "language": "java",
+    "port": 9000,
+    "purpose": "Real-time arbitrage trade execution",
+    "inputs": ["redis", "postgres"],
+    "outputs": ["postgres"],
+    "dependencies": ["feed-aggregator", "api-gateway"]
+  },
+  {
+    "name": "api-gateway",
+    "language": "node",
+    "port": 8080,
+    "purpose": "REST API for dashboard, auth, metrics",
+    "inputs": ["postgres", "redis"],
+    "outputs": ["dashboard"],
+    "dependencies": []
+  },
+  {
+    "name": "dashboard",
+    "language": "react",
+    "port": 3000,
+    "purpose": "UI for control and monitoring",
+    "inputs": ["api-gateway"],
+    "outputs": [],
+    "dependencies": ["api-gateway"]
+  },
+  {
+    "name": "feed-aggregator",
+    "language": "node",
+    "port": null,
+    "purpose": "Real-time price feed collector from CEX/DEX",
+    "inputs": [],
+    "outputs": ["redis"],
+    "dependencies": []
+  },
+  {
+    "name": "rebalancer",
+    "language": "java",
+    "port": null,
+    "purpose": "Balances working capital, cold sweeps",
+    "inputs": ["postgres"],
+    "outputs": ["ledger"],
+    "dependencies": ["executor"]
+  },
+  {
+    "name": "analytics",
+    "language": "python",
+    "port": 5000,
+    "purpose": "LSTM prediction and quant analytics",
+    "inputs": ["postgres"],
+    "outputs": ["dashboard", "prometheus"],
+    "gpu": true,
+    "dependencies": []
+  },
+  {
+    "name": "alert-agent",
+    "language": "node",
+    "port": null,
+    "purpose": "Sends panic, mode-change, latency alerts",
+    "inputs": ["api-gateway"],
+    "outputs": ["email", "telegram"],
+    "dependencies": ["sealed-secrets"]
+  },
+  {
+    "name": "circuit-breaker",
+    "language": "node",
+    "port": null,
+    "purpose": "Halts trading based on risk rules",
+    "inputs": ["executor", "analytics"],
+    "outputs": ["api-gateway"],
+    "dependencies": []
+  },
+  {
+    "name": "scheduler",
+    "language": "kubernetes-cronjob",
+    "port": null,
+    "purpose": "Triggers rebalancer and sweeps",
+    "inputs": [],
+    "outputs": ["executor", "rebalancer"],
+    "dependencies": []
+  },
+  {
+    "name": "secret-manager",
+    "language": "kubeseal",
+    "port": null,
+    "purpose": "Secures API keys and credentials",
+    "inputs": [],
+    "outputs": ["all-agents"],
+    "dependencies": []
+  }
+]
