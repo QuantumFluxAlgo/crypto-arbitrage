@@ -13,3 +13,6 @@ DerivedData/
 # Log files
 logs/
 EOF
+
+# Node modules
+node_modules/
