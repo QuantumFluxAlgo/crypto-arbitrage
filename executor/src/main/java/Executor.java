@@ -26,7 +26,7 @@ public class Executor {
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
 
-        if (!riskFilter.passes(opp)) {
+        nearMissLogger.log(opp, "rejected_by_risk_filter");
             logger.info("Opportunity rejected by risk filter");
             nearMissLogger.log(opp, "risk-filter");
             return;
