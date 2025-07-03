@@ -1,8 +1,11 @@
 import os
 import time
 import logging
+
+import numpy as np
 from flask import Flask, g, request, jsonify, Response
 from dotenv import load_dotenv
+from tensorflow.keras.models import load_model
 from prometheus_client import (
     CollectorRegistry,
     Counter,
@@ -13,17 +16,17 @@ from prometheus_client import (
     CONTENT_TYPE_LATEST,
 )
 
-# Load environment variables from .env file (if any)
+# Load .env file
 load_dotenv()
 
-# Flask setup
+# Setup Flask
 app = Flask(__name__)
 
-# Logging configuration
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Prometheus setup
+# Prometheus metrics setup
 registry = CollectorRegistry()
 ProcessCollector(registry=registry)
 GCCollector(registry=registry)
@@ -33,6 +36,15 @@ average_latency = Gauge('average_latency', 'Average request latency in seconds',
 
 _total_latency = 0.0
 _total_requests = 0
+
+# Load ML model
+MODEL_PATH = "model.h5"
+try:
+    model = load_model(MODEL_PATH)
+    logger.info("Loaded model from %s", MODEL_PATH)
+except Exception as e:
+    logger.exception("Failed to load model from %s: %s", MODEL_PATH, e)
+    model = None
 
 @app.before_request
 def before_request():
@@ -61,6 +73,25 @@ def ping():
 def metrics():
     data = generate_latest(registry)
     return Response(data, mimetype=CONTENT_TYPE_LATEST)
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    """Return model predictions for array of spreads."""
+    if model is None:
+        return jsonify({'error': 'model not loaded'}), 500
+
+    start_time = time.time()
+    try:
+        data = request.get_json(force=True)
+        spreads = np.asarray(data, dtype=np.float32)
+        logger.info("Input shape: %s", spreads.shape)
+        preds = model.predict(spreads)
+        elapsed = time.time() - start_time
+        logger.info("Output shape: %s, time: %.4fs", preds.shape, elapsed)
+        return jsonify(preds.tolist())
+    except Exception as e:
+        logger.exception("Prediction failed: %s", e)
+        return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
     debug = os.environ.get('FLASK_ENV') != 'production'

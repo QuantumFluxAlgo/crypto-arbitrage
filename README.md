@@ -63,4 +63,20 @@ bash test/verify-env.sh
 
 The script checks for **Jest**, **PyTest**, and **Maven**. If a tool is missing, the script exits with an error.
 
+## Analytics API
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the Flask app:
+
+```bash
+python analytics/app.py
+```
+
+POST `/predict` with JSON array of spreads to receive model probabilities.
+
 
