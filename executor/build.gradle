@@ -3,11 +3,16 @@ plugins {
     id 'application'
 }
 
+group = 'com.example'
+version = '1.0-SNAPSHOT'
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
     implementation 'org.slf4j:slf4j-simple:2.0.13'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
@@ -25,3 +30,4 @@ java {
 test {
     useJUnitPlatform()
 }
+
