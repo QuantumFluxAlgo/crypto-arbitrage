@@ -10,8 +10,22 @@ public class ResumeHandler {
 
     public void start() {
         thread = new Thread(() -> {
-            // TODO: Implement resume handling logic
+            if (redis instanceof redis.clients.jedis.Jedis jedis) {
+                jedis.subscribe(new redis.clients.jedis.JedisPubSub() {
+                    @Override
+                    public void onMessage(String channel, String message) {
+                        if ("resume".equalsIgnoreCase(message) && executor instanceof ResumeCapable rc) {
+                            System.out.println("RESUMING EXECUTION");
+                            rc.resumeFromPanic();
+                        }
+                    }
+                }, "control-feed");
+            }
         });
         thread.start();
+    }
+
+    public interface ResumeCapable {
+        void resumeFromPanic();
     }
 }
