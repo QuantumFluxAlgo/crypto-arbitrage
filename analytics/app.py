@@ -40,13 +40,16 @@ _total_latency = 0.0
 _total_requests = 0
 
 # In-memory trade store
+MAX_TRADES = 1000
 trades = []
 
 
-def record_trade(pnl):
-    """Record a trade's PnL in memory, keeping at most 1000 entries."""
-    trades.append({'pnl': pnl, 'timestamp': time.time()})
-    if len(trades) > 1000:
+def record_trade(pnl: float, timestamp: float | None = None) -> None:
+    """Record a trade's PnL in memory, keeping only the most recent entries."""
+    if timestamp is None:
+        timestamp = time.time()
+    trades.append({"timestamp": timestamp, "pnl": float(pnl)})
+    if len(trades) > MAX_TRADES:
         trades.pop(0)
 
 
