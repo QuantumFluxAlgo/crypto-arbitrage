@@ -1,7 +1,5 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
 
 import java.util.function.Consumer;
 
@@ -20,7 +18,7 @@ public class RedisClient extends Thread {
     private final String host;
     private final int port;
     private final String channel;
-    private final MessageHandler handler;
+    private MessageHandler handler;
     private volatile boolean running = true;
 
     public RedisClient(String host, int port, String channel, MessageHandler handler) {
@@ -35,6 +33,12 @@ public class RedisClient extends Thread {
         this(host, port, "spread-feed", (channel, message) -> simpleHandler.accept(message));
     }
 
+    public void subscribe(String channel, Consumer<String> handler) {
+        logger.info("Mock subscribe to channel '{}'", channel);
+        this.handler = (ch, msg) -> handler.accept(msg);
+        start();
+    }
+
     /** Stop the subscriber thread. */
     public void shutdown() {
         running = false;
@@ -43,26 +47,16 @@ public class RedisClient extends Thread {
 
     @Override
     public void run() {
-        logger.info("Subscribed to Redis channel '{}'", channel);
+        logger.info("Mock RedisClient started for channel '{}'", channel);
+        // This mock periodically invokes the handler with an empty message
         while (running) {
-            try (Jedis jedis = new Jedis(host, port)) {
-                jedis.subscribe(new JedisPubSub() {
-                    @Override
-                    public void onMessage(String ch, String msg) {
-                        if (handler != null) {
-                            handler.onMessage(ch, msg);
-                        }
-                    }
-                }, channel);
-            } catch (Exception e) {
-                if (running) {
-                    logger.error("Redis subscriber error, reconnecting", e);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                    }
+            try {
+                if (handler != null) {
+                    handler.onMessage(channel, "{}");
                 }
+                    Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }

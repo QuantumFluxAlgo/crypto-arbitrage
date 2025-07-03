@@ -6,25 +6,31 @@ import org.slf4j.LoggerFactory;
 public class MockExchangeAdapter implements ExchangeAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MockExchangeAdapter.class);
     private final Random random = new Random();
+    private final String name;
+
+    public MockExchangeAdapter(String name) {
+        this.name = name;
+    }
 
     @Override
-    public boolean placeOrder(String pair, double quantity, double price, boolean isBuy) {
+    public boolean placeOrder(String pair, String side, double size, double price) {
         boolean success = random.nextDouble() < 0.9;
         if (success) {
-            logger.info("Filled {} order for {} {} at {}", isBuy ? "buy" : "sell", quantity, pair, price);
+            logger.info("{} filled {} order for {} {} @ {}", name, side, size, pair, price);
         } else {
-            logger.warn("Order failed for {} {} at {}", quantity, pair, price);
+            logger.warn("{} failed {} order for {} {} @ {}", name, side, size, pair, price);
         }
         return success;
     }
 
     @Override
-    public double getFeeRate() {
+    public double getFeeRate(String pair) {
         return 0.001;
     }
 
     @Override
     public double getBalance(String asset) {
-        return 10000.0;
+        return 10_000.0;
     }
 }
+
