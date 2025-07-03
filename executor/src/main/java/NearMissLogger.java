@@ -21,10 +21,10 @@ public class NearMissLogger {
             stmt.setString(1, opp.getBuyExchange());
             stmt.setString(2, opp.getSellExchange());
             stmt.setString(3, opp.getPair());
-            stmt.setBigDecimal(4, opp.getGrossEdge());
-            stmt.setBigDecimal(5, opp.getNetEdge());
+            stmt.setDouble(4, opp.getGrossEdge());
+            stmt.setDouble(5, opp.getNetEdge());
             stmt.setString(6, reason);
-            stmt.setBigDecimal(7, opp.getExpectedProfitUsd());
+            stmt.setDouble(7, opp.getExpectedProfitUsd());
             stmt.setLong(8, opp.getLatencyMs());
             stmt.executeUpdate();
         } catch (SQLException e) {
