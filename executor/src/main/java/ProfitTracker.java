@@ -1,32 +1,30 @@
 public class ProfitTracker {
     private static double globalTotal = 0.0;
-    private double cumulativeProfit = 0.0;
+    private static double dailyTotal = 0.0;
 
     /**
-     * Record profit or loss from a trade (instance-level).
+     * Record profit or loss from a trade.
+     * Updates both the daily total and the global total.
      *
      * @param pnl profit (positive) or loss (negative)
      */
-    public void record(double pnl) {
-        cumulativeProfit += pnl;
-    }
-
-    /**
-     * Get the cumulative profit for this instance.
-     *
-     * @return instance-level profit
-     */
-    public double getTotal() {
-        return cumulativeProfit;
-    }
-
-    /**
-     * Record profit or loss globally (static-level).
-     *
-     * @param pnl profit (positive) or loss (negative)
-     */
-    public static void recordGlobal(double pnl) {
+    public static void record(double pnl) {
+        dailyTotal += pnl;
         globalTotal += pnl;
+    }
+
+    /**
+     * Get today's loss as a percentage of starting capital.
+     * For simplicity we assume a fixed starting balance of $10,000.
+     *
+     * @param pnl profit (positive) or loss (negative)
+     */
+    public static double getDailyLossPct() {
+        double startingBalance = 10_000.0;
+        if (dailyTotal >= 0) {
+            return 0.0;
+        }
+        return (-dailyTotal / startingBalance) * 100.0;
     }
 
     /**
