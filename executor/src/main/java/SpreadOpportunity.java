@@ -1,4 +1,4 @@
-public class SpreadOpportunity {
+public class SpreadOpportunityImpl implements SpreadOpportunity {
     public String pair;
     public String buyExchange;
     public String sellExchange;
@@ -7,9 +7,9 @@ public class SpreadOpportunity {
     public double expectedProfitUsd;
     public long latencyMs;
 
-    public SpreadOpportunity(String pair, String buyExchange, String sellExchange,
-                             double grossEdge, double netEdge, double expectedProfitUsd,
-                             long latencyMs) {
+    public SpreadOpportunityImpl(String pair, String buyExchange, String sellExchange,
+                                 double grossEdge, double netEdge, double expectedProfitUsd,
+                                 long latencyMs) {
         this.pair = pair;
         this.buyExchange = buyExchange;
         this.sellExchange = sellExchange;
@@ -20,8 +20,18 @@ public class SpreadOpportunity {
     }
 
     @Override
+    public double getNetEdge() {
+        return netEdge;
+    }
+
+    @Override
+    public long getRoundTripLatencyMs() {
+        return latencyMs;
+    }
+
+    @Override
     public String toString() {
-        return "SpreadOpportunity{" +
+        return "SpreadOpportunityImpl{" +
             "pair='" + pair + '\'' +
             ", buyExchange='" + buyExchange + '\'' +
             ", sellExchange='" + sellExchange + '\'' +
