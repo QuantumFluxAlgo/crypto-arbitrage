@@ -1,9 +1,19 @@
 {
+  "name": "crypto-arbitrage",
+  "version": "1.0.0",
+  "description": "Crypto arbitrage tool",
+  "main": "index.js",
   "scripts": {
     "test": "echo 'no root tests'"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
+    "nodemailer": "^7.0.4",
     "axios": "^1.10.0",
     "tailwindcss": "^4.1.11"
   }
 }
+
