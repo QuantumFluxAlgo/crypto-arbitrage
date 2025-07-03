@@ -62,7 +62,7 @@ public class Executor {
             logger.error("Failed to execute trade");
         }
 
-        if (PanicBrake.DEFAULT.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
+        if (PanicBrake.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
             isPanic = true;
             logger.error("PANIC BRAKE TRIGGERED");
             AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
