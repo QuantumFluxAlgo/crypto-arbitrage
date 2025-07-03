@@ -20,10 +20,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Batch 5] - 2025-07-06
 ### Added
 - ColdSweeper class and sweep trigger logic
-### Fixed
-- Removed stray App class and corrected Redis client filename
-- Replaced truncated SpreadOpportunity model
-- Updated NearMissLogger parameter types
+
+### Added
+- Mock IOC execution logic
+- TradeLogger and PnL tracker
+- Cold wallet sweep trigger logic (test wallet)
+- Rebalancer skeleton logic
+
+### Tests
+- ColdSweeperTest
+- RebalancerTest
 
 ## [Batch 3] - 2025-07-04
 
