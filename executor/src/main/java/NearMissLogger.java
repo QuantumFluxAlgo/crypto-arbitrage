@@ -15,7 +15,7 @@ public class NearMissLogger {
     }
 
     public void log(SpreadOpportunity opp, String reason) {
-        String sql = "INSERT INTO near_misses (buy_exchange, sell_exchange, pair, gross_edge, net_edge, reason, expected_profit_usd, latency_ms) " +
+        String sql = "INSERT INTO near_misses (buy_exchange, sell_exchange, pair, gross_edge, net_edge, reason, latency_ms, round_trip_latency_ms) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, opp.getBuyExchange());
@@ -24,8 +24,8 @@ public class NearMissLogger {
             stmt.setDouble(4, opp.getGrossEdge());
             stmt.setDouble(5, opp.getNetEdge());
             stmt.setString(6, reason);
-            stmt.setDouble(7, opp.getExpectedProfitUsd());
-            stmt.setLong(8, opp.getLatencyMs());
+            stmt.setLong(7, opp.getLatencyMs());
+            stmt.setLong(8, opp.getRoundTripLatencyMs());
             stmt.executeUpdate();
         } catch (SQLException e) {
             logger.error("Failed to log near miss", e);
