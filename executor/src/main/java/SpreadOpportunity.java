@@ -1,5 +1,8 @@
 package domain;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class SpreadOpportunity {
     private final String pair;
     private final String buyExchange;
@@ -22,7 +25,19 @@ public class SpreadOpportunity {
     }
 
     public static SpreadOpportunity fromJson(String json) {
-        throw new UnsupportedOperationException("JSON parsing not implemented");
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(json);
+            return new SpreadOpportunity(
+                node.get("pair").asText(),
+                node.get("buyExchange").asText(),
+                node.get("sellExchange").asText(),
+                node.get("grossEdge").asDouble(),
+                node.get("netEdge").asDouble()
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid opportunity JSON", e);
+        }
     }
 
     public TradeResult execute(double size, double price) {
