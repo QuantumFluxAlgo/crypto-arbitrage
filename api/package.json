@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "winston": "^3.10.0"
+      "winston": "^3.10.0",
+      "axios": "^1.10.0"
   }
 }
