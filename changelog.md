@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - RiskFilterTest
 
 ## [Batch 5] - 2025-07-06
+### Added
+- ColdSweeper class and sweep trigger logic
 ### Fixed
 - Removed stray App class and corrected Redis client filename
 - Replaced truncated SpreadOpportunity model
