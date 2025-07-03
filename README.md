@@ -51,4 +51,16 @@ To spin up your development environment:
 
 ```bash
 colima start --runtime podman
+```
+
+## 🛠️ Environment Setup
+
+Run the verification script to confirm required tools are installed:
+
+```bash
+bash test/verify-env.sh
+```
+
+The script checks for **Jest**, **PyTest**, and **Maven**. If a tool is missing, the script exits with an error.
+
 
