@@ -1,25 +1,34 @@
-const request = require('supertest');
-const app = require('../index');
+import Fastify from 'fastify';
+import fastifyJwt from '@fastify/jwt';
+import fastifyCookie from '@fastify/cookie';
+import supertest from 'supertest';
+import appModule from '../index.js';
 
-describe('API authentication', () => {
-  test('/login returns a token', async () => {
-    const res = await request(app).post('/login').send({
-      username: 'user',
-      password: 'pass'
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('token');
-  });
+let app;
 
-  test('/opportunities requires auth', async () => {
-    const unauth = await request(app).get('/opportunities');
-    expect(unauth.statusCode).toBe(401);
+beforeAll(async () => {
+  app = Fastify();
+  app.register(fastifyCookie);
+  app.register(fastifyJwt, { secret: 'test' });
+  app.register(appModule);
+  await app.ready();
+});
 
-    const login = await request(app).post('/login');
-    const token = login.body.token;
-    const authRes = await request(app)
+afterAll(() => app.close());
+
+test('login issues token and protects opportunities', async () => {
+  const loginRes = await supertest(app.server)
+    .post('/login')
+    .send({ email: 'a', password: 'b' })
+    .expect(200);
+
+  const cookie = loginRes.headers['set-cookie'][0];
+  await supertest(app.server)
+    .get('/opportunities')
+    .set('Cookie', cookie)
+    .expect(200);
+
+    await supertest(app.server)
       .get('/opportunities')
-      .set('Authorization', `Bearer ${token}`);
-    expect(authRes.statusCode).toBe(200);
-  });
+      .expect(401);
 });
