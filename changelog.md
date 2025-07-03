@@ -17,6 +17,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Tests
 - RiskFilterTest
 
+## [Batch 6] - 2025-07-07
+
+### Added
+- Flask ML microservice with LSTM model
+- GPU-enabled prediction API (/predict)
+- Prometheus metrics endpoint
+- Structured logs
+- Synthetic training data
+- PyTest for prediction
+
 ## [Batch 5] - 2025-07-06
 ### Added
 - ColdSweeper class and sweep trigger logic
