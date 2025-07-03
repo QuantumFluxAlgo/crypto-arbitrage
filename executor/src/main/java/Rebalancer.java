@@ -48,5 +48,15 @@ public class Rebalancer {
 
         // TODO: initiate actual transfers once the execution engine is wired
     }
+    
+    /**
+     * Wrapper around {@link #scan(Map, double)} for backward compatibility.
+     * Currently it simply delegates to {@code scan}.
+     *
+     * @param balances map of exchange name to current balance
+     * @param target   target balance per exchange
+     */
+    public void rebalance(Map<String, Double> balances, double target) {
+        scan(balances, target);
+    }
 }
-
