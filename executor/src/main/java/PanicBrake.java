@@ -1,9 +1,10 @@
+package safety;
+
 public class PanicBrake {
     private final double maxDailyLossPct;
     private final double maxLatencyMs;
     private final double minWinRate;
 
-    // Default static thresholds
     public static final PanicBrake DEFAULT = new PanicBrake(3.0, 500.0, 0.4);
 
     public PanicBrake(double maxDailyLossPct, double maxLatencyMs, double minWinRate) {
@@ -28,7 +29,6 @@ public class PanicBrake {
         return false;
     }
 
-    // Static shortcut using defaults
     public static boolean shouldHalt(float dailyLossPct, float avgLatencyMs, float winRate) {
         return DEFAULT.shouldHalt(dailyLossPct, avgLatencyMs, winRate);
     }

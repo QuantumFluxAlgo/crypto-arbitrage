@@ -1,7 +1,10 @@
+package executor;
+
+import domain.SpreadOpportunity;
+import domain.TradeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
+import safety.PanicBrake;
 
 public class Executor {
     private static final Logger logger = LoggerFactory.getLogger(Executor.class);
@@ -9,6 +12,14 @@ public class Executor {
     private final RedisClient redisClient;
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
+
+    private double dailyLossPct;
+    private double avgLatencyMs;
+    private double winRate;
+    private int totalTrades;
+    private int winTrades;
+    private long cumulativeLatencyMs;
+    private boolean isPanic;
 
     public Executor(RedisClient redisClient, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
@@ -21,36 +32,60 @@ public class Executor {
         redisClient.start();
     }
 
-    private void handleMessage(String message) {
+    public void handleMessage(String message) {
+        if (isPanic) {
+            logger.warn("Trading halted due to panic brake.");
+            return;
+        }
+
         logger.debug("Received message: {}", message);
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
 
-        nearMissLogger.log(opp, "rejected_by_risk_filter");
+        if (!riskFilter.passes(opp)) {
             logger.info("Opportunity rejected by risk filter");
-            nearMissLogger.log(opp, "risk-filter");
+            nearMissLogger.log(opp, "rejected_by_risk_filter");
             return;
         }
 
-        logger.info("EXECUTING...");
-        // Simulate IOC trade execution on buy and sell exchanges
-              MockExchangeAdapter buyAdapter = new MockExchangeAdapter(opp.getBuyExchange());
-              MockExchangeAdapter sellAdapter = new MockExchangeAdapter(opp.getSellExchange());
+        logger.info("Executing opportunity: {}", opp.getPair());
 
-              double size = 1.0;
-              double price = 1.0;
-              double feeRate = 0.001;
+        TradeResult result = opp.execute(1.0, 1.0); // TODO: Replace with dynamic size/price logic
 
-              boolean buyOk = buyAdapter.placeOrder(opp.getPair(), "BUY", size, price);
-              boolean sellOk = sellAdapter.placeOrder(opp.getPair(), "SELL", size, price);
+        updatePerformanceMetrics(result);
 
-              if (buyOk && sellOk) {
-                  double fee = size * price * feeRate;
-                  double pnl = opp.getExpectedProfitUsd() - fee;
-                  TradeLogger.log(opp, pnl);
-                  ProfitTracker.record(pnl);
-              } else {
-                  logger.error("Failed to execute trade: buyOk={} sellOk={}", buyOk, sellOk);
-              }
-          }
-      }
+        if (result.success) {
+            TradeLogger.log(opp, result.pnl);
+            ProfitTracker.record(result.pnl);
+            dailyLossPct = ProfitTracker.getDailyLossPct();
+        } else {
+            logger.error("Failed to execute trade");
+        }
+
+        if (PanicBrake.DEFAULT.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
+            isPanic = true;
+            logger.error("PANIC BRAKE TRIGGERED");
+            AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
+            redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
+        }
+    }
+
+    private void updatePerformanceMetrics(TradeResult result) {
+        totalTrades++;
+        cumulativeLatencyMs += result.latencyMs;
+        avgLatencyMs = cumulativeLatencyMs / (double) totalTrades;
+
+        if (result.success) {
+            winTrades++;
+        }
+        winRate = winTrades / (double) totalTrades;
+
+        logger.debug("Metrics: latency={}ms, winRate={}, totalTrades={}", result.latencyMs, winRate, totalTrades);
+    }
+
+    public void resumeTrading() {
+        isPanic = false;
+        logger.info("Trading manually resumed.");
+    }
+}
+
