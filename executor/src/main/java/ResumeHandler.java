@@ -1,31 +1,37 @@
+import executor.Executor;
+
+/**
+ * Skeleton for a handler that listens for resume signals over Redis.
+ */
 public class ResumeHandler {
+    
+    /** Connection to Redis. */
     private final Object redis;
-    private final java.util.concurrent.Executor executor;
+
+    /** Reference to the main executor. */
+    private final Executor executor;
+
+    /** Internal thread for listening to resume events. */
     private Thread thread;
 
-    public ResumeHandler(Object redis, java.util.concurrent.Executor executor) {
-        this.redis = redis;
+    /**
+     * Create a new resume handler.
+     *
+     * @param redis     active Redis connection
+     * @param executor  executor to resume when signalled
+     */
+    public ResumeHandler(Object redis, Executor executor) {        this.redis = redis;
         this.executor = executor;
     }
 
+    
+    /**
+     * Start the listener in its own thread.
+     */
     public void start() {
         thread = new Thread(() -> {
-            if (redis instanceof redis.clients.jedis.Jedis jedis) {
-                jedis.subscribe(new redis.clients.jedis.JedisPubSub() {
-                    @Override
-                    public void onMessage(String channel, String message) {
-                        if ("resume".equalsIgnoreCase(message) && executor instanceof ResumeCapable rc) {
-                            System.out.println("RESUMING EXECUTION");
-                            rc.resumeFromPanic();
-                        }
-                    }
-                }, "control-feed");
-            }
+            // TODO: subscribe to Redis and trigger executor.resumeFromPanic()
         });
         thread.start();
-    }
-
-    public interface ResumeCapable {
-        void resumeFromPanic();
     }
 }
