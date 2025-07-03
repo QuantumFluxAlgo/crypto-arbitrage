@@ -17,8 +17,8 @@ public class Executor {
     }
 
     public void start() {
-        logger.info("Subscribing to Redis channel 'opportunities'");
-        redisClient.subscribe("opportunities", this::handleMessage);
+        logger.info("Starting Redis client thread");
+        redisClient.start();
     }
 
     private void handleMessage(String message) {
