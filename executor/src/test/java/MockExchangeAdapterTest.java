@@ -28,3 +28,4 @@ public class MockExchangeAdapterTest {
         assertTrue(ratio > 0.85 && ratio < 0.95, "success ratio was " + ratio);
     }
 }
+
