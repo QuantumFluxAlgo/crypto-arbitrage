@@ -23,7 +23,8 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        // Use the system JDK to avoid network downloads in CI
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

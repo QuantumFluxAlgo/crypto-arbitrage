@@ -1,6 +1,8 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class Executor {
     private static final Logger logger = LoggerFactory.getLogger(Executor.class);
 
@@ -26,11 +28,29 @@ public class Executor {
 
         if (!riskFilter.passes(opp)) {
             logger.info("Opportunity rejected by risk filter");
-            nearMissLogger.log(opp);
+            nearMissLogger.log(opp, "risk-filter");
             return;
         }
 
         logger.info("EXECUTING...");
-        // Execution logic will be implemented in Batch 5
-    }
-}
+        // Simulate IOC trade execution on buy and sell exchanges
+              MockExchangeAdapter buyAdapter = new MockExchangeAdapter(opp.getBuyExchange());
+              MockExchangeAdapter sellAdapter = new MockExchangeAdapter(opp.getSellExchange());
+
+              double size = 1.0;
+              double price = 1.0;
+              double feeRate = 0.001;
+
+              boolean buyOk = buyAdapter.placeOrder(opp.getPair(), "BUY", size, price);
+              boolean sellOk = sellAdapter.placeOrder(opp.getPair(), "SELL", size, price);
+
+              if (buyOk && sellOk) {
+                  double fee = size * price * feeRate;
+                  double pnl = opp.getExpectedProfitUsd() - fee;
+                  TradeLogger.log(opp, pnl);
+                  ProfitTracker.record(pnl);
+              } else {
+                  logger.error("Failed to execute trade: buyOk={} sellOk={}", buyOk, sellOk);
+              }
+          }
+      }
