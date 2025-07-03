@@ -39,6 +39,35 @@ average_latency = Gauge('average_latency', 'Average request latency in seconds',
 _total_latency = 0.0
 _total_requests = 0
 
+# In-memory trade store
+trades = []  # list of {'timestamp': float, 'pnl': float}
+
+
+def record_trade(pnl: float, timestamp: float | None = None) -> None:
+    """Record an executed trade's profit or loss."""
+    if timestamp is None:
+        timestamp = time.time()
+    trades.append({'timestamp': timestamp, 'pnl': float(pnl)})
+
+
+def rolling_pnl(window: int = 50) -> float:
+    """Return the rolling P&L for the last `window` trades."""
+    recent = trades[-window:]
+    return float(sum(t['pnl'] for t in recent))
+
+
+def sharpe_ratio(window: int = 50) -> float:
+    """Compute the Sharpe ratio for the last `window` trades."""
+    recent = trades[-window:]
+    if not recent:
+        return 0.0
+    returns = np.array([t['pnl'] for t in recent], dtype=np.float32)
+    mean = returns.mean()
+    std = returns.std()
+    if std == 0:
+        return 0.0
+    return float(mean / std * np.sqrt(len(returns)))
+
 # Load model
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
 
@@ -106,6 +135,15 @@ def predict():
     except Exception as e:
         logger.exception("Prediction error: %s", e)
         return jsonify({'error': str(e)}), 400
+
+
+@app.route('/stats')
+def stats():
+    """Return rolling P&L and Sharpe ratio for recent trades."""
+    window = int(request.args.get('window', 50))
+    pnl = rolling_pnl(window)
+    sharpe = sharpe_ratio(window)
+    return jsonify({'rolling_pnl': pnl, 'sharpe_ratio': sharpe, 'window': window})
 
 if __name__ == '__main__':
     debug = os.getenv('FLASK_ENV') != 'production'

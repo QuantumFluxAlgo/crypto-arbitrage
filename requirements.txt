@@ -4,3 +4,4 @@ tensorflow        # ML
 prometheus_client # metrics
 numpy             # data prep
 pytest            # testing
+joblib            # model serialization
