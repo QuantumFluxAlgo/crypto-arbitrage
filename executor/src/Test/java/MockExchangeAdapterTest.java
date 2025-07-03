@@ -5,7 +5,7 @@ public class MockExchangeAdapterTest {
     @Test
     void feeRateIsConstant() {
         MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
-        assertEquals(0.001, adapter.getFeeRate(), 1e-9);
+        assertEquals(0.001, adapter.getFeeRate("BTC/USDT"), 1e-9);
     }
 
     @Test
