@@ -5,7 +5,6 @@ import logging
 import numpy as np
 from flask import Flask, g, request, jsonify, Response
 from dotenv import load_dotenv
-from tensorflow.keras.models import load_model
 from prometheus_client import (
     CollectorRegistry,
     Counter,
@@ -16,14 +15,17 @@ from prometheus_client import (
     CONTENT_TYPE_LATEST,
 )
 
-# Load .env file
+from tensorflow.keras.models import load_model as load_keras_model
+import joblib
+
+# Load .env variables
 load_dotenv()
 
-# Setup Flask
+# Configure Flask
 app = Flask(__name__)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 # Prometheus metrics setup
@@ -37,14 +39,25 @@ average_latency = Gauge('average_latency', 'Average request latency in seconds',
 _total_latency = 0.0
 _total_requests = 0
 
-# Load ML model
-MODEL_PATH = "model.h5"
-try:
-    model = load_model(MODEL_PATH)
-    logger.info("Loaded model from %s", MODEL_PATH)
-except Exception as e:
-    logger.exception("Failed to load model from %s: %s", MODEL_PATH, e)
-    model = None
+# Load model
+MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
+
+def load_model(path: str):
+    logger.info("Attempting to load model from %s", path)
+    try:
+        if path.endswith(".h5"):
+            model = load_keras_model(path)
+        elif path.endswith(".joblib"):
+            model = joblib.load(path)
+        else:
+            raise ValueError(f"Unsupported model format: {path}")
+        logger.info("Model loaded successfully")
+        return model
+    except Exception as e:
+        logger.exception("Model loading failed: %s", e)
+        return None
+
+model = load_model(MODEL_PATH)
 
 @app.before_request
 def before_request():
@@ -76,24 +89,25 @@ def metrics():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Return model predictions for array of spreads."""
     if model is None:
         return jsonify({'error': 'model not loaded'}), 500
 
-    start_time = time.time()
+    logger.info("Prediction started")
     try:
-        data = request.get_json(force=True)
-        spreads = np.asarray(data, dtype=np.float32)
-        logger.info("Input shape: %s", spreads.shape)
-        preds = model.predict(spreads)
-        elapsed = time.time() - start_time
-        logger.info("Output shape: %s, time: %.4fs", preds.shape, elapsed)
-        return jsonify(preds.tolist())
+        payload = request.get_json(force=True)
+        features = np.array(payload.get("features", payload), dtype=np.float32)
+        if len(features.shape) == 1:
+            features = features.reshape(1, -1)
+
+        logger.info("Input shape: %s", features.shape)
+        preds = model.predict(features)
+        logger.info("Output shape: %s", np.array(preds).shape)
+        return jsonify({'prediction': preds.tolist()})
     except Exception as e:
-        logger.exception("Prediction failed: %s", e)
+        logger.exception("Prediction error: %s", e)
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
-    debug = os.environ.get('FLASK_ENV') != 'production'
+    debug = os.getenv('FLASK_ENV') != 'production'
     app.run(host='0.0.0.0', port=5000, debug=debug)
 
