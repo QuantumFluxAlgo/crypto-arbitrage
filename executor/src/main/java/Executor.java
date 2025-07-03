@@ -87,5 +87,9 @@ public class Executor {
         isPanic = false;
         logger.info("Trading manually resumed.");
     }
-}
 
+    public void resumeFromPanic() {
+        isPanic = false;
+        logger.info("PANIC RESUME SIGNAL RECEIVED");
+    }
+}
