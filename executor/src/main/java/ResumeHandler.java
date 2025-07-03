@@ -1,37 +1,40 @@
 import executor.Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * Skeleton for a handler that listens for resume signals over Redis.
- */
 public class ResumeHandler {
-    
-    /** Connection to Redis. */
+    private static final String CHANNEL = "control-feed";
+     private static final Logger logger = LoggerFactory.getLogger(ResumeHandler.class);
+
     private final Object redis;
+     private final Executor executor;
+     private Thread thread;
 
-    /** Reference to the main executor. */
-    private final Executor executor;
+     public ResumeHandler(Object redis, Executor executor) {
+         this.redis = redis;
+         this.executor = executor;
+     }
 
-    /** Internal thread for listening to resume events. */
-    private Thread thread;
-
-    /**
-     * Create a new resume handler.
-     *
-     * @param redis     active Redis connection
-     * @param executor  executor to resume when signalled
-     */
-    public ResumeHandler(Object redis, Executor executor) {        this.redis = redis;
-        this.executor = executor;
-    }
-
-    
-    /**
-     * Start the listener in its own thread.
-     */
-    public void start() {
-        thread = new Thread(() -> {
-            // TODO: subscribe to Redis and trigger executor.resumeFromPanic()
-        });
-        thread.start();
-    }
-}
+     public void start() {
+         thread = new Thread(() -> {
+             if (redis instanceof redis.clients.jedis.Jedis jedis) {
+                 jedis.subscribe(new redis.clients.jedis.JedisPubSub() {
+                     @Override
+                     public void onMessage(String channel, String message) {
+                         if ("resume".equalsIgnoreCase(message)) {
+                             logger.info("RESUMING EXECUTION");
+                             executor.resumeFromPanic();
+                         }
+                     }
+                 }, CHANNEL);
+             } else if (redis instanceof RedisClient client) {
+                 client.subscribe(CHANNEL, message -> {
+                     if ("resume".equalsIgnoreCase(message)) {
+                         logger.info("RESUMING EXECUTION");
+                         executor.resumeFromPanic();
+                     }
+                 });
+             }
+         });
+         thread.start();
+     }
