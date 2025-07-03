@@ -8,6 +8,10 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     private final Random random = new Random();
     private final String name;
 
+    public MockExchangeAdapter() {
+        this("Mock");
+    }
+
     public MockExchangeAdapter(String name) {
         this.name = name;
     }
