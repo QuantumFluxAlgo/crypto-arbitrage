@@ -2,8 +2,14 @@
   "name": "api",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "test": "echo \"no api tests\""
+  },
   "dependencies": {
       "winston": "^3.10.0",
-      "axios": "^1.10.0"
+      "axios": "^1.10.0",
+      "fastify": "^5.4.0",
+      "@fastify/jwt": "^9.1.0",
+      "@fastify/cookie": "^11.0.2"
   }
 }
