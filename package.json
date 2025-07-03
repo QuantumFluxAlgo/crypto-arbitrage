@@ -11,9 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "nodemailer": "^7.0.4",
     "axios": "^1.10.0",
+    "nodemailer": "^7.0.4",
     "tailwindcss": "^4.1.11"
   }
 }
-
