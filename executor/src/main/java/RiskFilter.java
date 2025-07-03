@@ -16,15 +16,8 @@ public class RiskFilter {
         this.maxLatencyMs = maxLatencyMs;
     }
 
-    public boolean passes(SpreadOpportunity opp) {
-        if (opp.getNetEdge() < netEdgeThreshold) {
-            logger.info("Spread opportunity failed edge threshold: {} < {}", opp.getNetEdge(), netEdgeThreshold);
+    public boolean passes(SpreadOpportunity opportunity) {
+        if (opportunity.getNetEdge() < netEdgeThreshold) {
+            logger.info("Spread opportunity failed edge threshold: {} < {}", opportunity.getNetEdge(), netEdgeThreshold);
             return false;
         }
-        if (opp.getRoundTripLatencyMs() > maxLatencyMs) {
-            logger.info("Spread opportunity failed latency threshold: {} > {}", opp.getRoundTripLatencyMs(), maxLatencyMs);
-            return false;
-        }
-        return true;
-    }
-}
