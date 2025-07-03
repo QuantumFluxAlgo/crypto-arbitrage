@@ -1,14 +1,17 @@
 const axios = require('axios');
 
-const WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL;
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
 async function sendWebhook(payload, attempt = 1) {
   if (!WEBHOOK_URL) {
-    throw new Error('ALERT_WEBHOOK_URL not set');
+    throw new Error('Missing WEBHOOK_URL');
   }
 
+  const body =
+    typeof payload === 'string' ? { message: payload } : payload;
+
   try {
-    await axios.post(WEBHOOK_URL, payload);
+    await axios.post(WEBHOOK_URL, body);
     console.log('Webhook alert sent');
   } catch (error) {
     console.error('Failed to send webhook alert', error.message);
@@ -21,3 +24,4 @@ async function sendWebhook(payload, attempt = 1) {
 }
 
 module.exports = { sendWebhook };
+
