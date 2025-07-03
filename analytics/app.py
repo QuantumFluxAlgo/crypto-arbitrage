@@ -40,14 +40,27 @@ _total_latency = 0.0
 _total_requests = 0
 
 # In-memory trade store
-trades = []  # list of {'timestamp': float, 'pnl': float}
+trades = []
 
 
-def record_trade(pnl: float, timestamp: float | None = None) -> None:
-    """Record an executed trade's profit or loss."""
-    if timestamp is None:
-        timestamp = time.time()
-    trades.append({'timestamp': timestamp, 'pnl': float(pnl)})
+def record_trade(pnl):
+    """Record a trade's PnL in memory, keeping at most 1000 entries."""
+    trades.append({'pnl': pnl, 'timestamp': time.time()})
+    if len(trades) > 1000:
+        trades.pop(0)
+
+
+def compute_stats():
+    """Compute aggregate PnL and Sharpe ratio for all stored trades."""
+    if not trades:
+        return {'pnl': 0, 'sharpe': 0}
+    pnl_array = np.array([t['pnl'] for t in trades])
+    pnl = pnl_array.sum()
+    if pnl_array.std() == 0:
+        sharpe = 0
+    else:
+        sharpe = pnl_array.mean() / pnl_array.std() * np.sqrt(len(pnl_array))
+    return {'pnl': float(pnl), 'sharpe': float(sharpe)}
 
 
 def rolling_pnl(window: int = 50) -> float:
@@ -137,13 +150,21 @@ def predict():
         return jsonify({'error': str(e)}), 400
 
 
+@app.route('/trade', methods=['POST'])
+def trade():
+    """Endpoint used by the executor to record executed trades."""
+    data = request.get_json(force=True)
+    pnl = data.get('pnl')
+    if pnl is None:
+        return jsonify({'error': 'pnl required'}), 400
+    record_trade(float(pnl))
+    return jsonify({'status': 'ok'})
+
+
 @app.route('/stats')
 def stats():
-    """Return rolling P&L and Sharpe ratio for recent trades."""
-    window = int(request.args.get('window', 50))
-    pnl = rolling_pnl(window)
-    sharpe = sharpe_ratio(window)
-    return jsonify({'rolling_pnl': pnl, 'sharpe_ratio': sharpe, 'window': window})
+    """Return aggregate PnL and Sharpe ratio for recorded trades."""
+    return jsonify(compute_stats())
 
 if __name__ == '__main__':
     debug = os.getenv('FLASK_ENV') != 'production'
