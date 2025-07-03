@@ -5,13 +5,18 @@ import domain.TradeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import safety.PanicBrake;
+/**
+ * Executor agent responsible for executing arbitrage opportunities.
+ * Implements {@link ResumeHandler.ResumeCapable} to handle resume signals.
+ */
 
-public class Executor {
+public class Executor implements ResumeHandler.ResumeCapable, java.util.concurrent.Executor {
     private static final Logger logger = LoggerFactory.getLogger(Executor.class);
 
     private final RedisClient redisClient;
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
+    private final ResumeHandler resumeHandler;
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -23,6 +28,7 @@ public class Executor {
 
     public Executor(RedisClient redisClient, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
+        this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis("localhost", 6379), this);
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
     }
@@ -30,6 +36,15 @@ public class Executor {
     public void start() {
         logger.info("Starting Redis client thread");
         redisClient.start();
+        logger.info("Starting ResumeHandler thread");
+        resumeHandler.start();
+    }
+
+    @Override
+    public void execute(Runnable command) {
+        if (command != null) {
+            command.run();
+        }
     }
 
     public void handleMessage(String message) {
