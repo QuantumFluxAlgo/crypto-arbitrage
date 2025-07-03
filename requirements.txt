@@ -1,3 +1,6 @@
-flask
-tensorflow
-numpy
+flask             # web API
+python-dotenv     # load env
+tensorflow        # ML
+prometheus_client # metrics
+numpy             # data prep
+pytest            # testing
