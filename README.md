@@ -40,10 +40,9 @@ Start the virtual machine with Podman enabled:
 ```bash
 colima start --runtime podman
 
-
 ---
 
-## Dev Setup
+## File Structure
 
 root/
 ├── api/          # Node.js REST API
