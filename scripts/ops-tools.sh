@@ -17,6 +17,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NAMESPACE="arbitrage"
+# Directory containing Helm charts (can be overridden via CHART_DIR env var)
+CHART_DIR="${CHART_DIR:-$ROOT_DIR/infra/helm}"
 
 usage() {
   grep '^#' "$0" | cut -c 3-
@@ -28,7 +30,11 @@ cmd="$1"
 
 case "$cmd" in
   start)
-    helm upgrade --install arb-charts "$ROOT_DIR/infra/charts" --namespace "$NAMESPACE"
+    if [[ ! -d "$CHART_DIR" ]]; then
+      echo "Error: chart directory '$CHART_DIR' not found" >&2
+      exit 1
+    fi
+    helm upgrade --install arb-charts "$CHART_DIR" --namespace "$NAMESPACE"
     ;;
   stop)
     helm uninstall arb-charts --namespace "$NAMESPACE"
