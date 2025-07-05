@@ -36,5 +36,10 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     public double getBalance(String asset) {
         return 10_000.0;
     }
+
+    @Override
+    public void transfer(String asset, double amount, String destination) {
+        logger.info("{} transferring {} {} to {}", name, amount, asset, destination);
+    }
 }
 

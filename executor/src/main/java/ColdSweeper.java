@@ -9,12 +9,13 @@ public class ColdSweeper {
 
     private final double minAmountUsd;
     private final double minCapitalRatio;
+    private final WalletClient walletClient;
 
     /**
      * Default: sweep when profit ≥ $5,000 or ≥ 30% of capital.
      */
     public ColdSweeper() {
-        this(5000.0, 0.30);
+        this(5000.0, 0.30, new MockWalletClient());
     }
 
     /**
@@ -22,8 +23,13 @@ public class ColdSweeper {
      * @param minCapitalRatio relative profit threshold (e.g. 0.30 = 30%)
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio) {
+        this(minAmountUsd, minCapitalRatio, new MockWalletClient());
+    }
+
+    public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient) {
         this.minAmountUsd = minAmountUsd;
         this.minCapitalRatio = minCapitalRatio;
+        this.walletClient = walletClient;
     }
 
     /**
@@ -50,5 +56,6 @@ public class ColdSweeper {
      */
     public void sweepToColdWallet(String address) {
         logger.info("Sweeping to cold wallet: {}", address);
+        walletClient.withdraw(address);
     }
 }
