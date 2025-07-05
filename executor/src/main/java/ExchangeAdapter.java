@@ -27,5 +27,14 @@ public interface ExchangeAdapter {
      * @return available balance
      */
     double getBalance(String asset);
+
+    /**
+     * Transfer funds to another destination (exchange, wallet, etc.).
+     *
+     * @param asset       asset symbol
+     * @param amount      amount to transfer
+     * @param destination target destination identifier
+     */
+    void transfer(String asset, double amount, String destination);
 }
 

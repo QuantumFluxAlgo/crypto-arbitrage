@@ -30,8 +30,8 @@ public class ResumeHandler {
                          }
                      }
                  }, CHANNEL);
-             } else if (redis instanceof RedisClient client) {
-                 client.subscribe(CHANNEL, message -> {
+            } else if (redis instanceof RedisClient client) {
+                client.subscribe(CHANNEL, (ch, message) -> {
                      if ("resume".equalsIgnoreCase(message)) {
                          logger.info("RESUMING EXECUTION");
                          executor.resumeFromPanic();

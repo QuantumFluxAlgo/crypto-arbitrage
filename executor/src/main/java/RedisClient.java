@@ -28,6 +28,29 @@ public class RedisClient extends Thread {
         setName("RedisClientSubscriber");
     }
 
+    public void publish(String channel, String message) {
+        try (Jedis jedis = new Jedis(host, port)) {
+            jedis.publish(channel, message);
+        } catch (Exception e) {
+            logger.error("Redis publish failed: {}", e.getMessage());
+        }
+    }
+
+    public void subscribe(String channel, MessageHandler handler) {
+        new Thread(() -> {
+            try (Jedis jedis = new Jedis(host, port)) {
+                jedis.subscribe(new JedisPubSub() {
+                    @Override
+                    public void onMessage(String ch, String message) {
+                        handler.onMessage(ch, message);
+                    }
+                }, channel);
+            } catch (Exception e) {
+                logger.error("Redis subscribe failed: {}", e.getMessage());
+            }
+        }, "RedisClientSubscribe-" + channel).start();
+    }
+
     public void shutdown() {
         running = false;
         interrupt();

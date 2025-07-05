@@ -3,6 +3,9 @@ package executor;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+// For using ExchangeAdapter interface in tests
+import executor.ExchangeAdapter;
+
 public class MockExchangeAdapterTest {
     @Test
     void feeRateIsConstant() {
@@ -28,6 +31,12 @@ public class MockExchangeAdapterTest {
         }
         double ratio = success / (double) total;
         assertTrue(ratio > 0.85 && ratio < 0.95, "success ratio was " + ratio);
+        
+        @Test
+        void transferDoesNotThrow() {
+            ExchangeAdapter adapter = new MockExchangeAdapter("Test");
+            assertDoesNotThrow(() -> adapter.transfer("USDT", 1.5, "wallet"));
+        }
     }
 }
 

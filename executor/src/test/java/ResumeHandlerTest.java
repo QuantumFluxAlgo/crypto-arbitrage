@@ -12,9 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ResumeHandlerTest {
 
     /** Simple stub of the Redis client that immediately sends a resume message. */
-    static class StubRedisClient {
-        void subscribe(String channel, java.util.function.Consumer<String> handler) {
-            handler.accept("resume");
+    static class StubRedisClient extends RedisClient {
+        StubRedisClient() {
+            super("localhost", 6379, "chan", (c, m) -> {});
+        }
+
+        @Override
+        public void subscribe(String channel, MessageHandler handler) {
+            handler.onMessage(channel, "resume");
         }
     }
 
