@@ -2,6 +2,12 @@ import Fastify from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: process.env.NODE_ENV === 'production'
+});
 
 const app = Fastify();
 app.register(fastifyCookie);
@@ -30,6 +36,10 @@ app.addHook('onRequest', async (req, reply) => {
     } catch {
     reply.code(401).send({ error: 'unauthorized' });
   }
+});
+
+app.addHook('onError', async (req, reply, error) => {
+  Sentry.captureException(error);
 });
 
 app.get('/opportunities', async () => []);
