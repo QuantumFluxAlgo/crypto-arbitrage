@@ -18,8 +18,8 @@ public class ResumeHandlerTest {
         }
 
         @Override
-        public void subscribe(String channel, MessageHandler handler) {
-            handler.onMessage(channel, "resume");
+        public void subscribe(String channel, java.util.function.Consumer<String> handler) {
+            handler.accept("resume");
         }
     }
 

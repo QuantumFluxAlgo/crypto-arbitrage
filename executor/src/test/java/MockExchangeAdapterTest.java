@@ -31,12 +31,12 @@ public class MockExchangeAdapterTest {
         }
         double ratio = success / (double) total;
         assertTrue(ratio > 0.85 && ratio < 0.95, "success ratio was " + ratio);
-        
-        @Test
-        void transferDoesNotThrow() {
-            ExchangeAdapter adapter = new MockExchangeAdapter("Test");
-            assertDoesNotThrow(() -> adapter.transfer("USDT", 1.5, "wallet"));
-        }
+    }
+
+    @Test
+    void transferDoesNotThrow() {
+        ExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        assertDoesNotThrow(() -> adapter.transfer("USDT", 1.5, "wallet"));
     }
 }
 

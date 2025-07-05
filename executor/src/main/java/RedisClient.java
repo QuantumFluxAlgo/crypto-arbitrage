@@ -6,6 +6,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 import executor.AlertManager;
+import java.util.function.Consumer;
 
 public class RedisClient extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
@@ -49,6 +50,15 @@ public class RedisClient extends Thread {
                 logger.error("Redis subscribe failed: {}", e.getMessage());
             }
         }, "RedisClientSubscribe-" + channel).start();
+    }
+
+    /**
+     * Subscribe to a channel using a simple message consumer.
+     * @param channel Redis channel
+     * @param handler consumer invoked with each message
+     */
+    public void subscribe(String channel, Consumer<String> handler) {
+        subscribe(channel, (ch, msg) -> handler.accept(msg));
     }
 
     public void shutdown() {
