@@ -1,13 +1,14 @@
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProfitTracker {
     private static final Logger logger = LoggerFactory.getLogger(ProfitTracker.class);
+    private static final HttpClient httpClient = HttpClient.newHttpClient();
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
 
@@ -35,24 +36,22 @@ public class ProfitTracker {
     public static void record(double pnl) {
         dailyTotal += pnl;
         globalTotal += pnl;
-        try {
-            URL url = new URL(analyticsUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-            String json = "{\"pnl\":" + pnl + "}";
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(json.getBytes(StandardCharsets.UTF_8));
-            }
-            int code = conn.getResponseCode();
-            if (code >= 400) {
-                logger.warn("Failed to record trade: HTTP {}", code);
-            }
-            conn.disconnect();
-        } catch (Exception e) {
-            logger.error("Error sending trade to analytics", e);
-        }
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(analyticsUrl))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString("{\"pnl\":" + pnl + "}"))
+            .build();
+
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+            .thenAccept(resp -> {
+                if (resp.statusCode() >= 400) {
+                    logger.warn("Failed to record trade: HTTP {}", resp.statusCode());
+                }
+            })
+            .exceptionally(e -> {
+                logger.error("Error sending trade to analytics", e);
+                return null;
+            });
     }
 
     /**
