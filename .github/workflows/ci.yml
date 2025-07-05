@@ -72,6 +72,25 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 1
 
+      - name: Install feed-aggregator dependencies
+        run: npm install
+        working-directory: feed-aggregator
+
+      - name: Run feed-aggregator tests
+        run: npm test
+        working-directory: feed-aggregator
+
+      - name: Build feed-aggregator image
+        run: podman build -t feed-aggregator ./feed-aggregator
+
+      - name: Run Trivy scan on feed-aggregator
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: feed-aggregator
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
       - name: Run Analytics tests
         run: pytest
         working-directory: analytics
