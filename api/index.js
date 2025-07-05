@@ -4,7 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import pg from 'pg';
 const { Pool } = pg;
 
@@ -40,8 +40,7 @@ if (process.env.NODE_ENV === 'test') {
   });
 }
 
-const hash = (str) =>
-  crypto.createHash('sha256').update(str).digest('hex');
+const hash = (str) => bcrypt.hashSync(str, 10);
 
 const users = {
   user: hash('pass'),
@@ -50,7 +49,7 @@ const users = {
 app.post('/login', async (req, reply) => {
     const { email, password } = req.body;
     const stored = users[email];
-    if (stored && stored === hash(password)) {
+    if (stored && await bcrypt.compare(password, stored)) {
     const token = app.jwt.sign({ email });
     reply.setCookie('token', token, { httpOnly: true });
     return { ok: true };
