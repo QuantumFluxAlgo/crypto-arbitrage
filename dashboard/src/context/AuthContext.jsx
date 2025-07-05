@@ -12,30 +12,18 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-useEffect(() => {
-    async function verify() {
-      try {
-        const res = await axios.get('/api/metrics');
-        if (res.status === 200) {
-          setIsLoggedIn(true);
-          localStorage.setItem('token', 'active');
-        }
-      } catch {
-        setIsLoggedIn(false);
-        localStorage.removeItem('token');
-      }
-    }
-
+  useEffect(() => {
+    // Restore session from existing token in localStorage
     if (localStorage.getItem('token')) {
-      verify();
+      setIsLoggedIn(true);
     }
   }, []);
 
   const login = async (email, password) => {
     try {
-      await axios.post('/api/login', { email, password });
+      const res = await axios.post('/api/login', { email, password });
+      localStorage.setItem('token', res.data.token);
       setIsLoggedIn(true);
-      navigate('/dashboard');
     } catch (error) {
       console.error('Login failed', error);
       throw error;
@@ -43,15 +31,9 @@ useEffect(() => {
   };
 
   const logout = async () => {
-    try {
-      await axios.post('/api/logout');
-    } catch (err) {
-      console.error('Logout failed', err);
-    } finally {
-      localStorage.removeItem('token');
-      setIsLoggedIn(false);
-      navigate('/login');
-    }
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    navigate('/login');
   };
 
   const value = { isLoggedIn, login, logout };
