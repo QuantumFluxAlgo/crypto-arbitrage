@@ -118,6 +118,17 @@ describe('API authentication', () => {
         expect(Array.isArray(res.body)).toBe(true);
     });
 
+    test('POST /alerts/test/email returns 200', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .post('/alerts/test/email')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+    });
+
     test('/infra/status returns infra summary', async () => {
       const login = await request('http://localhost:8080')
         .post('/login')

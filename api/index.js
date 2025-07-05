@@ -6,6 +6,7 @@ import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
 import bcrypt from 'bcryptjs';
 import pg from 'pg';
+import { sendAlert } from './services/alertManager.js';
 const { Pool } = pg;
 
 Sentry.init({
@@ -46,6 +47,13 @@ const users = {
   user: hash('pass'),
 };
 
+const alertSettings = {
+  smtp_user: '',
+  smtp_pass: '',
+  telegram_token: '',
+  webhook_url: ''
+};
+
 app.post('/login', async (req, reply) => {
     const { email, password } = req.body;
     const stored = users[email];
@@ -73,6 +81,22 @@ app.addHook('onError', async (req, reply, error) => {
 app.get('/opportunities', async () => []);
 app.get('/settings', async () => ({}));
 app.post('/settings', async req => ({ saved: true }));
+
+app.get('/alerts', async () => alertSettings);
+app.post('/alerts', async req => {
+  Object.assign(alertSettings, req.body);
+  return { saved: true };
+});
+
+app.post('/alerts/test/:type', async (req, reply) => {
+  try {
+    await sendAlert(req.params.type, 'Test alert');
+    return { sent: true };
+  } catch (err) {
+    reply.code(500);
+    return { error: 'failed' };
+  }
+});
 app.get('/trades/history', async (req, reply) => {
   try {
     const { rows } = await pool.query(
