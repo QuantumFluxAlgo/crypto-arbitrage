@@ -63,11 +63,15 @@ function connect(attempt = 0) {
     });
 
     function reconnect() {
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.terminate();
+        }
+
       const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
       logger.warn(`Reconnecting in ${delay}ms`);
       setTimeout(() => connect(attempt + 1), delay);
     }
-}
+  }
 
 // small health endpoint
 const app = Fastify();
