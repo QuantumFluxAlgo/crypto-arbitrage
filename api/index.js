@@ -53,7 +53,6 @@ app.register(loginRoute);
 
 app.addHook('onRequest', async (req, reply) => {
     if (req.url === '/login') return;
-    }
   try {
     const token = req.cookies.token;
     await app.jwt.verify(token);
