@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from prometheus_client import (
     CollectorRegistry,
     Counter,
-    Gauge,
+    Histogram,
     ProcessCollector,
     GCCollector,
     generate_latest,
@@ -34,10 +34,11 @@ ProcessCollector(registry=registry)
 GCCollector(registry=registry)
 
 request_count = Counter('request_count', 'Total HTTP requests', registry=registry)
-average_latency = Gauge('average_latency', 'Average request latency in seconds', registry=registry)
-
-_total_latency = 0.0
-_total_requests = 0
+request_latency = Histogram(
+    'request_latency_seconds',
+    'Request latency in seconds',
+    registry=registry,
+)
 
 # In-memory trade store
 MAX_TRADES = 1000
@@ -111,12 +112,9 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    global _total_latency, _total_requests
     latency = time.time() - g.start_time
-    _total_latency += latency
-    _total_requests += 1
     request_count.inc()
-    average_latency.set(_total_latency / _total_requests)
+    request_latency.observe(latency)
     return response
 
 @app.route('/')
