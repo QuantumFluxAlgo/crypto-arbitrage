@@ -9,6 +9,11 @@ public class Main {
         String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
         int redisPort = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
         String redisChannel = System.getenv().getOrDefault("REDIS_CHANNEL", "spreads");
+        
+        double startingBalance = Double.parseDouble(System.getenv().getOrDefault("STARTING_BALANCE", "10000"));
+        String analyticsUrl = System.getenv().getOrDefault("ANALYTICS_URL", "http://localhost:5000/trade");
+
+        ProfitTracker.init(startingBalance, analyticsUrl);
 
         Connection conn = null;
         try {
@@ -31,7 +36,7 @@ public class Main {
         RedisClient redisClient = new RedisClient(redisHost, redisPort, redisChannel,
                 (ch, msg) -> holder[0].handleMessage(msg));
 
-        holder[0] = new Executor(redisClient, riskFilter, nearMissLogger);
+        holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger);
         holder[0].start();
     }
 }

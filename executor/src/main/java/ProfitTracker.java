@@ -11,6 +11,21 @@ public class ProfitTracker {
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
 
+    private static double startingBalance = 10_000.0;
+    private static String analyticsUrl = "http://localhost:5000/trade";
+
+    /**
+     * Initialize the tracker with starting capital and analytics endpoint.
+     *
+     * @param startBalance initial account balance used for loss calculations
+     * @param url analytics endpoint to send trade PnL data
+     */
+    public static void init(double startBalance, String url) {
+        startingBalance = startBalance;
+        analyticsUrl = url;
+        logger.info("ProfitTracker initialized: startingBalance={}, analyticsUrl={}", startBalance, url);
+    }
+
     /**
      * Record profit or loss from a trade.
      * Updates both the daily total and the global total.
@@ -21,7 +36,7 @@ public class ProfitTracker {
         dailyTotal += pnl;
         globalTotal += pnl;
         try {
-            URL url = new URL("http://localhost:5000/trade");
+            URL url = new URL(analyticsUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -41,13 +56,11 @@ public class ProfitTracker {
     }
 
     /**
-     * Get today's loss as a percentage of starting capital.
-     * For simplicity we assume a fixed starting balance of $10,000.
+     * Get today's loss as a percentage of the configured starting capital.
      *
      * @param pnl profit (positive) or loss (negative)
      */
     public static double getDailyLossPct() {
-        double startingBalance = 10_000.0;
         if (dailyTotal >= 0) {
             return 0.0;
         }
