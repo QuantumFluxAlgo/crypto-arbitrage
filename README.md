@@ -79,4 +79,15 @@ python analytics/app.py
 
 POST `/predict` with JSON array of spreads to receive model probabilities.
 
+## Monitoring
+
+We track system health and errors using multiple services:
+
+- **Sentry** – captures runtime errors from the Dashboard and API.
+  - `VITE_SENTRY_DSN` (dashboard)
+  - `API_SENTRY_DSN` (api)
+- **StatusCake** – uptime monitoring for all HTTP endpoints.
+  - `STATUSCAKE_API_TOKEN`
+- **Prometheus** – collects metrics from the Analytics and Executor agents.
+  - `PROMETHEUS_URL`
 
