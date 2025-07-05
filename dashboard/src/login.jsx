@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function Login() {
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
     try {
-      // TODO: replace with real login request
-      const success = true;
-      if (success) {
+      const res = await axios.post('/api/login', { email, password });
+      if (res.status === 200) {
         console.log('Login successful');
-      } else {
-        throw new Error('Invalid credentials');
+        setError(null);
       }
     } catch (err) {
-      setError(err);
+      const msg = err.response?.data?.error || 'Invalid credentials';
+      setError(new Error(msg));
       console.log('Login failed', err);
     }
   };

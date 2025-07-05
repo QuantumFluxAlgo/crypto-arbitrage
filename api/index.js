@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
+import crypto from 'crypto';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -18,9 +19,17 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()]
 });
 
+const hash = (str) =>
+  crypto.createHash('sha256').update(str).digest('hex');
+
+const users = {
+  user: hash('pass'),
+};
+
 app.post('/login', async (req, reply) => {
     const { email, password } = req.body;
-  if (email && password) {
+    const stored = users[email];
+    if (stored && stored === hash(password)) {
     const token = app.jwt.sign({ email });
     reply.setCookie('token', token, { httpOnly: true });
     return { ok: true };

@@ -11,6 +11,14 @@ describe('API authentication', () => {
       expect(res.headers['set-cookie']).toBeDefined();
     });
 
+    test('/login rejects invalid credentials', async () => {
+      const res = await request('http://localhost:8080').post('/login').send({
+        email: 'user',
+        password: 'wrong'
+      });
+      expect(res.statusCode).toBe(401);
+    });
+
     test('/opportunities requires auth', async () => {
       const unauth = await request('http://localhost:8080').get('/opportunities');
       expect(unauth.statusCode).toBe(401);
