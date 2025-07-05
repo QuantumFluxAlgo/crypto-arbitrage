@@ -20,6 +20,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
     private final ResumeHandler resumeHandler;
+    private final String redisHost;
+    private final int redisPort;
     private Connection dbConnection;
     private TradeLogger tradeLogger;
 
@@ -31,9 +33,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private long cumulativeLatencyMs;
     private boolean isPanic;
 
-    public Executor(RedisClient redisClient, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
+    public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
-        this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis("localhost", 6379), this);
+        this.redisHost = redisHost;
+        this.redisPort = redisPort;
+        this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis(redisHost, redisPort), this);
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
     }
