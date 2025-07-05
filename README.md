@@ -1,93 +1,99 @@
 # 🪙 Crypto Arbitrage
 
-A multi-agent, multi-service platform for real-time cryptocurrency arbitrage detection, execution, and monitoring.
-
-![MIT License](https://img.shields.io/badge/license-MIT-green.svg)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)
+![CI](https://github.com/QuantumFluxAlgo/crypto-arbitrage/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Sentry](https://img.shields.io/badge/sentry-monitoring-orange)
 
 ---
 
-## 📈 Overview
+## Overview
 
-**Crypto Arbitrage** is a high-performance system that identifies and executes arbitrage opportunities across multiple centralized exchanges.  
-It uses autonomous agents coordinated through **Redis** (pub/sub messaging) and **PostgreSQL** (state persistence), all observable via a real-time dashboard.
-
----
-
-## ⚙️ Features
-
-Each agent is encapsulated by role, designed for modularity and fault isolation:
-
-| Agent | Description |
-|-------|-------------|
-| [**Executor Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L7-L13) | Java service that detects real-time arbitrage spreads and executes trades atomically. |
-| [**API Gateway Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L17-L25) | Node.js service exposing RESTful endpoints like `/opportunities`, `/settings`, and `/login`. |
-| [**Dashboard Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L29-L33) | Mobile-friendly React interface for toggling modes, latency constraints, and loss thresholds. |
-| [**Feed Aggregator Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L37-L41) | Consolidates exchange price feeds and publishes to Redis in real-time. |
-| [**Rebalancer Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L45-L50) | Rebalances hot wallets and executes NAV-based sweeps to cold storage. |
-| [**Analytics Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L54-L58) | Python service running an LSTM model for price spread prediction; exposes Prometheus metrics. |
-| [**Alert Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L62-L69) | Dispatches notifications for anomalies, drawdowns, mode changes, and agent failures. |
-| [**Circuit Breaker Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L73-L79) | Shuts down trading activities when defined risk thresholds are exceeded. |
-| [**Scheduler Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L83-L88) | Orchestrates periodic jobs: rebalancing, metrics aggregation, and historical backups. |
-| [**Secret Manager Agent**](https://github.com/QuantumFluxAlgo/crypto-arbitrage/blob/develop/docs/agents.md#L92-L95) | Handles encrypted secrets via `kubeseal` and Kubernetes `sealed-secrets`. |
+**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana.
 
 ---
 
-## 💻 Requirements
+## Features
 
-Tested environments:
-
-- macOS 13+ (Monterey or later)
-- [Xcode Command Line Tools](https://developer.apple.com/xcode/)
-- [`colima`](https://github.com/abiosoft/colima) with `podman` runtime
-- Local service dependencies (see agent subdirectories)
+- Real-time order book aggregation across 14 exchanges
+- Java executor for sub-60µs trade execution
+- REST API with JWT authentication
+- React dashboard for live monitoring
+- Predictive analytics with optional GPU acceleration
+- Alerting and circuit breaking for risk management
 
 ---
 
-## 🚀 Dev Setup
+## Architecture
 
-To spin up your development environment:
-
-```bash
-colima start --runtime podman
+```mermaid
+graph TD
+  FeedAggregator[Feed Aggregator] --> Redis[(Redis)]
+  Redis --> Executor[Executor]
+  Executor --> API[API Gateway]
+  API --> Dashboard
+  Executor --> Analytics
+  Analytics --> Prometheus[(Prometheus)]
+  Executor --> Postgres[(PostgreSQL)]
 ```
 
-## 🛠️ Environment Setup
+---
 
-Run the verification script to confirm required tools are installed:
+## Setup
 
-```bash
-bash test/verify-env.sh
-```
+1. Start Colima using the Podman runtime:
+   ```bash
+   colima start --runtime podman
+   ```
+2. Install dependencies and charts:
+   ```bash
+   helm dependency update infra/helm
+   helm install arb infra/helm
+   ```
 
-The script checks for **Jest**, **PyTest**, and **Maven**. If a tool is missing, the script exits with an error.
+---
 
-## Analytics API
+## Envs & Secrets
 
-Install dependencies:
+Environment examples are provided in `api/.env.example` and `analytics/.env.example`. Secrets should be sealed with `kubeseal` before committing. Key variables include:
 
-```bash
-pip install -r requirements.txt
-```
+- `JWT_SECRET` – token signing key
+- `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`
+- `SENTRY_DSN` for API error reporting
+- `VITE_SENTRY_DSN` for dashboard errors
 
-Run the Flask app:
+---
 
-```bash
-python analytics/app.py
-```
+## Running Tests
 
-POST `/predict` with JSON array of spreads to receive model probabilities.
+- **Jest** for the dashboard and API:
+  ```bash
+  npx jest
+  ```
+- **PyTest** for analytics:
+  ```bash
+  pytest
+  ```
+- **Maven** for the executor:
+  ```bash
+  mvn test
+  ```
+
+---
 
 ## Monitoring
 
-We track system health and errors using multiple services:
+- **Sentry** captures runtime exceptions
+- **Prometheus** scrapes metrics from all agents
+- **StatusCake** monitors uptime of public endpoints
 
-- **Sentry** – captures runtime errors from the Dashboard and API.
-  - `VITE_SENTRY_DSN` (dashboard)
-  - `API_SENTRY_DSN` (api)
-- **StatusCake** – uptime monitoring for all HTTP endpoints.
-  - `STATUSCAKE_API_TOKEN`
-- **Prometheus** – collects metrics from the Analytics and Executor agents.
-  - `PROMETHEUS_URL`
+---
 
+## Deployment
+
+The platform runs on a Xeon host and is orchestrated by Kubernetes. Deploy or upgrade services using Helm charts located in `infra/helm`.
+
+---
+
+## License
+
+Released under the [MIT](LICENSE) license.
