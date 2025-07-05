@@ -57,14 +57,20 @@ def record_trade(pnl: float, timestamp: float | None = None) -> None:
 def compute_stats():
     """Compute aggregate PnL and Sharpe ratio for all stored trades."""
     if not trades:
-        return {'pnl': 0, 'sharpe': 0}
-    pnl_array = np.array([t['pnl'] for t in trades])
+        return {"pnl": 0, "sharpe": 0}
+
+    pnl_array = np.array([t["pnl"] for t in trades], dtype=np.float32)
     pnl = pnl_array.sum()
-    if pnl_array.std() == 0:
-        sharpe = 0
+    if len(pnl_array) < 2:
+        sharpe = 0.0
     else:
-        sharpe = pnl_array.mean() / pnl_array.std() * np.sqrt(len(pnl_array))
-    return {'pnl': float(pnl), 'sharpe': float(sharpe)}
+        std = pnl_array.std(ddof=1)
+        if std == 0:
+            sharpe = 0.0
+        else:
+            sharpe = pnl_array.mean() / std
+
+    return {"pnl": float(pnl), "sharpe": float(sharpe)}
 
 
 def rolling_pnl(window: int = 50) -> float:

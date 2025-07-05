@@ -24,4 +24,4 @@ def test_stats_endpoint_returns_metrics():
     assert resp.status_code == 200
     data = resp.get_json()
     assert data['pnl'] == approx(2.0)
-    assert data['sharpe'] == approx(0.92582009977, rel=1e-6)
+    assert data['sharpe'] == approx(0.43643578047, rel=1e-6)
