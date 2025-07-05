@@ -31,59 +31,61 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install podman
 
-      - name: Build containers
-        run: |
-          for dir in api dashboard analytics executor; do
-            if [ -d "$dir" ]; then
-              podman build "$dir"
-            else
-              echo "Directory $dir not found, skipping build"
-            fi
-          done
-          
       - name: Validate Kubernetes YAML
         run: kubectl apply --dry-run=client -f infra/k8s/
-
-      - name: Run Trivy scan on arb-api
-        uses: aquasecurity/trivy-action@v0.11.2
-        with:
-          image-ref: arb-api
-          format: table
-          exit-code: 1
-
-      - name: Run Trivy scan on arb-dashboard
-        uses: aquasecurity/trivy-action@v0.11.2
-        with:
-          image-ref: arb-dashboard
-          format: table
-          exit-code: 1
-
-      - name: Run Trivy scan on arb-analytics
-        uses: aquasecurity/trivy-action@v0.11.2
-        with:
-          image-ref: arb-analytics
-          format: table
-          exit-code: 1
-
-      - name: Run Trivy scan on arb-executor
-        uses: aquasecurity/trivy-action@v0.11.2
-        with:
-          image-ref: arb-executor
-          format: table
-          exit-code: 1
 
       - name: Run API tests
         run: npm test
         working-directory: api
 
+      - name: Build api image
+        run: podman build -t api ./api
+
+      - name: Run Trivy scan on api
+        uses: aquasecurity/trivy-action@v0.11.2
+        with:
+          image-ref: api
+          format: table
+          exit-code: 1
+
       - name: Run Dashboard tests
         run: npx jest
         working-directory: dashboard
 
+      - name: Build dashboard image
+        run: podman build -t dashboard ./dashboard
+
+      - name: Run Trivy scan on dashboard
+        uses: aquasecurity/trivy-action@v0.11.2
+        with:
+          image-ref: dashboard
+          format: table
+          exit-code: 1
+
       - name: Run Analytics tests
         run: pytest
         working-directory: analytics
+        
+      - name: Build analytics image
+        run: podman build -t analytics ./analytics
+
+      - name: Run Trivy scan on analytics
+        uses: aquasecurity/trivy-action@v0.11.2
+        with:
+          image-ref: analytics
+          format: table
+          exit-code: 1
 
       - name: Run Executor tests
         run: mvn test
         working-directory: executor
+        
+      - name: Build executor image
+        run: podman build -t executor ./executor
+
+      - name: Run Trivy scan on executor
+        uses: aquasecurity/trivy-action@v0.11.2
+        with:
+          image-ref: executor
+          format: table
+          exit-code: 1
