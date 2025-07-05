@@ -41,3 +41,8 @@ public class ResumeHandler {
          });
          thread.start();
      }
+
+    public interface ResumeCapable {
+        void resumeFromPanic();
+    }
+}

@@ -3,7 +3,7 @@ package safety;
 /**
  * Utility class that determines when trading should halt based on a few
  * safety thresholds.  All thresholds are fixed and checked in the static
- * {@link #shouldHalt(float, float, float)} method.
+ * {@link #shouldHalt(double, double, double)} method.
  */
 public class PanicBrake {
     /**
@@ -15,8 +15,8 @@ public class PanicBrake {
      * @return {@code true} if trading should halt
      */
 
-    public static boolean shouldHalt(float dailyLossPct, float avgLatencyMs, float winRate) {
-        return dailyLossPct > 3 || avgLatencyMs > 500 || winRate < 0.4;
+    public static boolean shouldHalt(double dailyLossPct, double avgLatencyMs, double winRate) {
+        return dailyLossPct > 3.0 || avgLatencyMs > 500.0 || winRate < 0.4;
     }
 }
 
