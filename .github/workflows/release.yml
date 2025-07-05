@@ -1,6 +1,3 @@
-+30
--7
-
 name: Release
 on:
   release:
@@ -48,6 +45,7 @@ jobs:
 
       - name: Generate SBOMs
         run: |
+          set -e
           syft dashboard:latest -o json > sbom-dashboard.json
           syft api:latest -o json > sbom-api.json
           syft executor:latest -o json > sbom-executor.json
