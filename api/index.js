@@ -30,6 +30,16 @@ const pool = new Pool({
   password: process.env.PGPASSWORD || ''
 });
 
+let redis;
+if (process.env.NODE_ENV === 'test') {
+  redis = { publish: async () => 1 };
+} else {
+  redis = new Redis({
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379
+  });
+}
+
 const hash = (str) =>
   crypto.createHash('sha256').update(str).digest('hex');
 
@@ -81,6 +91,10 @@ app.get('/trades/history', async (req, reply) => {
   }
 });
 app.get('/metrics', async () => ({ status: 'ok' }));
+app.post('/resume', async () => {
+  await redis.publish('control-feed', 'resume');
+  return { resumed: true };
+});
 app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     
   if (err) { logger.error(err); process.exit(1); }

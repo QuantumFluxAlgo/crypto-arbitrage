@@ -1,4 +1,5 @@
 import request from 'supertest';
+process.env.NODE_ENV = 'test';
 import app from '../index.js';
 
 describe('API authentication', () => {
@@ -75,6 +76,19 @@ describe('API authentication', () => {
     test('/resume requires auth', async () => {
       const res = await request('http://localhost:8080').post('/resume');
       expect(res.statusCode).toBe(401);
+    });
+    
+
+    test('/resume publishes message', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .post('/resume')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({ resumed: true });
     });
     
     test('/trades/history requires auth', async () => {
