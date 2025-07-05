@@ -1,10 +1,13 @@
++30
+-7
+
 name: Release
 on:
   release:
     types: [created]
 
 jobs:
-  build-dashboard:
+  release-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -15,22 +18,45 @@ jobs:
         with:
           node-version: 18
 
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Podman
         run: |
           sudo apt-get update
           sudo apt-get -y install podman
 
-      - name: Build dashboard image
-        run: podman build -t dashboard ./dashboard
+      - name: Build service images
+        run: |
+          podman build -t dashboard ./dashboard
+          podman build -t api ./api
+          podman build -t executor ./executor
+          podman build -t analytics ./analytics
+          podman build -t feed-aggregator ./feed-aggregator
 
       - name: Install Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
 
-      - name: Generate SBOM
-        run: syft dashboard:latest -o json > sbom-dashboard.json
+      - name: Generate SBOMs
+        run: |
+          syft dashboard:latest -o json > sbom-dashboard.json
+          syft api:latest -o json > sbom-api.json
+          syft executor:latest -o json > sbom-executor.json
+          syft analytics:latest -o json > sbom-analytics.json
+          syft feed-aggregator:latest -o json > sbom-feed-aggregator.json
 
-      - name: Upload SBOM
+      - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: sbom-*.json
+          files: |
+            sbom-*.json
+            changelog.md
