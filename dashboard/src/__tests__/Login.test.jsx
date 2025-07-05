@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Login from '../login.jsx';
+import Login from '../pages/Login.jsx';
 
 test('renders email, password inputs and submit button', () => {
   render(<Login />);
