@@ -7,6 +7,7 @@ import Redis from 'ioredis';
 import pg from 'pg';
 import loginRoute from './routes/login.js';
 import { sendAlert } from './services/alertManager.js';
+import infraRoutes from './routes/infra.js';
 const { Pool } = pg;
 
 Sentry.init({
@@ -51,13 +52,12 @@ const alertSettings = {
 app.register(loginRoute);
 
 app.addHook('onRequest', async (req, reply) => {
-    if (req.url === '/login') {
-      return;
+    if (req.url === '/login') return;
     }
   try {
     const token = req.cookies.token;
-      await app.jwt.verify(token);
-    } catch {
+    await app.jwt.verify(token);
+  } catch {
     reply.code(401).send({ error: 'unauthorized' });
   }
 });
@@ -110,17 +110,8 @@ app.post('/resume', async () => {
   return { resumed: true };
 });
 
-app.get('/infra/status', async () => ({
-  pods: [
-    { name: 'api', status: 'Running' },
-    { name: 'analytics', status: 'Running' },
-    { name: 'executor', status: 'Running' },
-    { name: 'dashboard', status: 'Running' }
-  ],
-  gpu: 70,
-  db: true,
-  redis: true
-}));
+app.register(infraRoutes, { redis, pool });
+
 app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     
   if (err) { logger.error(err); process.exit(1); }
