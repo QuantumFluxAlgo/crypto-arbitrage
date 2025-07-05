@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Pre-push hook to run project tests
-# Runs npm test, pytest, and mvn test
+# Runs npm test, pytest, and Gradle tests
 # Stops push if any test fails
 
 failed=0
@@ -28,15 +28,23 @@ else
     echo "pytest not found. Skipping pytest."
 fi
 
-if command -v mvn >/dev/null 2>&1; then
-    echo "Running mvn test..."
-    mvn test
+if [ -f ./gradlew ]; then
+    echo "Running ./gradlew test..."
+    ./gradlew test
     if [ $? -ne 0 ]; then
-        echo "mvn test failed." >&2
+        echo "gradle test failed." >&2
+        failed=1
+    fi
+elif command -v gradle >/dev/null 2>&1; then
+    echo "Running gradle test..."
+    gradle test
+    if [ $? -ne 0 ]; then
+        echo "gradle test failed." >&2
+
         failed=1
     fi
 else
-    echo "mvn not found. Skipping mvn test."
+    echo "Gradle not found. Skipping gradle test."
 fi
 
 if [ $failed -ne 0 ]; then
