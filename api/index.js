@@ -97,6 +97,18 @@ app.post('/resume', async () => {
   await redis.publish('control-feed', 'resume');
   return { resumed: true };
 });
+
+app.get('/infra/status', async () => ({
+  pods: [
+    { name: 'api', status: 'Running' },
+    { name: 'analytics', status: 'Running' },
+    { name: 'executor', status: 'Running' },
+    { name: 'dashboard', status: 'Running' }
+  ],
+  gpu: 70,
+  db: true,
+  redis: true
+}));
 app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     
   if (err) { logger.error(err); process.exit(1); }

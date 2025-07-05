@@ -117,6 +117,19 @@ describe('API authentication', () => {
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
     });
+
+    test('/infra/status returns infra summary', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .get('/infra/status')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('pods');
+      expect(Array.isArray(res.body.pods)).toBe(true);
+    });
 });
 
   afterAll(async () => {
