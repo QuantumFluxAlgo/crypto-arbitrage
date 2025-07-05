@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
+import Redis from 'ioredis';
 import crypto from 'crypto';
 import pg from 'pg';
 const { Pool } = pg;
