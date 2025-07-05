@@ -73,9 +73,9 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
   ```bash
   pytest
   ```
-- **Maven** for the executor:
+- **Gradle** for the executor:
   ```bash
-  mvn test
+  ./gradlew test
   ```
 
 ---
