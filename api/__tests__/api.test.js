@@ -91,6 +91,18 @@ describe('API authentication', () => {
       expect(res.body).toEqual({ resumed: true });
     });
     
+    test('/logout clears cookie', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .post('/logout')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({ loggedOut: true });
+    });
+    
     test('/trades/history requires auth', async () => {
         const unauth = await request('http://localhost:8080').get('/trades/history');
         expect(unauth.statusCode).toBe(401);

@@ -89,6 +89,10 @@ app.get('/trades/history', async (req, reply) => {
   }
 });
 app.get('/metrics', async () => ({ status: 'ok' }));
+app.post('/logout', async (req, reply) => {
+  reply.clearCookie('token');
+  return { loggedOut: true };
+});
 app.post('/resume', async () => {
   await redis.publish('control-feed', 'resume');
   return { resumed: true };
