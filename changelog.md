@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Batch 11] - 2025-07-05
+
+### Added
+- Login screen + JWT AuthContext
+- Full dashboard layout with equity + trade metrics
+- Settings UI with live patching
+- Analytics charts and LSTM prediction view
+- Infra status dashboard
+- Alert configuration form with test buttons
+
+### Backend
+- JWT login API
+- Settings API controller
+
 ## [Batch 10] - 2025-07-11
 
 ### Added
