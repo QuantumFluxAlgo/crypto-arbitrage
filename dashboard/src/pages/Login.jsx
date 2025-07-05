@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // adjust path if needed
+import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.svg";
 
 /**
  * Login page with email/password form.
@@ -27,15 +28,16 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="relative flex min-h-screen items-center justify-center bg-background text-text">
+      <img src={logo} alt="Prism Arbitrage" className="absolute left-4 top-4 h-12" />
       <form
         onSubmit={handleSubmit}
-        className="w-80 rounded bg-white p-6 shadow-md"
+        className="w-full rounded border px-3 py-2 text-black"
       >
-        <h1 className="mb-4 text-center text-2xl font-semibold">Login</h1>
+        <h1 className="mb-4 text-center text-2xl font-semibold">Prism Arbitrage</h1>
 
         {error && (
-          <div className="mb-3 text-sm text-red-500" data-testid="login-error">
+          <div className="mb-3 text-sm text-error" data-testid="login-error">
             {error}
           </div>
         )}
@@ -61,7 +63,7 @@ export default function Login() {
           <input
             id="password"
             type="password"
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded border px-3 py-2 text-black"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -70,9 +72,9 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700"
+          className="w-full rounded bg-primary py-2 text-white hover:bg-primary/80"
         >
-          Sign In
+          LOG IN
         </button>
       </form>
     </div>
