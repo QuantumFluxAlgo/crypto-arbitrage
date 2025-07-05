@@ -4,7 +4,7 @@ import app from '../index.js';
 
 describe('API authentication', () => {
     test('/login returns a cookie', async () => {
-        const res = await request('http://localhost:8080').post('/login').send({
+        const res = await request('http://localhost:8080').post('/api/login').send({
             email: 'user',
             password: 'pass'
         });
@@ -13,7 +13,7 @@ describe('API authentication', () => {
     });
     
     test('/login rejects invalid credentials', async () => {
-        const res = await request('http://localhost:8080').post('/login').send({
+        const res = await request('http://localhost:8080').post('/api/login').send({
             email: 'user',
             password: 'wrong'
         });
@@ -25,7 +25,7 @@ describe('API authentication', () => {
         expect(unauth.statusCode).toBe(401);
         
         const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
         const cookie = login.headers['set-cookie'][0].split(';')[0];
         const authRes = await request('http://localhost:8080')
@@ -39,7 +39,7 @@ describe('API authentication', () => {
       expect(res.statusCode).toBe(401);
 
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const authRes = await request('http://localhost:8080')
@@ -50,7 +50,7 @@ describe('API authentication', () => {
 
     test('GET /settings returns empty object', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
@@ -62,7 +62,7 @@ describe('API authentication', () => {
 
     test('POST /settings saves settings', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
@@ -81,7 +81,7 @@ describe('API authentication', () => {
 
     test('/resume publishes message', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
@@ -93,7 +93,7 @@ describe('API authentication', () => {
     
     test('/logout clears cookie', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
@@ -108,7 +108,7 @@ describe('API authentication', () => {
         expect(unauth.statusCode).toBe(401);
         
         const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
         const cookie = login.headers['set-cookie'][0].split(';')[0];
         const res = await request('http://localhost:8080')
@@ -120,7 +120,7 @@ describe('API authentication', () => {
 
     test('POST /alerts/test/email returns 200', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
@@ -131,7 +131,7 @@ describe('API authentication', () => {
 
     test('/infra/status returns infra summary', async () => {
       const login = await request('http://localhost:8080')
-        .post('/login')
+        .post('/api/login')
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
