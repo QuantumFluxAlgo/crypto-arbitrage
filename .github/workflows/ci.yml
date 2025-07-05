@@ -40,6 +40,9 @@ jobs:
               echo "Directory $dir not found, skipping build"
             fi
           done
+          
+      - name: Validate Kubernetes YAML
+        run: kubectl apply --dry-run=client -f infra/k8s/
 
       - name: Run Trivy scan on arb-api
         uses: aquasecurity/trivy-action@v0.11.2
