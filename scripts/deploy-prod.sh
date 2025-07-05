@@ -21,16 +21,19 @@ log "Installing containerd and podman"
 apt-get install -y containerd podman
 
 log "Installing Kubernetes components"
-apt-get install -y apt-transport-https ca-certificates curl
-curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-cat <<EOFAPT >/etc/apt/sources.list.d/kubernetes.list
-deb https://apt.kubernetes.io/ kubernetes-xenial main
-EOFAPT
-apt-get update -y
+apt-get install -y apt-transport-https ca-certificates curl gnupg
+curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg \
+  https://packages.cloud.google.com/apt/doc/apt-key.gpg
+curl -fsSLo /etc/apt/sources.list.d/kubernetes.list \
+  https://packages.cloud.google.com/apt/doc/kubernetes.listapt-get update -y
 apt-get install -y kubelet kubeadm kubectl
 
 log "Installing Helm"
-curl https://baltocdn.com/helm/signing.asc | apt-key add -
+curl -fsSLo /usr/share/keyrings/helm.gpg \
+  https://baltocdn.com/helm/signing.asc
+curl -fsSLo /etc/apt/sources.list.d/helm-stable-debian.list \
+  https://baltocdn.com/helm/stable/debian/helm.repo
+apt-get update -y
 apt-get install -y helm
 
 log "Initializing Kubernetes cluster"
