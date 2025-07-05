@@ -7,15 +7,16 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-      "winston": "^3.10.0",
-      "axios": "^1.10.0",
-    "fastify": "^5.4.0",
-    "@fastify/jwt": "^9.1.0",
     "@fastify/cookie": "^11.0.2",
-    "@sentry/node": "^7.100.0"
-    },
-    "devDependencies": {
-      "supertest": "^6.3.3",
-      "jest": "^30.0.3"
+    "@fastify/jwt": "^9.1.0",
+    "@sentry/node": "^7.100.0",
+    "axios": "^1.10.0",
+    "fastify": "^5.4.0",
+    "pg": "^8.11.0",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.3",
+    "supertest": "^6.3.3"
   }
 }

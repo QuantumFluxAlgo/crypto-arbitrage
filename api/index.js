@@ -4,6 +4,8 @@ import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
 import crypto from 'crypto';
+import pg from 'pg';
+const { Pool } = pg;
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -17,6 +19,14 @@ app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
 const logger = winston.createLogger({
   level: 'info',
   transports: [new winston.transports.Console()]
+});
+
+const pool = new Pool({
+  host: process.env.PGHOST || 'localhost',
+  port: process.env.PGPORT || 5432,
+  database: process.env.PGDATABASE || 'arbdb',
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD || ''
 });
 
 const hash = (str) =>
@@ -54,6 +64,21 @@ app.addHook('onError', async (req, reply, error) => {
 app.get('/opportunities', async () => []);
 app.get('/settings', async () => ({}));
 app.post('/settings', async req => ({ saved: true }));
+app.get('/trades/history', async (req, reply) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT pair, pnl, timestamp FROM trades ORDER BY timestamp DESC LIMIT 50'
+    );
+    return rows.map(row => ({
+      pair: row.pair,
+      PnL: row.pnl,
+      timestamp: row.timestamp
+    }));
+  } catch (err) {
+    req.log.error(err);
+    return [];
+  }
+});
 app.get('/metrics', async () => ({ status: 'ok' }));
 app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     

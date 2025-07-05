@@ -3,36 +3,51 @@ import app from '../index.js';
 
 describe('API authentication', () => {
     test('/login returns a cookie', async () => {
-      const res = await request('http://localhost:8080').post('/login').send({
-        email: 'user',
-        password: 'pass'
-      });
-      expect(res.statusCode).toBe(200);
-      expect(res.headers['set-cookie']).toBeDefined();
+        const res = await request('http://localhost:8080').post('/login').send({
+            email: 'user',
+            password: 'pass'
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.headers['set-cookie']).toBeDefined();
     });
-
+    
     test('/login rejects invalid credentials', async () => {
-      const res = await request('http://localhost:8080').post('/login').send({
-        email: 'user',
-        password: 'wrong'
-      });
-      expect(res.statusCode).toBe(401);
+        const res = await request('http://localhost:8080').post('/login').send({
+            email: 'user',
+            password: 'wrong'
+        });
+        expect(res.statusCode).toBe(401);
     });
-
+    
     test('/opportunities requires auth', async () => {
-      const unauth = await request('http://localhost:8080').get('/opportunities');
-      expect(unauth.statusCode).toBe(401);
-
+        const unauth = await request('http://localhost:8080').get('/opportunities');
+        expect(unauth.statusCode).toBe(401);
+        
         const login = await request('http://localhost:8080')
-          .post('/login')
-          .send({ email: 'user', password: 'pass' });
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
         const cookie = login.headers['set-cookie'][0].split(';')[0];
         const authRes = await request('http://localhost:8080')
         .get('/opportunities')
         .set('Cookie', cookie);
-      expect(authRes.statusCode).toBe(200);
+        expect(authRes.statusCode).toBe(200);
     });
-  });
+    
+    test('/trades/history requires auth', async () => {
+        const unauth = await request('http://localhost:8080').get('/trades/history');
+        expect(unauth.statusCode).toBe(401);
+        
+        const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+        const cookie = login.headers['set-cookie'][0].split(';')[0];
+        const res = await request('http://localhost:8080')
+        .get('/trades/history')
+        .set('Cookie', cookie);
+        expect(res.statusCode).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
+    });
+});
 
   afterAll(async () => {
     await app.close();
