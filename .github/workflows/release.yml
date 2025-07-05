@@ -1,0 +1,36 @@
+name: Release
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
+
+      - name: Build dashboard image
+        run: podman build -t dashboard ./dashboard
+
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: syft dashboard:latest -o json > sbom-dashboard.json
+
+      - name: Upload SBOM
+        uses: softprops/action-gh-release@v1
+        with:
+          files: sbom-*.json
