@@ -5,6 +5,9 @@ import domain.TradeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import safety.PanicBrake;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 /**
  * Executor agent responsible for executing arbitrage opportunities.
  * Implements {@link ResumeHandler.ResumeCapable} to handle resume signals.
@@ -17,6 +20,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
     private final ResumeHandler resumeHandler;
+    private Connection dbConnection;
+    private TradeLogger tradeLogger;
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -34,6 +39,20 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     }
 
     public void start() {
+        try {
+            String host = System.getenv().getOrDefault("PGHOST", "localhost");
+            String port = System.getenv().getOrDefault("PGPORT", "5432");
+            String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
+            String user = System.getenv().getOrDefault("PGUSER", "postgres");
+            String password = System.getenv().getOrDefault("PGPASSWORD", "");
+            String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+            dbConnection = DriverManager.getConnection(url, user, password);
+            tradeLogger = new TradeLogger(dbConnection);
+            logger.info("Database connection established");
+        } catch (SQLException e) {
+            logger.error("Failed to connect to database", e);
+        }
+        
         logger.info("Starting Redis client thread");
         redisClient.start();
         logger.info("Starting ResumeHandler thread");
@@ -70,7 +89,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         updatePerformanceMetrics(result);
 
         if (result.success) {
-            TradeLogger.log(opp, result.pnl);
+            if (tradeLogger != null) {
+                tradeLogger.logTrade(opp, result.pnl);
+            }
             ProfitTracker.record(result.pnl);
             dailyLossPct = ProfitTracker.getDailyLossPct();
         } else {
@@ -106,5 +127,16 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeFromPanic() {
         isPanic = false;
         logger.info("PANIC RESUME SIGNAL RECEIVED");
+    }
+
+    public void shutdown() {
+        redisClient.shutdown();
+        try {
+            if (dbConnection != null && !dbConnection.isClosed()) {
+                dbConnection.close();
+            }
+        } catch (SQLException e) {
+            logger.error("Error closing database connection", e);
+        }
     }
 }
