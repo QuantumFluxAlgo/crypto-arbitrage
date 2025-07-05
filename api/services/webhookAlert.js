@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
@@ -23,5 +23,4 @@ async function sendWebhook(payload, attempt = 1) {
   }
 }
 
-module.exports = { sendWebhook };
-
+export { sendWebhook };

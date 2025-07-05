@@ -4,8 +4,8 @@ import fastifyCookie from '@fastify/cookie';
 import winston from 'winston';
 import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
-import bcrypt from 'bcryptjs';
 import pg from 'pg';
+import loginRoute from './routes/login.js';
 import { sendAlert } from './services/alertManager.js';
 const { Pool } = pg;
 
@@ -41,12 +41,6 @@ if (process.env.NODE_ENV === 'test') {
   });
 }
 
-const hash = (str) => bcrypt.hashSync(str, 10);
-
-const users = {
-  user: hash('pass'),
-};
-
 const alertSettings = {
   smtp_user: '',
   smtp_pass: '',
@@ -54,18 +48,12 @@ const alertSettings = {
   webhook_url: ''
 };
 
-app.post('/login', async (req, reply) => {
-    const { email, password } = req.body;
-    const stored = users[email];
-    if (stored && await bcrypt.compare(password, stored)) {
-    const token = app.jwt.sign({ email });
-    reply.setCookie('token', token, { httpOnly: true });
-    return { ok: true };
-  }
-  reply.code(401).send({ error: 'invalid credentials' });
-});
+app.register(loginRoute);
 
 app.addHook('onRequest', async (req, reply) => {
+    if (req.url === '/login') {
+      return;
+    }
   try {
     const token = req.cookies.token;
       await app.jwt.verify(token);

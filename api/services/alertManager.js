@@ -1,7 +1,7 @@
-const winston = require('winston');
-const { sendEmail } = require('./emailAlert');
-const { sendTelegram } = require('./telegramAlert');
-const { sendWebhook } = require('./webhookAlert');
+import winston from 'winston';
+import { sendEmail } from './emailAlert.js';
+import { sendTelegram } from './telegramAlert.js';
+import { sendWebhook } from './webhookAlert.js';
 
 const logger = winston.createLogger({
   level: 'info',
@@ -54,5 +54,4 @@ async function sendAlert(type, message) {
   }
 }
 
-module.exports = { sendAlert };
-
+export { sendAlert };
