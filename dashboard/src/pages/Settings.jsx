@@ -1,91 +1,125 @@
-// dashboard/src/pages/Settings.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 export default function Settings() {
-  const [form, setForm] = useState({
-    personality_mode: '',
-    loss_cap_pct: '',
-    coin_exposure_cap_pct: '',
+  const [settings, setSettings] = useState({
+    personality_mode: 'Conservative',
+    coin_cap_pct: 0,
+    loss_limit_pct: 0,
+    latency_limit_ms: 0,
+    sweep_cadence_s: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch existing settings
   useEffect(() => {
-    async function load() {
+    async function fetchSettings() {
       try {
         const { data } = await axios.get('/api/settings');
-        setForm({
-          personality_mode: data.personality_mode || '',
-          loss_cap_pct: data.loss_cap_pct || '',
-          coin_exposure_cap_pct: data.coin_exposure_cap_pct || '',
+        setSettings({
+          personality_mode: data.personality_mode ?? 'Conservative',
+          coin_cap_pct: data.coin_cap_pct ?? 0,
+          loss_limit_pct: data.loss_limit_pct ?? 0,
+          latency_limit_ms: data.latency_limit_ms ?? 0,
+          sweep_cadence_s: data.sweep_cadence_s ?? 0,
         });
-      } catch (err) {
+      } catch {
         setError('Unable to load settings');
       } finally {
         setLoading(false);
       }
     }
-    load();
+
+    fetchSettings();
   }, []);
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setSettings((s) => ({ ...s, [name]: Number(value) || value }));
   }
 
-  async function handleSave() {
+  async function saveSettings() {
     try {
-      await axios.post('/api/settings', form);
+      await axios.patch('/api/settings', settings);
       alert('Settings saved');
-    } catch (err) {
+    } catch {
       alert('Save failed');
     }
   }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-error">{error}</div>;
 
   return (
-    <div className="grid grid-cols-1 gap-6 p-6 max-w-xl m-auto">
-      <label className="flex flex-col">
-        <span className="text-gray-700">Personality Mode</span>
+    <div className="max-w-xl m-auto p-6 space-y-6 bg-surface text-text rounded shadow">
+      <div className="space-x-2">
+        {['Conservative', 'Balanced', 'Aggressive'].map((mode) => (
+          <button
+            key={mode}
+            className={`px-3 py-1 rounded ${
+              settings.personality_mode === mode ? 'bg-primary text-white' : 'bg-background'
+            }`}
+            onClick={() => setSettings((s) => ({ ...s, personality_mode: mode }))}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
+
+      <label className="block">
+        <span className="block mb-1">Coin Cap: {settings.coin_cap_pct}%</span>
         <input
-          className="mt-1 p-2 border rounded"
-          type="text"
-          name="personality_mode"
-          value={form.personality_mode}
+          type="range"
+          min="0"
+          max="100"
+          name="coin_cap_pct"
+          value={settings.coin_cap_pct}
           onChange={handleChange}
+          className="w-full"
         />
       </label>
-      <label className="flex flex-col">
-        <span className="text-gray-700">Loss Cap %</span>
+
+      <label className="block">
+        <span className="block mb-1">Loss Limit %</span>
         <input
-          className="mt-1 p-2 border rounded"
           type="number"
-          name="loss_cap_pct"
-          value={form.loss_cap_pct}
+          name="loss_limit_pct"
+          value={settings.loss_limit_pct}
           onChange={handleChange}
+          className="w-full rounded p-2 text-black"
         />
       </label>
-      <label className="flex flex-col">
-        <span className="text-gray-700">Coin Exposure Cap %</span>
+
+      <label className="block">
+        <span className="block mb-1">Latency Limit (ms)</span>
         <input
-          className="mt-1 p-2 border rounded"
           type="number"
-          name="coin_exposure_cap_pct"
-          value={form.coin_exposure_cap_pct}
+          name="latency_limit_ms"
+          value={settings.latency_limit_ms}
           onChange={handleChange}
+          className="w-full rounded p-2 text-black"
         />
       </label>
+
+      <label className="block">
+        <span className="block mb-1">Sweep Cadence: {settings.sweep_cadence_s}s</span>
+        <input
+          type="range"
+          min="0"
+          max="60"
+          name="sweep_cadence_s"
+          value={settings.sweep_cadence_s}
+          onChange={handleChange}
+          className="w-full"
+        />
+      </label>
+
       <button
-        className="p-2 bg-blue-600 text-white rounded"
-        onClick={handleSave}
+        className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+        onClick={saveSettings}
       >
         Save
       </button>
     </div>
   );
 }
-
