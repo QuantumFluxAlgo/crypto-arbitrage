@@ -77,7 +77,7 @@ jobs:
         working-directory: feed-aggregator
 
       - name: Run feed-aggregator tests
-        run: npm test
+        run: pytest
         working-directory: feed-aggregator
 
       - name: Build feed-aggregator image

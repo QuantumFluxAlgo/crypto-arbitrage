@@ -32,6 +32,36 @@ describe('API authentication', () => {
         .set('Cookie', cookie);
         expect(authRes.statusCode).toBe(200);
     });
+
+    test('GET /settings returns empty object', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .get('/settings')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({});
+    });
+
+    test('POST /settings saves settings', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .post('/settings')
+        .set('Cookie', cookie)
+        .send({ maxLoss: 0.1 });
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({ saved: true });
+    });
+
+    test('/resume requires auth', async () => {
+      const res = await request('http://localhost:8080').post('/resume');
+      expect(res.statusCode).toBe(401);
+    });
     
     test('/trades/history requires auth', async () => {
         const unauth = await request('http://localhost:8080').get('/trades/history');
