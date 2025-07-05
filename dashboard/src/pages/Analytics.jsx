@@ -45,7 +45,7 @@ export default function Analytics() {
                 {new Date(trade.timestamp).toLocaleString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">{trade.pair}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{trade.PnL}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{trade.pnl.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
