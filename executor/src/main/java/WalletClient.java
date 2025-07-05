@@ -1,3 +1,5 @@
+package executor;
+
 public interface WalletClient {
     /**
      * Withdraw funds from the hot wallet to the given address.

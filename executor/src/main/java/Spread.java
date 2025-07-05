@@ -1,3 +1,5 @@
+package executor;
+
 public class Spread {
     private final double edge;
     private final long latencyMs;

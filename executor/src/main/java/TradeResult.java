@@ -1,4 +1,4 @@
-package domain;
+package executor;
 
 public class TradeResult {
     public final boolean success;

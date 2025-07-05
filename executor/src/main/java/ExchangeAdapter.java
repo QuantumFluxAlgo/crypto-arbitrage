@@ -1,3 +1,5 @@
+package executor;
+
 public interface ExchangeAdapter {
     /**
      * Place an order on the exchange.

@@ -1,6 +1,8 @@
+package executor;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import safety.PanicBrake;
+import executor.PanicBrake;
 
 public class PanicBrakeTest {
     @Test

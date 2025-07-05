@@ -1,10 +1,10 @@
 package executor;
 
-import domain.SpreadOpportunity;
-import domain.TradeResult;
+import executor.SpreadOpportunity;
+import executor.TradeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import safety.PanicBrake;
+import executor.PanicBrake;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

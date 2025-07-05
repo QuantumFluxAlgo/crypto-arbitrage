@@ -1,4 +1,4 @@
-package safety;
+package executor;
 
 /**
  * Utility class that determines when trading should halt based on a few

@@ -1,3 +1,9 @@
+package executor;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 static class StubRedisClient {
     void subscribe(String channel, java.util.function.Consumer<String> handler) {
         handler.accept("resume");
