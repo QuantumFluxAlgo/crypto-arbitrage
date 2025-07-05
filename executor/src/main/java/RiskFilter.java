@@ -1,5 +1,6 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import domain.SpreadOpportunity;
 
 public class RiskFilter {
     private static final Logger logger = LoggerFactory.getLogger(RiskFilter.class);
@@ -21,15 +22,7 @@ public class RiskFilter {
             logger.warn("Spread is null — rejecting.");
             return false;
         }
-        if (spread.getEdge() < minEdge) {
-            logger.info("Spread rejected: edge {} < {}", spread.getEdge(), minEdge);
-            return false;
-        }
-        if (spread.getLatencyMs() > maxLatencyMs) {
-            logger.info("Spread rejected: latency {} > {}", spread.getLatencyMs(), maxLatencyMs);
-            return false;
-        }
-        return true;
+        return passes(SpreadOpportunity.fromSpread(spread));
     }
 
     public boolean passes(SpreadOpportunity opportunity) {

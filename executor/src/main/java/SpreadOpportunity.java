@@ -40,6 +40,19 @@ public class SpreadOpportunity {
         }
     }
 
+    public static SpreadOpportunity fromSpread(Spread spread) {
+        SpreadOpportunity opp = new SpreadOpportunity(
+            "",
+            "",
+            "",
+            spread.getEdge(),
+            spread.getEdge()
+        );
+        opp.latencyMs = spread.getLatencyMs();
+        opp.roundTripLatencyMs = spread.getLatencyMs();
+        return opp;
+    }
+
     public TradeResult execute(double size, double price) {
         MockExchangeAdapter buy = new MockExchangeAdapter(buyExchange);
         MockExchangeAdapter sell = new MockExchangeAdapter(sellExchange);
