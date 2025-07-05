@@ -1,4 +1,9 @@
 from pytest import approx
+import pytest
+
+pytest.importorskip("numpy")
+pytest.importorskip("tensorflow")
+
 from . import app as analytics_app
 
 app = analytics_app.app
