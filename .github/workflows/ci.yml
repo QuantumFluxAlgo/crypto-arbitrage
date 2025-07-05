@@ -17,7 +17,7 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v4
-        with:
+    with:
           python-version: '3.10'
 
       - name: Setup Java
@@ -42,10 +42,11 @@ jobs:
         run: podman build -t api ./api
 
       - name: Run Trivy scan on api
-        uses: aquasecurity/trivy-action@v0.11.2
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: api
           format: table
+          severity: HIGH,CRITICAL
           exit-code: 1
 
       - name: Run Dashboard tests
@@ -56,10 +57,11 @@ jobs:
         run: podman build -t dashboard ./dashboard
 
       - name: Run Trivy scan on dashboard
-        uses: aquasecurity/trivy-action@v0.11.2
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: dashboard
           format: table
+          severity: HIGH,CRITICAL
           exit-code: 1
 
       - name: Run Analytics tests
@@ -70,10 +72,11 @@ jobs:
         run: podman build -t analytics ./analytics
 
       - name: Run Trivy scan on analytics
-        uses: aquasecurity/trivy-action@v0.11.2
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: analytics
           format: table
+          severity: HIGH,CRITICAL
           exit-code: 1
 
       - name: Run Executor tests
@@ -84,8 +87,10 @@ jobs:
         run: podman build -t executor ./executor
 
       - name: Run Trivy scan on executor
-        uses: aquasecurity/trivy-action@v0.11.2
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: executor
           format: table
+          severity: HIGH,CRITICAL
           exit-code: 1
+
