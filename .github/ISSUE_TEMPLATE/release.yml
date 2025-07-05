@@ -1,0 +1,17 @@
+name: Release Checklist
+description: Ensure all release requirements are complete
+labels: ["release"]
+title: "Release: <version>"
+body:
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Release steps
+      options:
+        - label: CI passing?
+        - label: Trivy scans clean?
+        - label: Panic brakes tested?
+        - label: Changelog updated?
+        - label: SBOM uploaded?
+    validations:
+      required: true
