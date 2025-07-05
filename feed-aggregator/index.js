@@ -1,7 +1,6 @@
 const WebSocket = require('ws');
 const Redis = require('ioredis');
 const Fastify = require('fastify');
-const { sendAlert } = require('../api/services/alertManager');
 const winston = require('winston');
 
 const FEED_URL = process.env.FEED_URL || 'wss://example.com/feed';
@@ -15,6 +14,14 @@ const logger = winston.createLogger({
 });
 
 const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+const ALERT_CHANNEL = 'alerts';
+
+function sendAlert(type, message) {
+  const payload = JSON.stringify({ type, message, source: 'feed-aggregator', ts: Date.now() });
+  return redis.publish(ALERT_CHANNEL, payload).catch(err => {
+    logger.error('Failed to publish alert', err);
+  });
+}
 
 function normalize(data) {
   const bids = (data.bids || data.b || []).map(p => [Number(p[0]), Number(p[1])]);
