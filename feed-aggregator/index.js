@@ -58,8 +58,8 @@ function connect(attempt = 0) {
 
     ws.on('error', err => {
       logger.error(`WebSocket error: ${err.message}`);
-      ws.terminate();
       sendAlert('email', `Feed connection error: ${err.message}`);
+      reconnect();
     });
 
     function reconnect() {
