@@ -31,12 +31,15 @@ public class ResumeHandler {
                      }
                  }, CHANNEL);
             } else if (redis instanceof RedisClient client) {
-                client.subscribe(CHANNEL, message -> {
-                    if ("resume".equalsIgnoreCase(message)) {
-                        logger.info("RESUMING EXECUTION");
-                        executor.resumeFromPanic();
+                client.subscribe(new redis.clients.jedis.JedisPubSub() {
+                    @Override
+                    public void onMessage(String channel, String message) {
+                        if ("resume".equalsIgnoreCase(message)) {
+                            logger.info("RESUMING EXECUTION");
+                            executor.resumeFromPanic();
+                        }
                     }
-                });
+                }, CHANNEL);
             }
          });
          thread.start();

@@ -18,9 +18,8 @@ public class ResumeHandlerTest {
         }
 
         @Override
-        public void subscribe(String channel, java.util.function.Consumer<String> handler) {
-            handler.accept("resume");
-        }
+        public void subscribe(redis.clients.jedis.JedisPubSub listener, String... channels) {
+            listener.onMessage(channels[0], "resume");        }
     }
 
     /**
