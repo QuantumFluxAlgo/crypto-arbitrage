@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  labels:
+    app: analytics
+    {{- include "crypto-arbitrage.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: analytics
+  template:
+    metadata:
+      labels:
+        app: analytics
+    spec:
+      containers:
+        - name: analytics
+          image: arb-analytics
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              nvidia.com/gpu: "1"
+          envFrom:
+            - secretRef:
+                name: analytics-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+  labels:
+    app: analytics
+spec:
+  type: ClusterIP
+  selector:
+    app: analytics
+  ports:
+    - port: 5000
+      targetPort: 5000
