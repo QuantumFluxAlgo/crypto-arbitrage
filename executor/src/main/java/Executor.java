@@ -32,6 +32,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private int winTrades;
     private long cumulativeLatencyMs;
     private boolean isPanic;
+    private boolean canaryMode;
 
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
@@ -40,6 +41,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis(redisHost, redisPort), this);
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
+        this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
     }
 
     public void start() {
@@ -104,6 +106,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
+        if (canaryMode) {
+            logger.info("CANARY MODE — trade bypassed");
+            return;
+        }
+
         logger.info("Executing opportunity: {}", opp.getPair());
 
         TradeResult result = opp.execute(1.0, 1.0); // TODO: Replace with dynamic size/price logic
@@ -149,6 +156,14 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeFromPanic() {
         isPanic = false;
         logger.info("PANIC RESUME SIGNAL RECEIVED");
+    }
+
+    public void setCanaryMode(boolean mode) {
+        this.canaryMode = mode;
+    }
+
+    public boolean isCanaryMode() {
+        return canaryMode;
     }
 
     public void shutdown() {
