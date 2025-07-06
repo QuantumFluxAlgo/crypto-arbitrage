@@ -7,14 +7,13 @@ Follow these steps to safeguard your database and quickly recover from failures.
 ## Backup with `pg_dump`
 
 1. Log in to the server hosting Postgres.
-2. Run the following command to create a compressed backup:
+2. Execute the helper script to create a compressed backup:
 
    ```bash
-   pg_dump -U arb -F c -f backup.dump
+   ./scripts/backup.sh
    ```
-   - `-U arb` uses the `arb` user.
-   - `-F c` outputs in custom format for faster restores.
-   - `-f backup.dump` specifies the backup file path.
+   - `backup.sh` runs `pg_dump -U $USER -F c -f backup.dump`.
+   - `backup.dump` will be written to the current directory.
 
 3. Store `backup.dump` in a secure location (e.g. off-site storage or encrypted bucket).
 
@@ -22,14 +21,14 @@ Follow these steps to safeguard your database and quickly recover from failures.
 
 ## Restore with `pg_restore`
 
-1. Ensure the destination database `arbdb` exists or create it with `createdb arbdb`.
-2. Run the restore command:
+1. Ensure the destination database exists or create it (e.g. `createdb arbdb`).
+2. Run the restore script:
 
    ```bash
-   pg_restore -U arb -d arbdb backup.dump
+   DB=arbdb ./scripts/restore.sh
    ```
-   - `-d arbdb` is the target database.
-   - The existing data will be overwritten if the schema already exists.
+   - Set `DB` to the target database name.
+   - Existing data will be overwritten if the schema already exists.
 
 3. Verify the tables and data once the command completes.
 
@@ -37,20 +36,20 @@ Follow these steps to safeguard your database and quickly recover from failures.
 
 ## Automate Daily Backups with Cron
 
-1. Edit the crontab for the `arb` user:
+1. Edit the crontab for the user running Postgres:
 
    ```bash
    crontab -e
    ```
 
-2. Add a daily job that runs at 02:00 each morning:
+2. Add a daily job that runs the backup script at 02:00 each morning:
 
    ```cron
-   0 2 * * * pg_dump -U arb -F c -f /path/to/backups/$(date +\%F).dump
+   0 2 * * * /path/to/repo/scripts/backup.sh
    ```
 
-   - Adjust the path to your desired backup directory.
-   - Old backups should be rotated or pruned to save space.
+   - Replace `/path/to/repo` with the location of this repository.
+   - Ensure the script is executable and rotates old backups as needed.
 
 3. Save the cron file. The system will automatically run the command every day.
 
