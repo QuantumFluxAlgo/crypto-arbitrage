@@ -5,6 +5,11 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module'
     },
-    rules: {}
+    env: { node: true },
+    extends: ['eslint:recommended'],
+    rules: {
+      'no-console': 'off',
+      'prefer-const': 'error'
+    }
   }
 ]
