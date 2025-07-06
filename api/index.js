@@ -26,9 +26,15 @@ Sentry.init({
   enabled: process.env.NODE_ENV === 'production',
 });
 
-const app = Fastify();
-app.register(fastifyCookie);
-app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
+function buildApp() {
+  const app = Fastify();
+  app.register(fastifyCookie);
+  app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
+  app.register(apiRoutes, { prefix: '/api' });
+  return app;
+}
+
+const app = buildApp();
 
 const logger = winston.createLogger({
   level: 'info',
@@ -173,7 +179,6 @@ async function apiRoutes(api) {
   api.register(analyticsRoutes, { pool });
 }
 
-app.register(apiRoutes, { prefix: '/api' });
 
 if (process.env.NODE_ENV !== 'test') {
   startWsServer();
@@ -187,5 +192,5 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
-export { logReplayCLI };
+export { buildApp, logReplayCLI };
 

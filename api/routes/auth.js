@@ -7,16 +7,6 @@ const users = {
 };
 
 export default async function authRoutes(app) {
-  app.post('/login', async (req, reply) => {
-    const { email, password } = req.body;
-    const stored = users[email];
-    if (stored && await bcrypt.compare(password, stored)) {
-      const token = app.jwt.sign({ email }, { algorithm: 'HS256' });
-      reply.setCookie('token', token, { httpOnly: true });
-      return { token };
-    }
-    reply.code(401).send({ error: 'invalid credentials' });
-  });
 
   app.post('/change-password', async (req, reply) => {
     const { oldPassword, newPassword } = req.body;
