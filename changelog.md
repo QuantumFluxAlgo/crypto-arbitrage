@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Batch 14] - 2025-07-08
+
+### Added
+- Feature logging from trade engine to training_features table
+- Python export script for ML training data
+- Weekly LSTM retrain job via cron
+- Model versioning table + API
+- Shadow model testing endpoint
+- CLI rollback utility for model versions
+
+### Docs
+- README.md ML pipeline section
+
 ## [Batch 13] - 2025-07-07
 
 ### Added
