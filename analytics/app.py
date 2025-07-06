@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import logging
 
@@ -185,6 +186,9 @@ def stats():
     return jsonify(compute_stats())
 
 if __name__ == '__main__':
+    if model is None:
+        logger.error('Failed to load model from %s. Exiting.', MODEL_PATH)
+        sys.exit(1)
+
     debug = os.getenv('FLASK_ENV') != 'production'
     app.run(host='0.0.0.0', port=5000, debug=debug)
-
