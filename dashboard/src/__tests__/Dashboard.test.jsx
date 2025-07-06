@@ -38,3 +38,11 @@ beforeEach(() => {
 afterEach(() => {
   jest.resetAllMocks();
 });
+test('displays loading then shows resume trading button', async () => {
+  render(<Dashboard />);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  expect(
+    await screen.findByRole('button', { name: /resume trading/i })
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+});

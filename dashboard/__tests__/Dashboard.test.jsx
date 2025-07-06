@@ -1,3 +1,6 @@
++4
+-1
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -13,8 +16,11 @@ jest.mock('recharts', () => {
   };
 });
 
-it('shows Resume Trading button', async () => {
+test('displays loading then shows resume trading button', async () => {
   render(<Dashboard />);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
   expect(
     await screen.findByRole('button', { name: /resume trading/i })
   ).toBeInTheDocument();
+  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+});
