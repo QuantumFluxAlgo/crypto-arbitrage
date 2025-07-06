@@ -22,16 +22,27 @@ apt-get install -y containerd podman
 
 log "Installing Kubernetes components"
 apt-get install -y apt-transport-https ca-certificates curl gnupg
-curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg \
+
+safe_curl() {
+    dest="$1"
+    url="$2"
+    if ! curl -fSLs -o "$dest" "$url"; then
+        log "Failed to download $url"
+        exit 1
+    fi
+}
+
+safe_curl /usr/share/keyrings/kubernetes-archive-keyring.gpg \
   https://packages.cloud.google.com/apt/doc/apt-key.gpg
-curl -fsSLo /etc/apt/sources.list.d/kubernetes.list \
-  https://packages.cloud.google.com/apt/doc/kubernetes.listapt-get update -y
+safe_curl /etc/apt/sources.list.d/kubernetes.list \
+  https://packages.cloud.google.com/apt/doc/kubernetes.list
+apt-get update -y
 apt-get install -y kubelet kubeadm kubectl
 
 log "Installing Helm"
-curl -fsSLo /usr/share/keyrings/helm.gpg \
+safe_curl /usr/share/keyrings/helm.gpg \
   https://baltocdn.com/helm/signing.asc
-curl -fsSLo /etc/apt/sources.list.d/helm-stable-debian.list \
+safe_curl /etc/apt/sources.list.d/helm-stable-debian.list \
   https://baltocdn.com/helm/stable/debian/helm.repo
 apt-get update -y
 apt-get install -y helm
@@ -57,6 +68,3 @@ for manifest in "$ROOT_DIR/infra/k8s"/*.yaml; do
 done
 
 log "Deploying Helm chart"
-helm upgrade --install arb "$ROOT_DIR/infra/helm" --namespace arb --create-namespace
-
-log "Production deployment complete"
