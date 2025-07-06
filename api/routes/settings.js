@@ -1,9 +1,6 @@
-export let settings = {
-  canary_mode: false,
-  useEnsemble: true,
-  shadowOnly: false,
-  ghost_mode: false
-};
+import settings from '../config/settings.js';
+
+export { settings };
 
 export default async function settingsRoutes(app) {
   app.get('/settings', async () => settings);
@@ -11,6 +8,9 @@ export default async function settingsRoutes(app) {
   app.post('/settings', async req => {
     if (typeof req.body.canary_mode === 'boolean') {
       settings.canary_mode = req.body.canary_mode;
+    }
+    if (typeof req.body.sandbox_mode === 'boolean' && !process.env.SANDBOX_MODE) {
+      settings.sandbox_mode = req.body.sandbox_mode;
     }
     if (typeof req.body.useEnsemble === 'boolean') {
       settings.useEnsemble = req.body.useEnsemble;

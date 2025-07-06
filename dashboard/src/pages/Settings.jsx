@@ -11,6 +11,7 @@ export default function Settings() {
     useEnsemble: false,
     shadowOnly: false,
     ghost_mode: false,
+    sandbox_mode: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +30,7 @@ export default function Settings() {
           useEnsemble: data.useEnsemble ?? false,
           shadowOnly: data.shadowOnly ?? false,
           ghost_mode: data.ghost_mode ?? false,
+          sandbox_mode: data.sandbox_mode ?? false,
         });
       } catch {
         setError('Unable to load settings');
@@ -181,6 +183,17 @@ export default function Settings() {
           className="accent-primary h-4 w-4"
         />
         <span>Ghost Mode</span>
+      </label>
+
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="sandbox_mode"
+          checked={settings.sandbox_mode}
+          onChange={handleChange}
+          className="accent-primary h-4 w-4"
+        />
+        <span>Sandbox Mode</span>
       </label>
 
       <button

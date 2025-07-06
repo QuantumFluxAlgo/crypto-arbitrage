@@ -1,6 +1,7 @@
 import request from 'supertest';
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_TOKEN = 'testadmintoken';
+process.env.SANDBOX_MODE = 'true';
 import app from '../index.js';
 
 describe('API authentication', () => {
@@ -97,6 +98,22 @@ describe('API authentication', () => {
         .send({ ghost_mode: true });
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({ saved: true });
+    });
+
+    test('PATCH /settings does not override sandbox env', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/api/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .patch('/api/settings')
+        .set('Cookie', cookie)
+        .send({ sandbox_mode: false });
+      expect(res.statusCode).toBe(200);
+      const verify = await request('http://localhost:8080')
+        .get('/api/settings')
+        .set('Cookie', cookie);
+      expect(verify.body.sandbox_mode).toBe(true);
     });
 
   test('/logout clears cookie', async () => {
