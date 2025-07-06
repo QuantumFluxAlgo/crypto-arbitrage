@@ -11,6 +11,7 @@ import authRoute from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import settingsRoutes from './routes/settings.js';
 import infraRoutes from './routes/infra.js';
+import modelRoutes from './routes/model.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 
@@ -131,6 +132,7 @@ async function apiRoutes(api) {
 
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
+  api.register(modelRoutes, { pool });
 }
 
 app.register(apiRoutes, { prefix: '/api' });
