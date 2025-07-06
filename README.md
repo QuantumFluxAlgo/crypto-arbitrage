@@ -104,6 +104,30 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
 - **Retrain flow**: features are loaded, the LSTM trains for 10 epochs, and
   validation loss and Sharpe ratio are saved for review.
 
+### AI Lifecycle
+
+- Trade execution → feature log → weekly retrain → scoring → version tag
+
+### Model Registry
+
+- Git-based model archive under `analytics/models/archive`
+- SHA256 hash used to track each saved model
+- Model audit endpoint: `GET /api/model/version`
+- Rollback via `analytics/model_swap.py` with alert notifications
+
+**CLI**
+
+```bash
+python analytics/train/retrain.py --epochs 10
+python analytics/model_swap.py --version <hash>
+```
+
+**API**
+
+```bash
+curl http://localhost:3000/api/model/version
+```
+
 ---
 
 ## Deployment
