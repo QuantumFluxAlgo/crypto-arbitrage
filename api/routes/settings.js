@@ -1,6 +1,7 @@
 export let settings = {
-    canary_mode: false,
-    useEnsemble: true
+  canary_mode: false,
+  useEnsemble: true,
+  shadowOnly: false
 };
 
 export default async function settingsRoutes(app) {
@@ -13,6 +14,10 @@ export default async function settingsRoutes(app) {
     if (typeof req.body.useEnsemble === 'boolean') {
       settings.useEnsemble = req.body.useEnsemble;
     }
+    if (typeof req.body.shadowOnly === 'boolean') {
+      settings.shadowOnly = req.body.shadowOnly;
+    }
     return { saved: true };
   });
 }
+

@@ -8,6 +8,8 @@ export default function Settings() {
     loss_limit_pct: 0,
     latency_limit_ms: 0,
     sweep_cadence_s: 0,
+    useEnsemble: false,
+    shadowOnly: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +24,8 @@ export default function Settings() {
           loss_limit_pct: data.loss_limit_pct ?? 0,
           latency_limit_ms: data.latency_limit_ms ?? 0,
           sweep_cadence_s: data.sweep_cadence_s ?? 0,
+          useEnsemble: data.useEnsemble ?? false,
+          shadowOnly: data.shadowOnly ?? false,
         });
       } catch {
         setError('Unable to load settings');
@@ -34,8 +38,11 @@ export default function Settings() {
   }, []);
 
   function handleChange(e) {
-    const { name, value } = e.target;
-    setSettings((s) => ({ ...s, [name]: Number(value) || value }));
+    const { name, value, type, checked } = e.target;
+    setSettings((s) => ({
+      ...s,
+      [name]: type === 'checkbox' ? checked : Number(value) || value
+    }));
   }
 
   async function saveSettings() {
@@ -112,6 +119,28 @@ export default function Settings() {
           onChange={handleChange}
           className="w-full"
         />
+      </label>
+
+ <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="useEnsemble"
+          checked={settings.useEnsemble}
+          onChange={handleChange}
+          className="accent-primary h-4 w-4"
+        />
+        <span>Use Ensemble Model</span>
+      </label>
+
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="shadowOnly"
+          checked={settings.shadowOnly}
+          onChange={handleChange}
+          className="accent-primary h-4 w-4"
+        />
+        <span>Shadow Only</span>
       </label>
 
       <button
