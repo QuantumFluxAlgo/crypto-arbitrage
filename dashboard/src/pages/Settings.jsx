@@ -14,6 +14,7 @@ export default function Settings() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -46,6 +47,23 @@ export default function Settings() {
       [name]: type === 'checkbox' ? checked : Number(value) || value
     }));
   }
+  
+    async function handleGhostChange(e) {
+    const { checked } = e.target;
+    setSettings((s) => ({ ...s, ghost_mode: checked }));
+    try {
+      await axios.patch('/api/settings', { ghost_mode: checked });
+      setToast({ type: 'success', msg: 'Simulation overlay updated' });
+    } catch {
+      setToast({ type: 'error', msg: 'Update failed' });
+    }
+  }
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   async function saveSettings() {
     try {
@@ -60,7 +78,16 @@ export default function Settings() {
   if (error) return <div className="p-6 text-error">{error}</div>;
 
   return (
-    <div className="max-w-xl m-auto p-6 space-y-6 bg-surface text-text rounded shadow">
+    <div className="relative max-w-xl m-auto p-6 space-y-6 bg-surface text-text rounded shadow">
+      {toast && (
+        <div
+          className={`absolute right-4 top-4 px-4 py-2 text-white rounded ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
+          {toast.msg}
+        </div>
+      )}
       <div className="space-x-2">
         {['Conservative', 'Balanced', 'Aggressive'].map((mode) => (
           <button
