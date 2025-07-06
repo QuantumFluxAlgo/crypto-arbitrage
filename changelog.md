@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Model versioning table + API
 - Shadow model testing endpoint
 - CLI rollback utility for model versions
+- Evaluation script to compare predictions between production and shadow models
 
 ### Docs
 - README.md ML pipeline section
