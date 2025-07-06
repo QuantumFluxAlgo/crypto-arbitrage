@@ -136,6 +136,10 @@ The platform runs on a Xeon host and is orchestrated by Kubernetes. Deploy or up
 
 ---
 
+## AI & ML Model Registry Lifecycle
+
+The platform uses a Git-backed registry to track every model version and related metrics. Each training run stores a version hash and evaluation scores. Shadow models are compared to production prior to promotion, and all updates trigger audit logs and notifications.
+
 ## License
 
 Released under the [MIT](LICENSE) license.

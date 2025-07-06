@@ -7,8 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Batch 15] - 2025-07-09
 
 ### Added
-- PDF report export script (`export_report.py`)
-- matplotlib dependency for charts
+- Ensemble scoring engine (rule + model blended)
+- Shadow vs prod model evaluator CLI
+- Git-based model registry with version hashes
+- Full audit logging on model lifecycle
+- Alerts on model update
+- Static PDF reporting script
+- AdminPanel screen with controls and logs
+
+### Docs
+- Final README update with AI + ML registry lifecycle
 
 ## [Batch 14] - 2025-07-08
 
