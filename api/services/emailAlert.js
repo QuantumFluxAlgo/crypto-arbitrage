@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import logger from './logger.js';
 
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
@@ -24,7 +25,13 @@ async function sendEmail(subject, body) {
     text: body,
   };
 
-  return transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+      logger.info('Email alert sent');
+    } catch (error) {
+      logger.error(`Failed to send email alert: ${error.message}`);
+      throw error;
+    }
 }
 
 export { sendEmail };

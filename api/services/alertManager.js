@@ -1,12 +1,7 @@
-import winston from 'winston';
+import logger from './logger.js';
 import { sendEmail } from './emailAlert.js';
 import { sendTelegram } from './telegramAlert.js';
 import { sendWebhook } from './webhookAlert.js';
-
-const logger = winston.createLogger({
-  level: 'info',
-  transports: [new winston.transports.Console()]
-});
 
 function hasEmailConfig() {
   return process.env.SMTP_USER && process.env.SMTP_PASS && process.env.ALERT_RECIPIENT;
