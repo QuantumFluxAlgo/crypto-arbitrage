@@ -26,8 +26,12 @@ apt-get install -y apt-transport-https ca-certificates curl gnupg
 safe_curl() {
     dest="$1"
     url="$2"
-    if ! curl -fSLs -o "$dest" "$url"; then
+    if ! curl -fSL -o "$dest" "$url"; then
         log "Failed to download $url"
+        exit 1
+    fi
+    if [ ! -s "$dest" ]; then
+        log "Downloaded file $dest is empty"
         exit 1
     fi
 }
