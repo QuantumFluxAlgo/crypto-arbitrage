@@ -1,12 +1,14 @@
 import argparse
 import hashlib
 import logging
+import os
+import socket
 import numpy as np
 from tensorflow.keras.models import Sequential, save_model
 from tensorflow.keras.layers import LSTM, Dense
 
 from .train import generate_data
-from .model_tracker import insert_metadata
+from .model_tracker import insert_metadata, send_event
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -46,7 +48,15 @@ def main():
 
     win_rate, sharpe, val_loss = train_model(args.epochs)
     version_hash = file_hash("model.h5")
-    insert_metadata(version_hash, sharpe=sharpe, win_rate=win_rate, val_loss=val_loss, notes=args.notes)
+    user = os.getenv("USER", "unknown")
+    try:
+        ip = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        ip = None
+    insert_metadata(version_hash, sharpe=sharpe, win_rate=win_rate,
+                    val_loss=val_loss, notes=args.notes,
+                    changed_by=user, change_type="train", source_ip=ip)
+    send_event(version_hash, "train", user, ip)
     logger.info("Logged metadata with hash %s", version_hash)
 
 

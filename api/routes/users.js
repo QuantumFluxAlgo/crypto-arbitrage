@@ -1,4 +1,4 @@
-import { listUsers, addUser, updatePassword, removeUser } from '../services/userStore.js';
+import { listUsers, addUser, updatePassword, removeUser } from './userStore.js';
 
 export default async function userRoutes(app) {
   app.addHook('preHandler', async (req, reply) => {

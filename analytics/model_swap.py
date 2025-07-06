@@ -2,7 +2,10 @@ import argparse
 import json
 import os
 import shutil
+import socket
 import time
+
+from .model_tracker import insert_metadata, send_event
 
 MODEL_FILE = os.path.join(os.path.dirname(__file__), 'model.h5')
 ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), 'models', 'archive')
@@ -29,16 +32,7 @@ def get_latest_hash():
     return files[-1].split('.')[0]
 
 
-def swap_model(version_hash):
-    src = os.path.join(ARCHIVE_DIR, f'{version_hash}.h5')
-    if not os.path.exists(src):
-        raise FileNotFoundError(f'Archived model {version_hash} not found')
-    shutil.copy2(src, MODEL_FILE)
-
-
-def log_note(meta, version_hash):
-    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-    note = f"{timestamp} rolled back to {version_hash}"
+@@ -42,29 +45,37 @@ def log_note(meta, version_hash):
     meta.setdefault('notes', []).append(note)
     meta['current_version'] = version_hash
 
@@ -64,6 +58,14 @@ def main():
     log_note(meta, version)
     save_metadata(meta)
     print(f'Activated model {version}')
+    user = os.getenv("USER", "unknown")
+    try:
+        ip = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        ip = None
+    change = 'rollback' if args.version else 'swap'
+    insert_metadata(version, changed_by=user, change_type=change, source_ip=ip)
+    send_event(version, change, user, ip)
 
 
 if __name__ == '__main__':

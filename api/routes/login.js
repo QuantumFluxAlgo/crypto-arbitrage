@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { findByEmail } from '../services/userStore.js';
+import { findByEmail } from './userStore.js';
 
 export default async function loginRoutes(app) {
   app.post('/login', async (req, reply) => {
@@ -13,5 +13,3 @@ export default async function loginRoutes(app) {
     reply.code(401).send({ error: 'invalid credentials' });
   });
 }
-api/routes/users.js
-New
