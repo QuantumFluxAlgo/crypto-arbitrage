@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import AdminPanel from '../pages/AdminPanel.jsx';
 
@@ -32,7 +33,9 @@ afterEach(() => {
 });
 
 test('renders audit logs and model hashes', async () => {
-  render(<AdminPanel />);
+   await act(async () => {
+    render(<AdminPanel />);
+  });
   expect(await screen.findByText('update')).toBeInTheDocument();
   expect(screen.getByText(/current model/i)).toBeInTheDocument();
 });

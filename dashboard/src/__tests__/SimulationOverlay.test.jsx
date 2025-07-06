@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import SimulationOverlay from '../components/SimulationOverlay.jsx';
 
@@ -31,7 +32,9 @@ afterEach(() => {
 });
 
 test('renders overlay heading and table', async () => {
+  await act(async () => {
   render(<SimulationOverlay />);
+  });
   expect(screen.getByText(/simulated opportunities/i)).toBeInTheDocument();
   expect(await screen.findByRole('table')).toBeInTheDocument();
 });

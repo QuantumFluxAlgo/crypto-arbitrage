@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import Infrastructure from '../pages/Infrastructure.jsx';
 
@@ -20,6 +21,8 @@ afterEach(() => {
 });
 
 test('shows infrastructure status table', async () => {
+  await act(async () => {
   render(<Infrastructure />);
+  });
   expect(await screen.findByText('app')).toBeInTheDocument();
 });

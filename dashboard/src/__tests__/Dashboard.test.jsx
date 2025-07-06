@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import Dashboard from '../pages/Dashboard.jsx';
 
@@ -41,6 +42,7 @@ afterEach(() => {
 test('displays loading then shows resume trading button', async () => {
   render(<Dashboard />);
   expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  await act(async () => {});
   expect(
     await screen.findByRole('button', { name: /resume trading/i })
   ).toBeInTheDocument();

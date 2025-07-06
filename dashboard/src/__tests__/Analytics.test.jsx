@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import Analytics from '../pages/Analytics.jsx';
 
@@ -26,7 +27,9 @@ afterEach(() => {
 });
 
 test('renders analytics headings', async () => {
-  render(<Analytics />);
+  await act(async () => {
+render(<Analytics />);
+  });
   expect(await screen.findByText(/rolling pnl/i)).toBeInTheDocument();
   expect(screen.getByText(/lstm predictions/i)).toBeInTheDocument();
 });

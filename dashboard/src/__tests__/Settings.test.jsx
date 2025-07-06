@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import Settings from '../pages/Settings.jsx';
 import axios from 'axios';
@@ -22,7 +23,9 @@ afterEach(() => {
 });
 
 test('loads settings and shows save button', async () => {
-  render(<Settings />);
+  await act(async () => {
+    render(<Settings />);
+  });
   await waitFor(() => expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument());
   expect(screen.getByText(/balanced/i)).toBeInTheDocument();
 });
