@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function LineChart({ data = [], color = '#00C8A0' }) {
   if (!data.length) {
@@ -76,14 +76,20 @@ export default function Dashboard() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="p-4 space-y-6 text-text bg-background min-h-screen">
+        <h1 className="text-2xl font-bold">Prism Arbitrage Dashboard</h1>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-6 text-text bg-background min-h-screen">
       <h1 className="text-2xl font-bold">Prism Arbitrage Dashboard</h1>
 
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <>
+      <React.Fragment>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-surface p-4 rounded shadow">
               <h2 className="font-semibold mb-2">Equity Curve</h2>
@@ -148,8 +154,7 @@ export default function Dashboard() {
             </button>
           </div>
           {resumeError && <div className="text-red-500">{resumeError}</div>}
-        </>
-      )
-    </div>
+        </React.Fragment>
+      </div>
   );
 }

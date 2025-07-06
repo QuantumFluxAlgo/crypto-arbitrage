@@ -2,10 +2,22 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Settings from '../src/pages/Settings.jsx';
+import axios from 'axios';
 
-test('renders personality mode buttons', () => {
+jest.mock('axios');
+
+beforeEach(() => {
+  axios.get.mockResolvedValue({ data: { personality_mode: 'Conservative' } });
+  axios.patch.mockResolvedValue({});
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
+
+test('renders personality mode buttons', async () => {
   render(<Settings />);
-  expect(screen.getByRole('button', { name: /Conservative/i })).toBeInTheDocument();
+  expect(await screen.findByRole('button', { name: /Conservative/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Balanced/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Aggressive/i })).toBeInTheDocument();
 });

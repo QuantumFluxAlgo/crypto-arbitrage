@@ -6,6 +6,8 @@ import Analytics from './pages/Analytics';
 import Alerts from './pages/Alerts';
 import Login from './pages/Login';
 import Infrastructure from './pages/Infrastructure';
+import AdminPanel from './pages/AdminPanel';
+
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/infrastructure" element={<Infrastructure />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/login" element={<Login />} />
         </Routes>

@@ -32,5 +32,5 @@ afterEach(() => {
 test('renders dashboard and resume button', async () => {
   render(<Dashboard />);
   expect(await screen.findByText(/prism arbitrage dashboard/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /resume trading/i })).toBeInTheDocument();
+  expect(await screen.findByRole('button', { name: /resume trading/i })).toBeInTheDocument();
 });
