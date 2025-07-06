@@ -9,7 +9,19 @@ export let settings = {
 export default async function settingsRoutes(app) {
   app.get('/settings', async () => settings);
 
-  app.post('/settings', async req => {
+  const bodySchema = {
+    type: 'object',
+    properties: {
+      canary_mode: { type: 'boolean' },
+      useEnsemble: { type: 'boolean' },
+      shadowOnly: { type: 'boolean' },
+      ghost_mode: { type: 'boolean' },
+      sandbox_mode: { type: 'boolean' }
+    },
+    additionalProperties: false
+  };
+
+  const saveSettings = async req => {
     if (typeof req.body.canary_mode === 'boolean') {
       settings.canary_mode = req.body.canary_mode;
     }
@@ -26,5 +38,13 @@ export default async function settingsRoutes(app) {
       settings.sandbox_mode = req.body.sandbox_mode;
     }
     return { saved: true };
+  };
+
+  app.route({
+    method: ['POST', 'PATCH'],
+    url: '/settings',
+    schema: { body: bodySchema },
+    handler: saveSettings
   });
 }
+
