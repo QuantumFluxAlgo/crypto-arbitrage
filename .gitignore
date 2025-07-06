@@ -19,3 +19,5 @@ EOF
 
 # Node modules
 node_modules/
+*.h5
+analytics/models/
