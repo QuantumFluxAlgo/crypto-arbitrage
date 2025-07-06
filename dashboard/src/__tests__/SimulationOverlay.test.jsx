@@ -3,6 +3,16 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SimulationOverlay from '../components/SimulationOverlay.jsx';
 
+jest.mock('recharts', () => {
+  const actual = jest.requireActual('recharts');
+  return {
+    ...actual,
+    ResponsiveContainer: ({ children }) => (
+      <div style={{ width: 800, height: 600 }}>{children}</div>
+    )
+  };
+});
+
 beforeEach(() => {
   global.WebSocket = class {
     constructor() {}
