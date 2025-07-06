@@ -5,6 +5,7 @@ import executor.TradeResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import executor.PanicBrake;
+import executor.FeatureLogger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -24,6 +25,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final int redisPort;
     private Connection dbConnection;
     private TradeLogger tradeLogger;
+    private FeatureLogger featureLogger;
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -58,6 +60,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
              try {
                  dbConnection = DriverManager.getConnection(url, user, password);
                  tradeLogger = new TradeLogger(dbConnection);
+                 featureLogger = new FeatureLogger(dbConnection);
                  logger.info("Database connection established");
                  connected = true;
              } catch (SQLException e) {
@@ -125,6 +128,14 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             dailyLossPct = ProfitTracker.getDailyLossPct();
         } else {
             logger.error("Failed to execute trade");
+        }
+        
+        if (featureLogger != null) {
+            double slippage = opp.getGrossEdge() - opp.getNetEdge();
+            double volatility = 0.0; // TODO derive from market data
+            double latencySec = result.latencyMs / 1000.0;
+            int label = result.pnl > 0 ? 1 : 0;
+            featureLogger.logFeatureVector(opp.getPair(), opp.getNetEdge(), slippage, volatility, latencySec, label);
         }
 
         if (PanicBrake.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
