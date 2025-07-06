@@ -14,6 +14,7 @@ import infraRoutes from './routes/infra.js';
 import modelRoutes from './routes/models.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
+import { start as startWsServer } from './services/wsServer.js';
 
 const { Pool } = pg;
 
@@ -152,6 +153,7 @@ async function apiRoutes(api) {
 app.register(apiRoutes, { prefix: '/api' });
 
 if (process.env.NODE_ENV !== 'test') {
+  startWsServer();
   app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     if (err) {
       logger.error(err);
