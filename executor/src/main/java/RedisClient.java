@@ -37,28 +37,36 @@ public class RedisClient extends Thread {
         }
     }
 
-    subscribe(new JedisPubSub() {
-        @Override
-        public void onMessage(String ch, String message) {
-            handler.onMessage(ch, message);
-        }
-    }, channel);
-}
-
-/**
- * Subscribe with a provided {@link JedisPubSub} listener.
- * @param listener JedisPubSub instance
- * @param channels channels to subscribe to
- */
-public void subscribe(JedisPubSub listener, String... channels) {
-    public void subscribe(String channel, MessageHandler handler) {
+    /**
+     * Subscribe with a provided {@link JedisPubSub} listener.
+     * A new thread will be created for the subscription.
+     *
+     * @param listener JedisPubSub instance
+     * @param channels channels to subscribe to
+     */
+    public void subscribe(JedisPubSub listener, String... channels) {
         new Thread(() -> {
             try (Jedis jedis = new Jedis(host, port)) {
                 jedis.subscribe(listener, channels);
             } catch (Exception e) {
                 logger.error("Redis subscribe failed: {}", e.getMessage());
             }
-}, "RedisClientSubscribe-" + String.join(",", channels)).start();
+        }, "RedisClientSubscribe-" + String.join(",", channels)).start();
+    }
+
+    /**
+     * Subscribe to a channel with a {@link MessageHandler} implementation.
+     *
+     * @param channel  Redis channel
+     * @param handler  callback invoked for each message
+     */
+    public void subscribe(String channel, MessageHandler handler) {
+        subscribe(new JedisPubSub() {
+            @Override
+            public void onMessage(String ch, String message) {
+                handler.onMessage(ch, message);
+            }
+        }, channel);
     }
 
     /**
