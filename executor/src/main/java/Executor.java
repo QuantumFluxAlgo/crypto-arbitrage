@@ -2,6 +2,7 @@ package executor;
 
 import executor.SpreadOpportunity;
 import executor.TradeResult;
+import executor.SandboxExchangeAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import executor.PanicBrake;
@@ -148,7 +149,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         logger.info("Executing opportunity: {}", opp.getPair());
 
-        TradeResult result = opp.execute(1.0, 1.0); // TODO: Replace with dynamic size/price logic
+        TradeResult result;
+        if (sandboxMode) {
+            SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
+                    redisClient,
+                    o -> scoringEngine.predictProbability(o));
+            result = adapter.execute(opp, 1.0, 1.0);
+        } else {
+            result = opp.execute(1.0, 1.0); // TODO: Replace with dynamic size/price logic
+        }
 
         updatePerformanceMetrics(result);
 

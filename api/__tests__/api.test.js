@@ -19,6 +19,14 @@ describe('API authentication', () => {
       .send({ email: 'user', password: 'wrong' });
     expect(res.statusCode).toBe(401);
   });
+    
+  test('sandbox login works with demo credentials', async () => {
+    const res = await request('http://localhost:8080')
+      .post('/api/login')
+      .send({ email: 'demo@prismarbitrage.ai', password: 'demo1234' });
+     expect(res.statusCode).toBe(200);
+     expect(res.body).toEqual({ token: 'demo-token' });
+    });
 
   test('/opportunities requires auth', async () => {
     const unauth = await request('http://localhost:8080').get('/api/opportunities');

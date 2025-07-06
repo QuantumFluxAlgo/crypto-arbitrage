@@ -60,6 +60,7 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
 - `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`
 - `SENTRY_DSN` for API error reporting
 - `VITE_SENTRY_DSN` for dashboard errors
+- `SANDBOX_MODE` to enable demo login without DB
 
 ---
 
