@@ -124,8 +124,6 @@ async function apiRoutes(api) {
     }
   });
 
-  api.get('/metrics', async () => ({ status: 'ok' }));
-
   api.post('/logout', async (req, reply) => {
     reply.clearCookie('token');
     return { loggedOut: true };
@@ -156,3 +154,4 @@ if (process.env.NODE_ENV !== 'test') {
 
 export default app;
 export { buildApp, logReplayCLI };
+
