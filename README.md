@@ -38,6 +38,20 @@ graph TD
 
 ---
 
+## Required Tools
+
+The pre-push hook runs tests across multiple languages. Make sure the following tools are installed locally:
+
+- **Node.js 18** with `npm`
+- **Python 3.10** with `pytest`
+- **Java 17** with `gradle` (or `mvn`)
+- **Podman** for building container images
+- **Helm** and `kubectl` for Kubernetes
+
+Ensure these tools are available in your `PATH` so `githooks/pre-push` can execute them.
+
+---
+
 ## Setup
 
 1. Start Colima using the Podman runtime:
