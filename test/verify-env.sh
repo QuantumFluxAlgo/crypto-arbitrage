@@ -4,9 +4,13 @@
 # Usage: bash test/verify-env.sh
 #
 # This script checks versions of Jest, PyTest, and Maven. If any check
-# fails, the script exits with a non-zero status.
+# fails, the script exits with a non-zero status. Maven is required only
+# if a `pom.xml` file exists in the project.
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Check Jest via npx
 npx -y jest --version >/dev/null 2>&1 || {
@@ -20,11 +24,17 @@ pytest --version >/dev/null 2>&1 || {
   exit 1
 }
 
-# Check Maven (optional)
-if mvn -v >/dev/null 2>&1; then
-  echo "Maven found"
+# Check Maven only if the project uses it (presence of pom.xml)
+if find "$REPO_ROOT" -name pom.xml | grep -q pom.xml; then
+  if mvn -v >/dev/null 2>&1; then
+    echo "Maven found"
+  else
+    echo "Error: Maven is required but not installed" >&2
+    exit 1
+  fi
 else
-  echo "Warning: Maven is not installed" >&2
+  echo "Maven not required"
 fi
 
 echo "Environment verified"
+
