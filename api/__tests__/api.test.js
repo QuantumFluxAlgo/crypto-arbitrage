@@ -57,11 +57,23 @@ describe('API authentication', () => {
       .get('/api/settings')
       .set('Cookie', cookie);
     expect(res.statusCode).toBe(200);
-    // Accept both `{}` and `{ canary_mode: false }` variants
     expect(res.body).toEqual(expect.any(Object));
   });
 
-  test('POST /settings saves settings', async () => {
+  test('PATCH /settings saves settings', async () => {
+    const login = await request('http://localhost:8080')
+      .post('/api/login')
+      .send({ email: 'user', password: 'pass' });
+    const cookie = login.headers['set-cookie'][0].split(';')[0];
+    const res = await request('http://localhost:8080')
+      .patch('/api/settings')
+      .set('Cookie', cookie)
+      .send({ maxLoss: 0.1 });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ saved: true });
+  });
+
+  test('POST /settings saves settings (legacy)', async () => {
     const login = await request('http://localhost:8080')
       .post('/api/login')
       .send({ email: 'user', password: 'pass' });
@@ -208,4 +220,3 @@ describe('API authentication', () => {
 afterAll(async () => {
   await app.close();
 });
-

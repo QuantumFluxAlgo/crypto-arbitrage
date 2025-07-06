@@ -12,6 +12,7 @@ import userRoutes from './routes/users.js';
 import settingsRoutes from './routes/settings.js';
 import infraRoutes from './routes/infra.js';
 import { sendAlert } from './services/alertManager.js';
+import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 
 const { Pool } = pg;
 
@@ -58,6 +59,7 @@ async function apiRoutes(api) {
   api.register(loginRoute);
   api.register(authRoute);
   api.register(settingsRoutes);
+  api.register(auditLogger, { pool });
 
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
@@ -79,6 +81,9 @@ async function apiRoutes(api) {
   });
 
   api.get('/opportunities', async () => []);
+
+  api.get('/settings', async () => ({}));
+  api.patch('/settings', async req => ({ saved: true }));
 
   api.get('/alerts', async () => alertSettings);
   api.post('/alerts', async req => {
@@ -139,4 +144,4 @@ app.listen({ port: 8080, host: '0.0.0.0' }, err => {
 });
 
 export default app;
-
+export { logReplayCLI };
