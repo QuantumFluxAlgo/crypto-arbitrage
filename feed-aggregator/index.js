@@ -32,23 +32,36 @@ function normalize(data) {
 function connect(attempt = 0) {
   const ws = new WebSocket(FEED_URL);
 
-  ws.on('open', () => {
+    function reconnect() {
+      if (
+        ws.readyState === WebSocket.OPEN ||
+        ws.readyState === WebSocket.CONNECTING
+      ) {
+        ws.terminate();
+      }
+
+      const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
+      logger.warn(`Reconnecting in ${delay}ms`);
+      setTimeout(() => connect(attempt + 1), delay);
+    }
+
+    ws.on('open', () => {
       logger.info('Feed connected');
       attempt = 0;
-  });
+    });
 
     ws.on('message', msg => {
-    try {
+      try {
         const book = normalize(JSON.parse(msg));
         redis.publish(CHANNEL, JSON.stringify(book)).catch(err => {
           logger.error('Redis publish failed', err);
           sendAlert('email', `Redis publish failed: ${err.message}`);
         });
-    } catch (err) {
+      } catch (err) {
         logger.error('Bad message', err);
         sendAlert('telegram', `Feed parse error: ${err.message}`);
-    }
-  });
+      }
+    });
 
     ws.on('close', () => {
       logger.error('WebSocket closed unexpectedly');
@@ -61,16 +74,6 @@ function connect(attempt = 0) {
       sendAlert('email', `Feed connection error: ${err.message}`);
       reconnect();
     });
-
-    function reconnect() {
-        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-          ws.terminate();
-        }
-
-      const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
-      logger.warn(`Reconnecting in ${delay}ms`);
-      setTimeout(() => connect(attempt + 1), delay);
-    }
   }
 
 // small health endpoint
