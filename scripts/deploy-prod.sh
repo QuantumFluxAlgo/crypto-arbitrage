@@ -72,3 +72,5 @@ for manifest in "$ROOT_DIR/infra/k8s"/*.yaml; do
 done
 
 log "Deploying Helm chart"
+helm upgrade --install crypto-arbitrage "$ROOT_DIR/infra/helm" \
+  --namespace arbitrage --create-namespace
