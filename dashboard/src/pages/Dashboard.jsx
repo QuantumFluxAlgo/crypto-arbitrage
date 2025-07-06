@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import SimulationOverlay from '../components/SimulationOverlay.jsx';
 
 function LineChart({ data = [], color = '#00C8A0' }) {
   if (!data.length) {
@@ -103,28 +104,31 @@ export default function Dashboard() {
               <h2 className="font-semibold mb-2">Win Rate</h2>
               <LineChart data={metrics.winRate} color="#00C8A0" />
             </div>
-            <div className="bg-surface p-4 rounded shadow md:row-span-3">
-              <h2 className="font-semibold mb-2">Open Trades</h2>
-              <table className="min-w-full text-sm text-left">
-                <thead className="text-gray-400">
-                  <tr>
-                    <th className="px-2 py-1">Market</th>
-                    <th className="px-2 py-1">Type</th>
-                    <th className="px-2 py-1">Size</th>
+          <div className="bg-surface p-4 rounded shadow md:row-span-3">
+            <h2 className="font-semibold mb-2">Open Trades</h2>
+            <table className="min-w-full text-sm text-left">
+              <thead className="text-gray-400">
+                <tr>
+                  <th className="px-2 py-1">Market</th>
+                  <th className="px-2 py-1">Type</th>
+                  <th className="px-2 py-1">Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.openTrades.map((t, i) => (
+                  <tr key={i} className="odd:bg-background even:bg-surface">
+                    <td className="px-2 py-1">{t.market}</td>
+                    <td className="px-2 py-1">{t.type}</td>
+                    <td className="px-2 py-1">{t.size}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {metrics.openTrades.map((t, i) => (
-                    <tr key={i} className="odd:bg-background even:bg-surface">
-                      <td className="px-2 py-1">{t.market}</td>
-                      <td className="px-2 py-1">{t.type}</td>
-                      <td className="px-2 py-1">{t.size}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
+          <div className="md:col-span-2">
+            <SimulationOverlay />
+          </div>
+        </div>
 
           <div className="flex items-center space-x-4">
             <label className="flex items-center space-x-2">
