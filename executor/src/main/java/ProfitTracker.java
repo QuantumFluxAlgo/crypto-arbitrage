@@ -4,6 +4,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,8 @@ import org.slf4j.LoggerFactory;
 public class ProfitTracker {
     private static final Logger logger = LoggerFactory.getLogger(ProfitTracker.class);
     private static final HttpClient httpClient = HttpClient.newHttpClient();
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final int MAX_RETRIES = 3;
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
 
@@ -38,6 +43,10 @@ public class ProfitTracker {
     public static void record(double pnl) {
         dailyTotal += pnl;
         globalTotal += pnl;
+        sendWithRetry(pnl, 0);
+    }
+
+    private static void sendWithRetry(double pnl, int attempt) {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(analyticsUrl))
             .header("Content-Type", "application/json")
@@ -48,12 +57,23 @@ public class ProfitTracker {
             .thenAccept(resp -> {
                 if (resp.statusCode() >= 400) {
                     logger.warn("Failed to record trade: HTTP {}", resp.statusCode());
+                    scheduleRetry(pnl, attempt + 1);
                 }
             })
             .exceptionally(e -> {
                 logger.error("Error sending trade to analytics", e);
                 return null;
             });
+    }
+
+    
+    private static void scheduleRetry(double pnl, int attempt) {
+        if (attempt > MAX_RETRIES) {
+            logger.error("Failed to record trade after {} attempts", attempt);
+            return;
+        }
+        long delay = (long) Math.pow(2, attempt); // exponential backoff seconds
+        scheduler.schedule(() -> sendWithRetry(pnl, attempt), delay, TimeUnit.SECONDS);
     }
 
     /**
