@@ -88,6 +88,24 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
 
 ---
 
+## ML Training Pipeline
+
+- **Feature logging**: the Java executor stores trade inputs via `FeatureLogger`.
+- **Export**: run `analytics/train/export_features.py` to dump recent rows from
+  the `training_features` table as CSV or NumPy files.
+- **Model retraining**: execute `analytics/train/retrain.py` to train the
+  `SpreadLSTM` model on exported features and log results.
+- **Versioning**: models are recorded in the `model_metadata` table for
+  reproducibility.
+- **Shadow testing**: new models are validated against the live model before
+  promotion.
+- **Rollback**: use `model_swap.py` to swap to a prior model if issues arise.
+- **Scheduling**: `crontab.txt` runs `retrain.py` every Sunday at 2&nbsp;AM.
+- **Retrain flow**: features are loaded, the LSTM trains for 10 epochs, and
+  validation loss and Sharpe ratio are saved for review.
+
+---
+
 ## Deployment
 
 The platform runs on a Xeon host and is orchestrated by Kubernetes. Deploy or upgrade services using Helm charts located in `infra/helm`.
