@@ -49,4 +49,10 @@ async function sendAlert(type, message) {
   }
 }
 
-export { sendAlert };
+async function alertModelUpdate(versionHash, accuracy) {
+  const msg = `Model updated to ${versionHash} — Accuracy: ${accuracy}`;
+  await sendAlert('email', msg);
+  await sendAlert('telegram', msg);
+}
+
+export { sendAlert, alertModelUpdate };
