@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Batch 13] - 2025-07-07
+
+### Added
+- Admin user management (CRUD + reset password)
+- Canary mode toggle in settings
+- Trade replay CLI tool for model training
+- Postgres backup + restore scripts
+- Audit logging for sensitive ops actions
+
+### CLI
+- `scripts/replay-trades.js`
+- `scripts/backup.sh`, `restore.sh`
+
+## [Batch 12] - 2025-07-06
+
+### Added
+- Admin user CRUD routes with hashed passwords
+- Change-password and reset-password endpoints
+- Canary mode toggle to bypass trade execution
+- Trade replay CLI for model testing and auditing
+- Audit logger for settings changes and trade replays
+- Database backup and restore scripts using pg_dump
+
+### Backend
+- Audit middleware registered on settings route
+- Auth routes for password management
+
 ## [Batch 11] - 2025-07-05
 
 ### Added
