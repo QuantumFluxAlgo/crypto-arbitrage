@@ -38,12 +38,12 @@ function connect(attempt = 0) {
         ws.readyState === WebSocket.CONNECTING
       ) {
         ws.terminate();
-      }
-
-      const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
-      logger.warn(`Reconnecting in ${delay}ms`);
-      setTimeout(() => connect(attempt + 1), delay);
     }
+
+        const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
+        logger.warn(`Reconnecting in ${delay}ms`);
+        setTimeout(() => connect(attempt + 1), delay);
+      }
 
     ws.on('open', () => {
       logger.info('Feed connected');
@@ -76,9 +76,9 @@ function connect(attempt = 0) {
     });
   }
 
-// small health endpoint
-const app = Fastify();
-app.get('/health', async () => ({ ok: true }));
-app.listen({ port: 8090, host: '0.0.0.0' });
+  // small health endpoint
+  const app = Fastify();
+  app.get('/health', async () => ({ ok: true }));
+  app.listen({ port: 8090, host: '0.0.0.0' });
 
-connect();
+  connect();
