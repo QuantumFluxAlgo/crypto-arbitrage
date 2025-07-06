@@ -6,3 +6,4 @@ numpy==1.26.4             # data prep
 pytest==8.4.0            # testing
 joblib==1.5.1            # model serialization
 
+psycopg2-binary==2.9.9       # postgres client
