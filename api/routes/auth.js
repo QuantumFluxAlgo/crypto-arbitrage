@@ -1,10 +1,5 @@
 import bcrypt from 'bcryptjs';
-
-const hash = str => bcrypt.hashSync(str, 10);
-
-const users = {
-  user: hash('pass')
-};
+import { findByEmail, addUser, updatePassword } from './userStore.js';
 
 export default async function authRoutes(app) {
 
@@ -12,11 +7,11 @@ export default async function authRoutes(app) {
     const { oldPassword, newPassword } = req.body;
     try {
       const { email } = await app.jwt.verify(req.cookies.token);
-      const stored = users[email];
-      if (!stored || !(await bcrypt.compare(oldPassword, stored))) {
+      const user = findByEmail(email);
+      if (!user || !(await bcrypt.compare(oldPassword, user.password))) {
         return reply.code(400).send({ error: 'invalid credentials' });
       }
-      users[email] = await bcrypt.hash(newPassword, 10);
+      await updatePassword(user.id, newPassword);
       return { changed: true };
     } catch {
       return reply.code(401).send({ error: 'unauthorized' });
@@ -32,7 +27,12 @@ export default async function authRoutes(app) {
     if (!email || !newPassword) {
       return reply.code(400).send({ error: 'missing params' });
     }
-    users[email] = await bcrypt.hash(newPassword, 10);
+    const user = findByEmail(email);
+    if (user) {
+      await updatePassword(user.id, newPassword);
+    } else {
+      await addUser(email, newPassword, false);
+    }
     return { reset: true };
   });
 }

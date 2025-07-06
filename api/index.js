@@ -28,8 +28,12 @@ Sentry.init({
 
 function buildApp() {
   const app = Fastify();
+  settings.sandbox_mode = process.env.SANDBOX_MODE === 'true';
   app.register(fastifyCookie);
-  app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
+    app.register(fastifyJwt, {
+      secret: process.env.JWT_SECRET || 'change-me',
+      cookie: { cookieName: 'token' }
+    });
   app.register(apiRoutes, { prefix: '/api' });
   return app;
 }
@@ -69,7 +73,6 @@ const alertSettings = {
 async function apiRoutes(api) {
   api.register(loginRoute);
   api.register(authRoute);
-  api.register(settingsRoutes);
   api.register(auditLogger, { pool });
 
   api.addHook('onRequest', async (req, reply) => {
@@ -81,7 +84,7 @@ async function apiRoutes(api) {
     ];
     if (openPaths.includes(req.url)) return;
     try {
-      await req.jwtVerify({ token: req.cookies.token });
+      await req.jwtVerify();
     } catch {
       reply.code(401).send({ error: 'unauthorized' });
     }
@@ -93,38 +96,47 @@ async function apiRoutes(api) {
 
   api.get('/opportunities', async () => []);
 
-  api.get('/settings', async () => settings);
-  api.patch('/settings', async req => {
-    if (typeof req.body.personality_mode === 'string') {
-      settings.personality_mode = req.body.personality_mode;
-    }
-    if (typeof req.body.coin_cap_pct === 'number') {
-      settings.coin_cap_pct = req.body.coin_cap_pct;
-    }
-    if (typeof req.body.loss_limit_pct === 'number') {
-      settings.loss_limit_pct = req.body.loss_limit_pct;
-    }
-    if (typeof req.body.latency_limit_ms === 'number') {
-      settings.latency_limit_ms = req.body.latency_limit_ms;
-    }
-    if (typeof req.body.sweep_cadence_s === 'number') {
-      settings.sweep_cadence_s = req.body.sweep_cadence_s;
-    }
-    if (typeof req.body.useEnsemble === 'boolean') {
-      settings.useEnsemble = req.body.useEnsemble;
-    }
-    if (typeof req.body.shadowOnly === 'boolean') {
-      settings.shadowOnly = req.body.shadowOnly;
-    }
-    if (typeof req.body.ghost_mode === 'boolean') {
-      settings.ghost_mode = req.body.ghost_mode;
-    }
-    if (typeof req.body.canary_mode === 'boolean') {
-      settings.canary_mode = req.body.canary_mode;
-    }
-    if (typeof req.body.sandbox_mode === 'boolean' && !process.env.SANDBOX_MODE) {
-      settings.sandbox_mode = req.body.sandbox_mode;
-    }
+    const updateSettings = body => {
+      if (typeof body.personality_mode === 'string') {
+        settings.personality_mode = body.personality_mode;
+      }
+      if (typeof body.coin_cap_pct === 'number') {
+        settings.coin_cap_pct = body.coin_cap_pct;
+      }
+      if (typeof body.loss_limit_pct === 'number') {
+        settings.loss_limit_pct = body.loss_limit_pct;
+      }
+      if (typeof body.latency_limit_ms === 'number') {
+        settings.latency_limit_ms = body.latency_limit_ms;
+      }
+      if (typeof body.sweep_cadence_s === 'number') {
+        settings.sweep_cadence_s = body.sweep_cadence_s;
+      }
+      if (typeof body.useEnsemble === 'boolean') {
+        settings.useEnsemble = body.useEnsemble;
+      }
+      if (typeof body.shadowOnly === 'boolean') {
+        settings.shadowOnly = body.shadowOnly;
+      }
+      if (typeof body.ghost_mode === 'boolean') {
+        settings.ghost_mode = body.ghost_mode;
+      }
+      if (typeof body.canary_mode === 'boolean') {
+        settings.canary_mode = body.canary_mode;
+      }
+      if (typeof body.sandbox_mode === 'boolean' && !process.env.SANDBOX_MODE) {
+        settings.sandbox_mode = body.sandbox_mode;
+      }
+    };
+
+    api.get('/settings', async () => settings);
+    api.patch('/settings', async req => {
+      updateSettings(req.body);
+      return { saved: true };
+    });
+
+    api.post('/settings', async req => {
+      updateSettings(req.body);
     return { saved: true };
   });
 
@@ -144,22 +156,7 @@ async function apiRoutes(api) {
     }
   });
 
-  api.get('/trades/history', async (req, reply) => {
-    try {
-      const { rows } = await pool.query(
-        'SELECT pair, pnl, timestamp FROM trades ORDER BY timestamp DESC LIMIT 50'
-      );
-      return rows.map(row => ({
-        pair: row.pair,
-        PnL: row.pnl,
-        timestamp: row.timestamp,
-      }));
-    } catch (err) {
-      req.log.error(err);
-      return [];
-    }
-  });
-
+    
   api.get('/metrics', async () => ({ status: 'ok' }));
 
   api.post('/logout', async (req, reply) => {
