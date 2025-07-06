@@ -142,6 +142,7 @@ app = analytics_app.app
 
 def setup_module(module):
     analytics_app.model = DummyModel()
+    analytics_app.shadow_model = DummyModel()
 
 
 def test_predict_returns_valid_shape():
@@ -152,9 +153,16 @@ def test_predict_returns_valid_shape():
     data = resp.get_json()
     assert isinstance(data, dict)
     assert 'prediction' in data
+    assert 'shadow_prediction' in data
     result = data['prediction']
+    shadow_result = data['shadow_prediction']
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], list)
     assert len(result[0]) == 2
     assert all(isinstance(x, float) for x in result[0])
+    assert isinstance(shadow_result, list)
+    assert len(shadow_result) == 1
+    assert isinstance(shadow_result[0], list)
+    assert len(shadow_result[0]) == 2
+    assert all(isinstance(x, float) for x in shadow_result[0])

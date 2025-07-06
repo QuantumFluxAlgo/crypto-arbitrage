@@ -31,3 +31,8 @@ class SpreadLSTM:
         """Predict probabilities for the given input."""
         with tf.device(self.device):
             return self.model.predict(X)
+
+    @staticmethod
+    def load(path: str):
+        """Load a previously saved Keras model."""
+        return tf.keras.models.load_model(path)

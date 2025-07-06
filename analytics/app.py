@@ -93,6 +93,7 @@ def sharpe_ratio(window: int = 50) -> float:
 
 # Load model
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
+SHADOW_MODEL_PATH = os.getenv("MODEL_SHADOW_PATH", "model_shadow.h5")
 
 def load_model(path: str):
     logger.info("Attempting to load model from %s", path)
@@ -110,6 +111,7 @@ def load_model(path: str):
         return None
 
 model = load_model(MODEL_PATH)
+shadow_model = load_model(SHADOW_MODEL_PATH)
 
 @app.before_request
 def before_request():
@@ -151,7 +153,16 @@ def predict():
         logger.info("Input shape: %s", features.shape)
         preds = model.predict(features)
         logger.info("Output shape: %s", np.array(preds).shape)
-        return jsonify({'prediction': preds.tolist()})
+
+        shadow_preds = None
+        if shadow_model is not None:
+            shadow_preds = shadow_model.predict(features)
+
+        response = {'prediction': preds.tolist()}
+        if shadow_preds is not None:
+            response['shadow_prediction'] = shadow_preds.tolist()
+
+        return jsonify(response)
     except Exception as e:
         logger.exception("Prediction error: %s", e)
         return jsonify({'error': str(e)}), 400
