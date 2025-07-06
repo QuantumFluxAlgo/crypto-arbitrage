@@ -1,5 +1,6 @@
 import request from 'supertest';
 process.env.NODE_ENV = 'test';
+process.env.ADMIN_TOKEN = 'testadmintoken';
 import app from '../index.js';
 
 describe('API authentication', () => {
@@ -123,6 +124,41 @@ describe('API authentication', () => {
     expect(Array.isArray(res.body.pods)).toBe(true);
   });
 
+  test('/change-password updates stored password', async () => {
+    const login = await request('http://localhost:8080')
+      .post('/api/login')
+      .send({ email: 'user', password: 'pass' });
+    const cookie = login.headers['set-cookie'][0].split(';')[0];
+    const res = await request('http://localhost:8080')
+      .post('/api/change-password')
+      .set('Cookie', cookie)
+      .send({ oldPassword: 'pass', newPassword: 'newpass' });
+    expect(res.statusCode).toBe(200);
+    const relog = await request('http://localhost:8080')
+      .post('/api/login')
+      .send({ email: 'user', password: 'newpass' });
+    expect(relog.statusCode).toBe(200);
+  });
+
+  test('/reset-password requires admin token', async () => {
+    const res = await request('http://localhost:8080')
+      .post('/api/reset-password')
+      .send({ email: 'user', newPassword: 'reset' });
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('/reset-password resets user password with admin token', async () => {
+    const res = await request('http://localhost:8080')
+      .post('/api/reset-password')
+      .set('x-admin-token', 'testadmintoken')
+      .send({ email: 'user', newPassword: 'resetpass' });
+    expect(res.statusCode).toBe(200);
+    const login = await request('http://localhost:8080')
+      .post('/api/login')
+      .send({ email: 'user', password: 'resetpass' });
+    expect(login.statusCode).toBe(200);
+  });
+
   test('/api/users requires admin', async () => {
     const login = await request('http://localhost:8080')
       .post('/api/login')
@@ -169,3 +205,4 @@ describe('API authentication', () => {
 afterAll(async () => {
   await app.close();
 });
+
