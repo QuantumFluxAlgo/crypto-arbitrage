@@ -20,6 +20,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final RedisClient redisClient;
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
+    private final ScoringEngine scoringEngine;
     private final ResumeHandler resumeHandler;
     private final String redisHost;
     private final int redisPort;
@@ -43,6 +44,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis(redisHost, redisPort), this);
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
+        this.scoringEngine = new ScoringEngine();
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
     }
 
@@ -106,6 +108,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         if (!riskFilter.passes(opp)) {
             logger.info("Opportunity rejected by risk filter");
             nearMissLogger.log(opp, "rejected_by_risk_filter");
+            return;
+        }
+
+        if (!scoringEngine.scoreSpread(opp)) {
+            logger.info("Opportunity rejected by scoring engine");
+            nearMissLogger.log(opp, "rejected_by_scoring");
             return;
         }
 
