@@ -6,6 +6,7 @@ import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
 import pg from 'pg';
 import loginRoute from './routes/login.js';
+import userRoutes from './routes/users.js';
 import { sendAlert } from './services/alertManager.js';
 import infraRoutes from './routes/infra.js';
 const { Pool } = pg;
@@ -55,10 +56,9 @@ async function apiRoutes(api) {
     api.addHook('onRequest', async (req, reply) => {
       if (req.url === '/api/login' || req.url === '/login') return;
       try {
-        const token = req.cookies.token;
-        await api.jwt.verify(token);
+        await req.jwtVerify({ token: req.cookies.token });
       } catch {
-          reply.code(401).send({ error: 'unauthorized' });
+        reply.code(401).send({ error: 'unauthorized' });
       }
     });
 
@@ -112,6 +112,7 @@ async function apiRoutes(api) {
         return { resumed: true };
       });
 
+      api.register(userRoutes, { prefix: '/users' });
       api.register(infraRoutes, { redis, pool });
     }
 
