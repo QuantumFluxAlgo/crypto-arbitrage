@@ -13,6 +13,8 @@ import settingsRoutes from './routes/settings.js';
 import settings from './config/settings.js';
 import infraRoutes from './routes/infra.js';
 import modelRoutes from './routes/models.js';
+import metricsRoutes from './routes/metrics.js';
+import analyticsRoutes from './routes/analytics.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
@@ -87,17 +89,35 @@ async function apiRoutes(api) {
 
   api.get('/settings', async () => settings);
   api.patch('/settings', async req => {
-    if (typeof req.body.canary_mode === 'boolean') {
-      settings.canary_mode = req.body.canary_mode;
+    if (typeof req.body.personality_mode === 'string') {
+      settings.personality_mode = req.body.personality_mode;
     }
-    if (typeof req.body.sandbox_mode === 'boolean' && !process.env.SANDBOX_MODE) {
-      settings.sandbox_mode = req.body.sandbox_mode;
+    if (typeof req.body.coin_cap_pct === 'number') {
+      settings.coin_cap_pct = req.body.coin_cap_pct;
+    }
+    if (typeof req.body.loss_limit_pct === 'number') {
+      settings.loss_limit_pct = req.body.loss_limit_pct;
+    }
+    if (typeof req.body.latency_limit_ms === 'number') {
+      settings.latency_limit_ms = req.body.latency_limit_ms;
+    }
+    if (typeof req.body.sweep_cadence_s === 'number') {
+      settings.sweep_cadence_s = req.body.sweep_cadence_s;
+    }
+    if (typeof req.body.useEnsemble === 'boolean') {
+      settings.useEnsemble = req.body.useEnsemble;
     }
     if (typeof req.body.shadowOnly === 'boolean') {
       settings.shadowOnly = req.body.shadowOnly;
     }
     if (typeof req.body.ghost_mode === 'boolean') {
       settings.ghost_mode = req.body.ghost_mode;
+    }
+    if (typeof req.body.canary_mode === 'boolean') {
+      settings.canary_mode = req.body.canary_mode;
+    }
+    if (typeof req.body.sandbox_mode === 'boolean' && !process.env.SANDBOX_MODE) {
+      settings.sandbox_mode = req.body.sandbox_mode;
     }
     return { saved: true };
   });
@@ -149,6 +169,8 @@ async function apiRoutes(api) {
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
   api.register(modelRoutes, { pool });
+  api.register(metricsRoutes);
+  api.register(analyticsRoutes, { pool });
 }
 
 app.register(apiRoutes, { prefix: '/api' });
