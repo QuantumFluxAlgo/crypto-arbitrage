@@ -21,3 +21,5 @@ EOF
 node_modules/
 *.h5
 analytics/models/
+# Python bytecode
+__pycache__/
