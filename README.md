@@ -77,6 +77,22 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
   ```bash
   ./gradlew test
   ```
+  
+### Live Trade Simulation
+
+- Toggle ghost mode in settings
+- Simulated trades appear in dashboard overlay
+- Data streamed from Redis → WebSocket → UI
+- Disable for live trading
+
+To feed sample trades, use the CLI mock tester:
+```bash
+node scripts/replay-trade.js --pair BTC-USD
+```
+Inspect raw WebSocket messages:
+```bash
+npx wscat -c ws://localhost:3000/ws/trades
+```
 
 ---
 
