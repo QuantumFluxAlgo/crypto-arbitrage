@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 const hash = (str) => bcrypt.hashSync(str, 10);
 
 const users = {
-  operator: hash('pass')
+    user: hash('pass')
 };
 
 export default async function loginRoutes(app) {

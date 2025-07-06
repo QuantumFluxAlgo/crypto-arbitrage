@@ -13,7 +13,7 @@ describe('API authentication', () => {
     });
     
     test('/login rejects invalid credentials', async () => {
-        const res = await request('http://localhost:8080').post('/api/login').send({
+        const unauth = await request('http://localhost:8080').get('/api/opportunities');
             email: 'user',
             password: 'wrong'
         });
@@ -29,13 +29,13 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
         const cookie = login.headers['set-cookie'][0].split(';')[0];
         const authRes = await request('http://localhost:8080')
-        .get('/opportunities')
+        .get('/api/opportunities')
         .set('Cookie', cookie);
         expect(authRes.statusCode).toBe(200);
     });
     
     test('/resume requires auth', async () => {
-      const res = await request('http://localhost:8080').post('/resume');
+        const res = await request('http://localhost:8080').post('/api/resume');
       expect(res.statusCode).toBe(401);
 
       const login = await request('http://localhost:8080')
@@ -43,7 +43,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const authRes = await request('http://localhost:8080')
-        .post('/resume')
+        .post('/api/resume')
         .set('Cookie', cookie);
       expect(authRes.statusCode).toBe(200);
     });
@@ -54,7 +54,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .get('/settings')
+        .get('/api/settings')
         .set('Cookie', cookie);
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({});
@@ -66,7 +66,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .post('/settings')
+        .post('/api/settings')
         .set('Cookie', cookie)
         .send({ maxLoss: 0.1 });
       expect(res.statusCode).toBe(200);
@@ -74,7 +74,7 @@ describe('API authentication', () => {
     });
 
     test('/resume requires auth', async () => {
-      const res = await request('http://localhost:8080').post('/resume');
+        const res = await request('http://localhost:8080').post('/api/resume');
       expect(res.statusCode).toBe(401);
     });
     
@@ -85,7 +85,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .post('/resume')
+        .post('/api/resume')
         .set('Cookie', cookie);
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({ resumed: true });
@@ -97,14 +97,14 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .post('/logout')
+        .post('/api/logout')
         .set('Cookie', cookie);
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({ loggedOut: true });
     });
     
     test('/trades/history requires auth', async () => {
-        const unauth = await request('http://localhost:8080').get('/trades/history');
+        const unauth = await request('http://localhost:8080').get('/api/trades/history');
         expect(unauth.statusCode).toBe(401);
         
         const login = await request('http://localhost:8080')
@@ -112,7 +112,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
         const cookie = login.headers['set-cookie'][0].split(';')[0];
         const res = await request('http://localhost:8080')
-        .get('/trades/history')
+        .get('/api/trades/history')
         .set('Cookie', cookie);
         expect(res.statusCode).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
@@ -124,7 +124,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .post('/alerts/test/email')
+        .post('/api/alerts/test/email')
         .set('Cookie', cookie);
       expect(res.statusCode).toBe(200);
     });
@@ -135,7 +135,7 @@ describe('API authentication', () => {
         .send({ email: 'user', password: 'pass' });
       const cookie = login.headers['set-cookie'][0].split(';')[0];
       const res = await request('http://localhost:8080')
-        .get('/infra/status')
+        .get('/api/infra/status')
         .set('Cookie', cookie);
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('pods');
