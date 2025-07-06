@@ -4,7 +4,6 @@
   "description": "Crypto arbitrage tool",
   "main": "index.js",
   "scripts": {
-    "test": "echo 'no root tests'"
     "test": "echo 'no root tests'",
     "mock:ghost": "node scripts/mock-ghost-feed.js"
   },
@@ -17,7 +16,6 @@
     "minimist": "^1.2.8",
     "nodemailer": "^7.0.4",
     "pg": "^8.11.0",
-    "tailwindcss": "^4.1.11"
     "tailwindcss": "^4.1.11",
     "ioredis": "^5.6.1"
   }

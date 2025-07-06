@@ -151,6 +151,23 @@ describe('API authentication', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
+    test('/infra/status returns fake data in sandbox mode', async () => {
+      process.env.SANDBOX_MODE = 'true';
+      const login = await request('http://localhost:8080')
+        .post('/api/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .get('/api/infra/status')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.gpu).toBe(72);
+      expect(res.body.db).toBe(true);
+      expect(res.body.redis).toBe(true);
+      expect(res.body.pods.length).toBe(5);
+      delete process.env.SANDBOX_MODE;
+    });
+
   test('POST /alerts/test/email returns 200', async () => {
     const login = await request('http://localhost:8080')
       .post('/api/login')

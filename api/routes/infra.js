@@ -4,6 +4,26 @@ export default async function infraRoutes(app, opts) {
   const { redis, pool } = opts;
 
   app.get('/infra/status', async () => {
+      // In sandbox mode we just return a hardcoded healthy state
+      if (process.env.SANDBOX_MODE === 'true') {
+        return {
+          pods: [
+            { name: 'api', status: 'Running' },
+            { name: 'analytics', status: 'Running' },
+            { name: 'executor', status: 'Running' },
+            { name: 'dashboard', status: 'Running' },
+            { name: 'feed-aggregator', status: 'Running' }
+          ],
+          gpu: 72,
+          db: true,
+          redis: true,
+          components: [
+            { name: 'Redis', status: 'Healthy' },
+            { name: 'Postgres', status: 'Healthy' }
+          ]
+        };
+      }
+
     const pods = [
       { name: 'api', status: 'Running' },
       { name: 'analytics', status: 'Running' },
