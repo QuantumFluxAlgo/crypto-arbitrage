@@ -36,6 +36,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private long cumulativeLatencyMs;
     private boolean isPanic;
     private boolean canaryMode;
+    private boolean ghostMode;
 
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
@@ -46,6 +47,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.nearMissLogger = nearMissLogger;
         this.scoringEngine = new ScoringEngine();
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
+        this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
     }
 
     public void start() {
@@ -116,6 +118,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             nearMissLogger.log(opp, "rejected_by_scoring");
             return;
         }
+        
+        if (ghostMode) {
+            logger.info("GHOST MODE — broadcasting opportunity");
+            redisClient.publish("ghost-feed", message);
+            return;
+        }
 
         if (canaryMode) {
             logger.info("CANARY MODE — trade bypassed");
@@ -183,6 +191,14 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
     public boolean isCanaryMode() {
         return canaryMode;
+    }
+
+    public void setGhostMode(boolean mode) {
+        this.ghostMode = mode;
+    }
+
+    public boolean isGhostMode() {
+        return ghostMode;
     }
 
     public void shutdown() {

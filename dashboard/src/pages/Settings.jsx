@@ -10,6 +10,7 @@ export default function Settings() {
     sweep_cadence_s: 0,
     useEnsemble: false,
     shadowOnly: false,
+    ghost_mode: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,6 +27,7 @@ export default function Settings() {
           sweep_cadence_s: data.sweep_cadence_s ?? 0,
           useEnsemble: data.useEnsemble ?? false,
           shadowOnly: data.shadowOnly ?? false,
+          ghost_mode: data.ghost_mode ?? false,
         });
       } catch {
         setError('Unable to load settings');
@@ -121,7 +123,7 @@ export default function Settings() {
         />
       </label>
 
- <label className="flex items-center space-x-2">
+      <label className="flex items-center space-x-2">
         <input
           type="checkbox"
           name="useEnsemble"
@@ -141,6 +143,17 @@ export default function Settings() {
           className="accent-primary h-4 w-4"
         />
         <span>Shadow Only</span>
+      </label>
+
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="ghost_mode"
+          checked={settings.ghost_mode}
+          onChange={handleChange}
+          className="accent-primary h-4 w-4"
+        />
+        <span>Ghost Mode</span>
       </label>
 
       <button

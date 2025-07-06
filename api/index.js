@@ -94,6 +94,9 @@ async function apiRoutes(api) {
     if (typeof req.body.shadowOnly === 'boolean') {
       settings.shadowOnly = req.body.shadowOnly;
     }
+    if (typeof req.body.ghost_mode === 'boolean') {
+      settings.ghost_mode = req.body.ghost_mode;
+    }
     return { saved: true };
   });
 

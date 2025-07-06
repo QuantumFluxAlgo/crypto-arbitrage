@@ -86,6 +86,19 @@ describe('API authentication', () => {
     expect(res.body).toEqual({ saved: true });
   });
 
+    test('PATCH /settings toggles ghost mode', async () => {
+      const login = await request('http://localhost:8080')
+        .post('/api/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request('http://localhost:8080')
+        .patch('/api/settings')
+        .set('Cookie', cookie)
+        .send({ ghost_mode: true });
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({ saved: true });
+    });
+
   test('/logout clears cookie', async () => {
     const login = await request('http://localhost:8080')
       .post('/api/login')

@@ -1,7 +1,8 @@
 export let settings = {
   canary_mode: false,
   useEnsemble: true,
-  shadowOnly: false
+  shadowOnly: false,
+  ghost_mode: false
 };
 
 export default async function settingsRoutes(app) {
@@ -17,7 +18,9 @@ export default async function settingsRoutes(app) {
     if (typeof req.body.shadowOnly === 'boolean') {
       settings.shadowOnly = req.body.shadowOnly;
     }
+    if (typeof req.body.ghost_mode === 'boolean') {
+      settings.ghost_mode = req.body.ghost_mode;
+    }
     return { saved: true };
   });
 }
-
