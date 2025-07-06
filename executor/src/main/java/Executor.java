@@ -43,18 +43,36 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     }
 
     public void start() {
-        try {
-            String host = System.getenv().getOrDefault("PGHOST", "localhost");
-            String port = System.getenv().getOrDefault("PGPORT", "5432");
-            String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
-            String user = System.getenv().getOrDefault("PGUSER", "postgres");
-            String password = System.getenv().getOrDefault("PGPASSWORD", "");
-            String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
-            dbConnection = DriverManager.getConnection(url, user, password);
-            tradeLogger = new TradeLogger(dbConnection);
-            logger.info("Database connection established");
-        } catch (SQLException e) {
-            logger.error("Failed to connect to database", e);
+        int attempts = 0;
+         boolean connected = false;
+         String host = System.getenv().getOrDefault("PGHOST", "localhost");
+         String port = System.getenv().getOrDefault("PGPORT", "5432");
+         String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
+         String user = System.getenv().getOrDefault("PGUSER", "postgres");
+         String password = System.getenv().getOrDefault("PGPASSWORD", "");
+         String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+
+         while (attempts < 3 && !connected) {
+             try {
+                 dbConnection = DriverManager.getConnection(url, user, password);
+                 tradeLogger = new TradeLogger(dbConnection);
+                 logger.info("Database connection established");
+                 connected = true;
+             } catch (SQLException e) {
+                 attempts++;
+                 logger.error("Failed to connect to database (attempt {}/3)", attempts, e);
+                 if (attempts >= 3) {
+                     logger.error("Could not establish database connection after {} attempts. Executor will not start.", attempts);
+                     return;
+                 }
+                 try {
+                     Thread.sleep(2000L);
+                 } catch (InterruptedException ie) {
+                     Thread.currentThread().interrupt();
+                     logger.error("Retry sleep interrupted", ie);
+                     return;
+                 }
+             }
         }
         
         logger.info("Starting Redis client thread");
