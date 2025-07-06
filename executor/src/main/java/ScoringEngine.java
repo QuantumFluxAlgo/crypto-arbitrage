@@ -16,6 +16,10 @@ public class ScoringEngine {
         this.useEnsemble = useEnsemble;
     }
 
+    public double predict(SpreadOpportunity opp) {
+        return predictor.predict(opp);
+    }
+
     public boolean scoreSpread(SpreadOpportunity opp) {
         if (opp == null) {
             return false;

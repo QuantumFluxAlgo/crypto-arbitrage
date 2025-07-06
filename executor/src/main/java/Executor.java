@@ -21,6 +21,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final RiskFilter riskFilter;
     private final NearMissLogger nearMissLogger;
     private final ScoringEngine scoringEngine;
+    private final ProfitEstimator profitEstimator;
+    private final SimulatedPublisher simulatedPublisher;
     private final ResumeHandler resumeHandler;
     private final String redisHost;
     private final int redisPort;
@@ -37,6 +39,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private boolean isPanic;
     private boolean canaryMode;
     private boolean ghostMode;
+    private boolean sandboxMode;
 
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
@@ -46,8 +49,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
         this.scoringEngine = new ScoringEngine();
+        this.profitEstimator = new ProfitEstimator();
+        this.simulatedPublisher = new SimulatedPublisher(redisClient, true);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
+        this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
     }
 
     public void start() {
@@ -106,6 +112,16 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         logger.debug("Received message: {}", message);
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
+
+        double predictedProb = scoringEngine.predict(opp);
+        double simulatedPnl = profitEstimator.estimate(opp);
+
+        if (sandboxMode) {
+            logger.info("SANDBOX MODE — publishing simulated trade");
+            simulatedPublisher.publish(opp.getPair(), opp.getNetEdge(), predictedProb,
+                    opp.getRoundTripLatencyMs(), simulatedPnl);
+            return;
+        }
 
         if (!riskFilter.passes(opp)) {
             logger.info("Opportunity rejected by risk filter");
@@ -199,6 +215,14 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
     public boolean isGhostMode() {
         return ghostMode;
+    }
+
+    public void setSandboxMode(boolean mode) {
+        this.sandboxMode = mode;
+    }
+
+    public boolean isSandboxMode() {
+        return sandboxMode;
     }
 
     public void shutdown() {
