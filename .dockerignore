@@ -1,0 +1,9 @@
+# Files and folders not needed for the test container
+.git
+node_modules
+dashboard/node_modules
+api/node_modules
+feed-aggregator/node_modules
+executor/build
+**/__pycache__
+**/*.pyc
