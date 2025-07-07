@@ -1,20 +1,23 @@
+
 package executor;
 
 import executor.SpreadOpportunity;
 import executor.TradeResult;
 import executor.SandboxExchangeAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import executor.PanicBrake;
 import executor.FeatureLogger;
+import executor.ConfigValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 /**
  * Executor agent responsible for executing arbitrage opportunities.
  * Implements {@link ResumeHandler.ResumeCapable} to handle resume signals.
  */
-
 public class Executor implements ResumeHandler.ResumeCapable, java.util.concurrent.Executor {
     private static final Logger logger = LoggerFactory.getLogger(Executor.class);
 
@@ -60,42 +63,55 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     }
 
     public void start() {
-        int attempts = 0;
-         boolean connected = false;
-         String host = System.getenv().getOrDefault("PGHOST", "localhost");
-         String port = System.getenv().getOrDefault("PGPORT", "5432");
-         String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
-         String user = System.getenv().getOrDefault("PGUSER", "postgres");
-         String password = System.getenv().getOrDefault("PGPASSWORD", "");
-         String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
-
-         while (attempts < 3 && !connected) {
-             try {
-                 dbConnection = DriverManager.getConnection(url, user, password);
-                 tradeLogger = new TradeLogger(dbConnection);
-                 featureLogger = new FeatureLogger(dbConnection);
-                 logger.info("Database connection established");
-                 connected = true;
-             } catch (SQLException e) {
-                 attempts++;
-                 logger.error("Failed to connect to database (attempt {}/3)", attempts, e);
-                 if (attempts >= 3) {
-                     logger.error("Could not establish database connection after {} attempts. Executor will not start.", attempts);
-                     return;
-                 }
-                 try {
-                     Thread.sleep(2000L);
-                 } catch (InterruptedException ie) {
-                     Thread.currentThread().interrupt();
-                     logger.error("Retry sleep interrupted", ie);
-                     return;
-                 }
-             }
+        // ✅ Config validation for runtime safety
+        try {
+            ConfigValidator validator = new ConfigValidator(
+                Double.parseDouble(System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0")),
+                Double.parseDouble(System.getenv().getOrDefault("LATENCY_MAX_MS", "250.0")),
+                Double.parseDouble(System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.5"))
+            );
+            validator.validate();
+        } catch (RuntimeException ex) {
+            logger.error("❌ CONFIG VALIDATION FAILED: {}", ex.getMessage());
+            return;
         }
-        
-        logger.info("Starting Redis client thread");
+
+        int attempts = 0;
+        boolean connected = false;
+        String host = System.getenv().getOrDefault("PGHOST", "localhost");
+        String port = System.getenv().getOrDefault("PGPORT", "5432");
+        String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
+        String user = System.getenv().getOrDefault("PGUSER", "postgres");
+        String password = System.getenv().getOrDefault("PGPASSWORD", "");
+        String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+
+        while (attempts < 3 && !connected) {
+            try {
+                dbConnection = DriverManager.getConnection(url, user, password);
+                tradeLogger = new TradeLogger(dbConnection);
+                featureLogger = new FeatureLogger(dbConnection);
+                logger.info("✅ Database connection established");
+                connected = true;
+            } catch (SQLException e) {
+                attempts++;
+                logger.error("❌ Failed to connect to database (attempt {}/3)", attempts, e);
+                if (attempts >= 3) {
+                    logger.error("❌ Could not establish database connection after {} attempts. Executor will not start.", attempts);
+                    return;
+                }
+                try {
+                    Thread.sleep(2000L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    logger.error("❌ Retry sleep interrupted", ie);
+                    return;
+                }
+            }
+        }
+
+        logger.info("🚀 Starting Redis client thread");
         redisClient.start();
-        logger.info("Starting ResumeHandler thread");
+        logger.info("🔁 Starting ResumeHandler thread");
         resumeHandler.start();
     }
 
@@ -137,7 +153,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             nearMissLogger.log(opp, "rejected_by_scoring");
             return;
         }
-        
+
         if (ghostMode) {
             logger.info("GHOST MODE — broadcasting opportunity");
             redisClient.publish("ghost-feed", message);
@@ -173,7 +189,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         } else {
             logger.error("Failed to execute trade");
         }
-        
+
         if (featureLogger != null) {
             double slippage = opp.getGrossEdge() - opp.getNetEdge();
             double volatility = 0.0; // TODO derive from market data
