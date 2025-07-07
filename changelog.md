@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Batch 19] - 2025-07-13
+
+### Added
+- Auto-switching personality scheduler toggles between Realistic and Aggressive based on analytics stats
+
 ## [Batch 18] - 2025-07-12
 
 ### Added

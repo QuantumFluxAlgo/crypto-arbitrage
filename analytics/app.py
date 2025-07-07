@@ -91,6 +91,19 @@ def sharpe_ratio(window: int = 50) -> float:
         return 0.0
     return float(mean / std * np.sqrt(len(returns)))
 
+
+def recent_performance(days: int = 7) -> dict:
+    """Return volatility and win rate for trades within the last `days`."""
+    cutoff = time.time() - days * 86400
+    recent = [t for t in trades if t["time"] >= cutoff]
+    if not recent:
+        return {"volatility": 0.0, "win_rate": 0.0}
+
+    pnls = np.array([t["pnl"] for t in recent], dtype=np.float32)
+    vol = float(pnls.std(ddof=1)) if len(pnls) > 1 else 0.0
+    win_rate = float((pnls > 0).mean())
+    return {"volatility": vol, "win_rate": win_rate}
+
 # Load model
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
 SHADOW_MODEL_PATH = os.getenv("MODEL_SHADOW_PATH", "model_shadow.h5")
@@ -177,6 +190,13 @@ def trade():
         return jsonify({'error': 'pnl required'}), 400
     record_trade(float(pnl))
     return jsonify({'status': 'ok'})
+
+
+@app.route('/performance')
+def performance():
+    """Return 7-day volatility and win rate."""
+    days = int(request.args.get('days', 7))
+    return jsonify(recent_performance(days))
 
 
 @app.route('/stats')

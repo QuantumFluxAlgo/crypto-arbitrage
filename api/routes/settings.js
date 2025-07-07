@@ -3,7 +3,8 @@ export let settings = {
   useEnsemble: true,
   shadowOnly: false,
   ghost_mode: false,
-  sandbox_mode: process.env.SANDBOX_MODE === 'true'
+  sandbox_mode: process.env.SANDBOX_MODE === 'true',
+  personality_mode: 'Realistic'
 };
 
 export default async function settingsRoutes(app) {
@@ -16,7 +17,8 @@ export default async function settingsRoutes(app) {
       useEnsemble: { type: 'boolean' },
       shadowOnly: { type: 'boolean' },
       ghost_mode: { type: 'boolean' },
-      sandbox_mode: { type: 'boolean' }
+      sandbox_mode: { type: 'boolean' },
+      personality_mode: { type: 'string' }
     },
     additionalProperties: false
   };
@@ -43,6 +45,9 @@ export default async function settingsRoutes(app) {
         } else {
           settings.sandbox_mode = req.body.sandbox_mode;
         }
+    }
+    if (typeof req.body.personality_mode === 'string') {
+      settings.personality_mode = req.body.personality_mode;
     }
     return { saved: true };
   };

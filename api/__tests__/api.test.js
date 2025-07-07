@@ -114,7 +114,7 @@ describe('API authentication', () => {
       expect(res.body).toEqual({ saved: true });
     });
 
-    test('PATCH /settings does not override sandbox env', async () => {
+    test('PATCH /settings updates personality mode', async () => {
       const login = await request(app.server)
         .post('/api/login')
         .send({ email: 'user', password: 'pass' });
@@ -122,12 +122,12 @@ describe('API authentication', () => {
       const res = await request(app.server)
         .patch('/api/settings')
         .set('Cookie', cookie)
-        .send({ sandbox_mode: false });
+        .send({ personality_mode: 'Aggressive' });
       expect(res.statusCode).toBe(200);
       const verify = await request(app.server)
         .get('/api/settings')
         .set('Cookie', cookie);
-      expect(verify.body.sandbox_mode).toBe(true);
+      expect(verify.body.personality_mode).toBe('Aggressive');
     });
 
   test('/logout clears cookie', async () => {
