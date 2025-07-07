@@ -54,4 +54,17 @@ function start() {
   logger.info(`WebSocket server listening on ${WS_PORT}`);
 }
 
-export { start, wss };
+function stop() {
+  if (wss) {
+    wss.close();
+    wss = undefined;
+  }
+  if (redis && typeof redis.quit === 'function') {
+    redis.quit();
+    redis = undefined;
+  }
+  clients.clear();
+}
+
+export { start, stop, wss };
+
