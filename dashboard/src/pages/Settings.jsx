@@ -3,7 +3,7 @@ import axios from 'axios';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
-    personality_mode: 'Conservative',
+    personality_mode: 'Realistic',
     coin_cap_pct: 0,
     loss_limit_pct: 0,
     latency_limit_ms: 0,
@@ -22,7 +22,7 @@ export default function Settings() {
       try {
         const { data } = await axios.get('/api/settings');
         setSettings({
-          personality_mode: data.personality_mode ?? 'Conservative',
+          personality_mode: data.personality_mode ?? 'Realistic',
           coin_cap_pct: data.coin_cap_pct ?? 0,
           loss_limit_pct: data.loss_limit_pct ?? 0,
           latency_limit_ms: data.latency_limit_ms ?? 0,
@@ -91,7 +91,7 @@ export default function Settings() {
         </div>
       )}
       <div className="space-x-2">
-        {['Conservative', 'Balanced', 'Aggressive'].map((mode) => (
+        {['Realistic', 'Aggressive', 'Auto'].map((mode) => (
           <button
             key={mode}
             className={`px-3 py-1 rounded ${

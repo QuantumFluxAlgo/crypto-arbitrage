@@ -9,7 +9,7 @@ jest.mock('axios');
 
 beforeEach(() => {
   axios.get.mockResolvedValue({ data: {
-    personality_mode: 'Balanced',
+    personality_mode: 'Aggressive',
     coin_cap_pct: 10,
     loss_limit_pct: 1,
     latency_limit_ms: 100,
@@ -28,5 +28,5 @@ test('loads settings and shows save button', async () => {
   });
 
   expect(await screen.findByRole('button', { name: /save/i })).toBeInTheDocument();
-  expect(screen.getByText(/balanced/i)).toBeInTheDocument();
+  expect(screen.getByText(/aggressive/i)).toBeInTheDocument();
 });

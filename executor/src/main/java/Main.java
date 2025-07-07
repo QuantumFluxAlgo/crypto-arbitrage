@@ -28,7 +28,8 @@ public class Main {
             e.printStackTrace();
         }
 
-        RiskFilter riskFilter = new RiskFilter();
+        String mode = System.getenv().getOrDefault("PERSONALITY_MODE", "REALISTIC");
+        RiskFilter riskFilter = new RiskFilter(mode);
         NearMissLogger nearMissLogger = new NearMissLogger(conn);
         TradeLogger tradeLogger = new TradeLogger(conn);
 

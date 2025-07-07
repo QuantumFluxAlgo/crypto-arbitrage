@@ -77,7 +77,7 @@ const alertSettings = {
 async function apiRoutes(api) {
   api.register(loginRoute);
   api.register(authRoute);
-  api.register(settingsRoutes);
+  api.register(settingsRoutes, { redis });
   api.register(auditLogger, { pool });
 
   api.addHook('onRequest', async (req, reply) => {
@@ -117,21 +117,6 @@ async function apiRoutes(api) {
     }
   });
 
-  api.get('/trades/history', async (req, reply) => {
-    try {
-      const { rows } = await pool.query(
-        'SELECT pair, pnl, timestamp FROM trades ORDER BY timestamp DESC LIMIT 50'
-      );
-      return rows.map(row => ({
-        pair: row.pair,
-        PnL: row.pnl,
-        timestamp: row.timestamp,
-      }));
-    } catch (err) {
-      req.log.error(err);
-      return [];
-    }
-  });
 
   api.post('/logout', async (req, reply) => {
     reply.clearCookie('token');
