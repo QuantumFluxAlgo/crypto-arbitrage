@@ -17,7 +17,7 @@ export default async function loginRoutes(app) {
     }
 
     const user = findByEmail(email);
-    if (user && (await bcrypt.compare(password, user.password) || password === 'pass')) {
+    if (user && await bcrypt.compare(password, user.password)) {
       const token = app.jwt.sign({ email, isAdmin: user.isAdmin }, { algorithm: 'HS256' });
       reply.setCookie('token', token, { httpOnly: true });
       return { token };
