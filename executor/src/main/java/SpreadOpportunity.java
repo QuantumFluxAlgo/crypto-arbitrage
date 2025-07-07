@@ -11,6 +11,8 @@ public class SpreadOpportunity {
     private final double netEdge;
     private long latencyMs;
     private long roundTripLatencyMs;
+    private long latencyMicros;
+    private long roundTripLatencyMicros;
 
     public SpreadOpportunity(String pair,
                              String buyExchange,
@@ -50,6 +52,8 @@ public class SpreadOpportunity {
         );
         opp.latencyMs = spread.getLatencyMs();
         opp.roundTripLatencyMs = spread.getLatencyMs();
+        opp.latencyMicros = spread.getLatencyMs() * 1000;
+        opp.roundTripLatencyMicros = spread.getLatencyMs() * 1000;
         return opp;
     }
 
@@ -57,17 +61,20 @@ public class SpreadOpportunity {
         MockExchangeAdapter buy = new MockExchangeAdapter(buyExchange);
         MockExchangeAdapter sell = new MockExchangeAdapter(sellExchange);
 
-        long start = System.currentTimeMillis();
-        boolean buyOk = buy.placeOrder(pair, "BUY", size, price);
-        boolean sellOk = sell.placeOrder(pair, "SELL", size, price);
-        long end = System.currentTimeMillis();
-        
-        latencyMs = end - start;
+        long start = System.nanoTime();
+        boolean buyOk = buy.placeIocOrder(pair, "BUY", size, price);
+        boolean sellOk = sell.placeIocOrder(pair, "SELL", size, price);
+        long end = System.nanoTime();
+
+        latencyMicros = (end - start) / 1000;
+        roundTripLatencyMicros = latencyMicros;
+        latencyMs = latencyMicros / 1000;
         roundTripLatencyMs = latencyMs;
         double fee = size * price * buy.getFeeRate(pair);
         double pnl = netEdge - fee;
+        boolean success = buyOk && sellOk && latencyMicros <= 60;
 
-        return new TradeResult(buyOk && sellOk, pnl, latencyMs);
+        return new TradeResult(success, success ? pnl : 0.0, latencyMs);
     }
 
     public String getPair() { return pair; }
@@ -77,5 +84,7 @@ public class SpreadOpportunity {
     public double getNetEdge() { return netEdge; }
     public long getLatencyMs() { return latencyMs; }
     public long getRoundTripLatencyMs() { return roundTripLatencyMs; }
+    public long getLatencyMicros() { return latencyMicros; }
+    public long getRoundTripLatencyMicros() { return roundTripLatencyMicros; }
 }
 

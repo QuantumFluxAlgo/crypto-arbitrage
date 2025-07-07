@@ -61,6 +61,11 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
     }
 
     @Override
+    public boolean placeIocOrder(String pair, String side, double size, double price) {
+        return placeOrder(pair, side, size, price);
+    }
+
+    @Override
     public double getFeeRate(String pair) {
         return feeRate;
     }

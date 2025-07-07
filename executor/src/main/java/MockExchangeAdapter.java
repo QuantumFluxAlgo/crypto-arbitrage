@@ -43,5 +43,10 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     public void transfer(String asset, double amount, String destination) {
         logger.info("{} transferring {} {} to {}", name, amount, asset, destination);
     }
+    
+    @Override
+    public boolean placeIocOrder(String pair, String side, double size, double price) {
+        return placeOrder(pair, side, size, price);
+    }
 }
 
