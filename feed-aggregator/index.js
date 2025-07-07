@@ -7,6 +7,7 @@ const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
 const CHANNEL = "orderbook";
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const HEALTH_PORT = process.env.HEALTH_PORT || 8090;
 const MAX_RECONNECT_ATTEMPTS = parseInt(
   process.env.MAX_RECONNECT_ATTEMPTS || "5",
   10
@@ -103,6 +104,6 @@ function connect(attempt = 0) {
 // small health endpoint
 const app = Fastify();
 app.get("/health", async () => ({ ok: true }));
-app.listen({ port: 8090, host: "0.0.0.0" });
+app.listen({ port: HEALTH_PORT, host: "0.0.0.0" });
 
 connect();
