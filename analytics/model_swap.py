@@ -3,9 +3,14 @@ import json
 import os
 import shutil
 import socket
+import subprocess
 import time
+import logging
 
 from .model_tracker import insert_metadata, send_event
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 MODEL_FILE = os.path.join(os.path.dirname(__file__), "model.h5")
 ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), "models", "archive")
@@ -68,6 +73,16 @@ def main():
     log_note(meta, version)
     save_metadata(meta)
     print(f"Activated model {version}")
+    try:
+        subprocess.run(["git", "add", METADATA_FILE], check=True, capture_output=True)
+        subprocess.run([
+            "git",
+            "commit",
+            "-m",
+            f"swap model {version}",
+        ], check=True, capture_output=True)
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        logger.warning("Git commit failed: %s", exc)
     user = os.getenv("USER", "unknown")
     try:
         ip = socket.gethostbyname(socket.gethostname())

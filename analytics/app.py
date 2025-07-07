@@ -51,7 +51,7 @@ def record_trade(pnl: float, timestamp: float | None = None) -> None:
     """Record a trade's PnL in memory using a fixed-size deque."""
     if timestamp is None:
         timestamp = time.time()
-        trades.pop(0)
+    trades.append({"pnl": pnl, "time": timestamp})
 
 
 def compute_stats():
@@ -75,18 +75,18 @@ def compute_stats():
 
 def rolling_pnl(window: int = 50) -> float:
     """Return the rolling P&L for the last `window` trades."""
-    recent = trades[-window:]
     recent = list(trades)[-window:]
+    return float(sum(t["pnl"] for t in recent))
 
 
 def sharpe_ratio(window: int = 50) -> float:
     """Compute the Sharpe ratio for the last `window` trades."""
-    recent = trades[-window:]
     recent = list(trades)[-window:]
+    if len(recent) < 2:
         return 0.0
     returns = np.array([t['pnl'] for t in recent], dtype=np.float32)
     mean = returns.mean()
-    std = returns.std()
+    std = returns.std(ddof=1)
     if std == 0:
         return 0.0
     return float(mean / std * np.sqrt(len(returns)))
