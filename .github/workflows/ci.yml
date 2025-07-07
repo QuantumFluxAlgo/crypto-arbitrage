@@ -28,10 +28,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+
       - name: Install Podman
         run: |
           sudo apt-get update
           sudo apt-get -y install podman
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
       - name: Validate Kubernetes YAML
         run: kubectl apply --dry-run=client --validate=false -f infra/k8s/
