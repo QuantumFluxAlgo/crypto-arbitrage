@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SimulatedPublisher {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedPublisher.class);
-    private static final String CHANNEL = "ghost_feed";
+    /** Redis channel used for publishing simulated trades. */
+    private static final String CHANNEL =
+            System.getenv().getOrDefault("GHOST_FEED_CHANNEL", "ghost_feed");
 
     private final RedisClient redisClient;
     private final ObjectMapper mapper = new ObjectMapper();

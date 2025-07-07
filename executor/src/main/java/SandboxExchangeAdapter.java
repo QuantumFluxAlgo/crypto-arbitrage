@@ -15,7 +15,9 @@ import java.util.Random;
  */
 public class SandboxExchangeAdapter extends MockExchangeAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SandboxExchangeAdapter.class);
-    private static final String CHANNEL = "ghost_feed";
+    /** Redis channel used for publishing sandbox trade results. */
+    private static final String CHANNEL =
+            System.getenv().getOrDefault("GHOST_FEED_CHANNEL", "ghost_feed");
 
     private final Random random = new Random();
     private final double slippagePct;

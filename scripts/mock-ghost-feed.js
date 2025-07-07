@@ -13,7 +13,7 @@ const args = minimist(process.argv.slice(2), {
   default: {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: process.env.REDIS_PORT || 6379,
-    channel: 'ghost_feed',
+    channel: process.env.GHOST_FEED_CHANNEL || 'ghost_feed',
     interval: 2000,
   },
 });
