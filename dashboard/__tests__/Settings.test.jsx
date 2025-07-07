@@ -17,8 +17,10 @@ afterEach(() => {
 });
 
 test('renders personality mode buttons', async () => {
-  render(<Settings />);
-  await act(async () => {});
+  await act(async () => {
+    render(<Settings />);
+  });
+
   expect(await screen.findByRole('button', { name: /Conservative/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Balanced/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Aggressive/i })).toBeInTheDocument();

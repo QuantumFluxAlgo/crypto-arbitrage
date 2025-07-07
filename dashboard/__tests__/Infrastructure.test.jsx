@@ -4,8 +4,29 @@ import { act } from 'react';
 import '@testing-library/jest-dom';
 import Infrastructure from '../src/pages/Infrastructure.jsx';
 
-test('shows loading state', async () => {
-  render(<Infrastructure />);
-  expect(screen.getByText(/Loading/i)).toBeInTheDocument();
-  await act(async () => {});
+beforeEach(() => {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          pods: [{ name: 'app', status: 'Running' }],
+          gpu: 0,
+          db: true,
+          redis: true,
+        }),
+    })
+  );
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
+
+test('shows infrastructure status table', async () => {
+  await act(async () => {
+    render(<Infrastructure />);
+  });
+
+  expect(await screen.findByText('app')).toBeInTheDocument();
 });

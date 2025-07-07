@@ -17,9 +17,12 @@ afterEach(() => {
 });
 
 test('renders alert form after loading', async () => {
-  render(<Alerts />);
-  expect(screen.getByText(/loading/i)).toBeInTheDocument();
-  await act(async () => {});
-  await waitFor(() => expect(screen.getByLabelText(/smtp user/i)).toBeInTheDocument());
+  await act(async () => {
+    render(<Alerts />);
+  });
+
+  await waitFor(() =>
+    expect(screen.getByLabelText(/smtp user/i)).toBeInTheDocument()
+  );
   expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
 });

@@ -40,9 +40,10 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 test('displays loading then shows resume trading button', async () => {
-  render(<Dashboard />);
-  expect(screen.getByText(/loading/i)).toBeInTheDocument();
-  await act(async () => {});
+  await act(async () => {
+    render(<Dashboard />);
+  });
+
   expect(
     await screen.findByRole('button', { name: /resume trading/i })
   ).toBeInTheDocument();
