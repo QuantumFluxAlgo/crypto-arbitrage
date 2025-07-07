@@ -121,13 +121,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Tests
 - None
 
-## [Batch 8] - 2025-07-09
+## [Batch 8] - 2025-07-07
 
 ### Added
-- Kubernetes manifest validation in CI workflow
+- `ConfigValidator.java` to enforce runtime safety limits on executor startup
+- Unit tests in `ConfigValidatorTest.java` with JUnit 5 coverage
+- Auto-fail logic if `LOSS_CAP_PCT > 10`, `LATENCY_MAX_MS > 500`, or `WIN_RATE_THRESHOLD < 0.4`
+- Virtualenv setup and `pytest` installation for analytics validation
+- Full `verify-env.sh` compatibility and confirmation flow
 
-### Tests
-- None
+### Improved
+- Executor startup is now hardened against invalid operator configuration
+- Prevents high-loss or unsafe latency scenarios from booting the engine
+
+### Verified
+- `./verify-env.sh` passed all services (Maven, PyTest, Jest)
+- Manual panic + resume cycle tested locally
 
 ## [Batch 7] - 2025-07-08
 
