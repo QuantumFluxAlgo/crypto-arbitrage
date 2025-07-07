@@ -10,7 +10,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Check Jest via npx
 npx -y jest --version >/dev/null 2>&1 || {
@@ -25,7 +25,7 @@ pytest --version >/dev/null 2>&1 || {
 }
 
 # Check Maven only if the project uses it (presence of pom.xml)
-if find "$REPO_ROOT" -name pom.xml | grep -q pom.xml; then
+if find "${REPO_ROOT}" -name pom.xml | grep -q pom.xml; then
   if mvn -v >/dev/null 2>&1; then
     echo "Maven found"
   else
