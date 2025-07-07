@@ -27,8 +27,8 @@ def _update_metadata(version: str, path: Path, notes: str = "") -> None:
         writer.writerow([version, path.as_posix(), notes])
 
 
-def register_model(model_path: str = "model.h5", notes: str = "") -> str:
-    """Save a model file and commit metadata.
+def register_model(model_path: str = "model.h5", notes: str = "") -> Path:
+    """Save a model file and append metadata.
 
     Parameters
     ----------
@@ -39,8 +39,8 @@ def register_model(model_path: str = "model.h5", notes: str = "") -> str:
 
     Returns
     -------
-    str
-        The Git commit hash used as the model version.
+    pathlib.Path
+        Path to the saved model file.
     """
     version = _get_git_hash()
     MODELS_DIR.mkdir(exist_ok=True)
@@ -48,9 +48,7 @@ def register_model(model_path: str = "model.h5", notes: str = "") -> str:
     shutil.copy2(model_path, dest)
     _update_metadata(version, dest, notes)
 
-    subprocess.run(["git", "add", str(dest), str(METADATA_CSV)], check=True)
-    subprocess.run(["git", "commit", "-m", f"feat: register model {version}"], check=True)
-    return version
+    return dest
 
 
 def restore_model(version: str, out_path: str = "model.h5") -> str:
@@ -70,7 +68,9 @@ def verify_model(version: str) -> bool:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Lightweight Git model registry")
+    parser = argparse.ArgumentParser(
+        description="Lightweight Git model registry"
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     reg = sub.add_parser("register", help="Register a new model")
@@ -87,8 +87,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.cmd == "register":
-        v = register_model(args.path, notes=args.notes)
-        print(v)
+        saved_path = register_model(args.path, notes=args.notes)
+        version = saved_path.stem
+        subprocess.run(
+            ["git", "add", str(saved_path), str(METADATA_CSV)], check=True
+        )
+        subprocess.run([
+            "git",
+            "commit",
+            "-m",
+            f"feat: register model {version}",
+        ], check=True)
+        print(saved_path)
     elif args.cmd == "restore":
         restore_model(args.version, args.out)
     elif args.cmd == "verify":
