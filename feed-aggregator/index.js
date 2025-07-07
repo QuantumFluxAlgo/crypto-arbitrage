@@ -14,6 +14,8 @@ const MAX_RECONNECT_ATTEMPTS = parseInt(
 );
 const MAX_RECONNECT_DELAY = 30000;
 
+let reconnectAttempts = 0;
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
   transports: [new winston.transports.Console()],
@@ -46,16 +48,19 @@ function normalize(data) {
   return { bids, asks };
 }
 
-function connect(attempt = 0) {
+function connect() {
   const ws = new WebSocket(FEED_URL);
 
   function reconnect() {
-      if (attempt >= MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttempts += 1;
+      if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
         logger.error("Max reconnect attempts reached; giving up");
         sendAlert(
           "email",
           "Feed reconnect attempts exceeded. Manual intervention required."
         );
+        return;
+      }
         return;
       }
     if (
@@ -65,14 +70,19 @@ function connect(attempt = 0) {
       ws.terminate();
     }
 
-    const delay = Math.min(MAX_RECONNECT_DELAY, Math.pow(2, attempt) * 1000);
-    logger.warn(`Reconnecting in ${delay}ms (attempt ${attempt + 1})`);
-    setTimeout(() => connect(attempt + 1), delay);
+    const delay = Math.min(
+      MAX_RECONNECT_DELAY,
+      Math.pow(2, reconnectAttempts - 1) * 1000
+    );
+    logger.warn(
+      `Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`
+    );
+    setTimeout(() => connect(), delay);
   }
 
   ws.on("open", () => {
     logger.info("Feed connected");
-    attempt = 0;
+    reconnectAttempts = 0;
   });
 
   ws.on("message", (msg) => {
