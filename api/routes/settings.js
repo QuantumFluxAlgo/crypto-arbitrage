@@ -3,7 +3,7 @@ export let settings = {
   useEnsemble: true,
   shadowOnly: false,
   ghost_mode: false,
-  sandbox_mode: false
+  sandbox_mode: process.env.SANDBOX_MODE === 'true'
 };
 
 export default async function settingsRoutes(app) {
@@ -35,7 +35,14 @@ export default async function settingsRoutes(app) {
       settings.ghost_mode = req.body.ghost_mode;
     }
     if (typeof req.body.sandbox_mode === 'boolean') {
-      settings.sandbox_mode = req.body.sandbox_mode;
+        if (
+          process.env.SANDBOX_MODE === 'true' &&
+          req.body.sandbox_mode === false
+        ) {
+          // Ignore attempts to disable sandbox mode when forced by env
+        } else {
+          settings.sandbox_mode = req.body.sandbox_mode;
+        }
     }
     return { saved: true };
   };
