@@ -24,6 +24,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final ScoringEngine scoringEngine;
     private final ProfitEstimator profitEstimator;
     private final SimulatedPublisher simulatedPublisher;
+    private final RiskSettings riskSettings;
     private final ResumeHandler resumeHandler;
     private final String redisHost;
     private final int redisPort;
@@ -52,6 +53,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.scoringEngine = new ScoringEngine();
         this.profitEstimator = new ProfitEstimator();
         this.simulatedPublisher = new SimulatedPublisher(redisClient, true);
+        this.riskSettings = new RiskSettings();
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
         this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
@@ -149,14 +151,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         logger.info("Executing opportunity: {}", opp.getPair());
 
+        double tradeSize = riskSettings.computeTradeSize();
         TradeResult result;
         if (sandboxMode) {
             SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
                     redisClient,
                     o -> scoringEngine.predictProbability(o));
-            result = adapter.execute(opp, 1.0, 1.0);
+            result = adapter.execute(opp, tradeSize, 1.0);
         } else {
-            result = opp.execute(1.0, 1.0); // TODO: Replace with dynamic size/price logic
+            result = opp.execute(tradeSize, 1.0);
         }
 
         updatePerformanceMetrics(result);
