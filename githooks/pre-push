@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 #
 # Pre-push hook to run project tests
 # Runs npm test, pytest, and Gradle tests
