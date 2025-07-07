@@ -78,6 +78,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         int attempts = 0;
         boolean connected = false;
+        int maxRetries = Integer.parseInt(System.getenv().getOrDefault("DB_RETRIES", "3"));
+        long retryDelayMs = Long.parseLong(System.getenv().getOrDefault("DB_RETRY_DELAY_MS", "2000"));
         String host = System.getenv().getOrDefault("PGHOST", "localhost");
         String port = System.getenv().getOrDefault("PGPORT", "5432");
         String database = System.getenv().getOrDefault("PGDATABASE", "arbdb");
@@ -85,7 +87,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         String password = System.getenv().getOrDefault("PGPASSWORD", "");
         String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
 
-        while (attempts < 3 && !connected) {
+        while (attempts < maxRetries && !connected) {
             try {
                 dbConnection = DriverManager.getConnection(url, user, password);
                 tradeLogger = new TradeLogger(dbConnection);
@@ -94,13 +96,13 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                 connected = true;
             } catch (SQLException e) {
                 attempts++;
-                logger.error("❌ Failed to connect to database (attempt {}/3)", attempts, e);
-                if (attempts >= 3) {
+                logger.error("❌ Failed to connect to database (attempt {}/{})", attempts, maxRetries, e);
+                if (attempts >= maxRetries) {
                     logger.error("❌ Could not establish database connection after {} attempts. Executor will not start.", attempts);
                     return;
                 }
                 try {
-                    Thread.sleep(2000L);
+                    Thread.sleep(retryDelayMs);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     logger.error("❌ Retry sleep interrupted", ie);

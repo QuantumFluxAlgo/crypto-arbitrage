@@ -75,6 +75,8 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
 - `SENTRY_DSN` for API error reporting
 - `VITE_SENTRY_DSN` for dashboard errors
 - `SANDBOX_MODE` to enable demo login without DB
+- `DB_RETRIES` sets how many times the executor retries DB connections (default 3)
+- `DB_RETRY_DELAY_MS` delay in ms between DB retry attempts (default 2000)
 
 ---
 
