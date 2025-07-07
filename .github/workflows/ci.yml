@@ -34,14 +34,14 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install podman
 
-      - name: Configure kubectl
+      - name: Install kubeconform
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+          curl -L https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz \
+            | tar xz
+          sudo mv kubeconform /usr/local/bin/
 
       - name: Validate Kubernetes YAML
-        run: kubectl apply --dry-run=client --validate=false -f infra/k8s/
+        run: kubeconform -strict -ignore-missing-schemas -summary infra/k8s/
 
       - name: Run API tests
         run: npm test
