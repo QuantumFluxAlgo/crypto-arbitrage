@@ -20,10 +20,11 @@ import { start as startWsServer } from './services/wsServer.js';
 
 const { Pool } = pg;
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  enabled: process.env.NODE_ENV === 'production',
-});
+if (process.env.SENTRY_DSN && process.env.NODE_ENV === 'production') {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+  });
+}
 
 function buildApp() {
   const app = Fastify();
