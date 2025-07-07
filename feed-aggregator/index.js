@@ -7,6 +7,11 @@ const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
 const CHANNEL = "orderbook";
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const MAX_RECONNECT_ATTEMPTS = parseInt(
+  process.env.MAX_RECONNECT_ATTEMPTS || "5",
+  10
+);
+const MAX_RECONNECT_DELAY = 30000;
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
@@ -44,6 +49,14 @@ function connect(attempt = 0) {
   const ws = new WebSocket(FEED_URL);
 
   function reconnect() {
+      if (attempt >= MAX_RECONNECT_ATTEMPTS) {
+        logger.error("Max reconnect attempts reached; giving up");
+        sendAlert(
+          "email",
+          "Feed reconnect attempts exceeded. Manual intervention required."
+        );
+        return;
+      }
     if (
       ws.readyState === WebSocket.OPEN ||
       ws.readyState === WebSocket.CONNECTING
@@ -51,8 +64,8 @@ function connect(attempt = 0) {
       ws.terminate();
     }
 
-    const delay = Math.min(30000, Math.pow(2, attempt) * 1000);
-    logger.warn(`Reconnecting in ${delay}ms`);
+    const delay = Math.min(MAX_RECONNECT_DELAY, Math.pow(2, attempt) * 1000);
+    logger.warn(`Reconnecting in ${delay}ms (attempt ${attempt + 1})`);
     setTimeout(() => connect(attempt + 1), delay);
   }
 
