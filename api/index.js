@@ -58,6 +58,14 @@ if (process.env.NODE_ENV === 'test') {
   });
 }
 
+// Ensure external connections close gracefully when the server shuts down
+app.addHook('onClose', async () => {
+  await pool.end();
+  if (redis && typeof redis.quit === 'function') {
+    await redis.quit();
+  }
+});
+
 const alertSettings = {
   smtp_user: '',
   smtp_pass: '',
