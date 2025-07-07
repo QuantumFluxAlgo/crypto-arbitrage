@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import logging
+from collections import deque
 
 import numpy as np
 from flask import Flask, g, request, jsonify, Response
@@ -43,15 +44,13 @@ request_latency = Histogram(
 
 # In-memory trade store
 MAX_TRADES = 1000
-trades = []
+trades = deque(maxlen=MAX_TRADES)
 
 
 def record_trade(pnl: float, timestamp: float | None = None) -> None:
-    """Record a trade's PnL in memory, keeping only the most recent entries."""
+    """Record a trade's PnL in memory using a fixed-size deque."""
     if timestamp is None:
         timestamp = time.time()
-    trades.append({"timestamp": timestamp, "pnl": float(pnl)})
-    if len(trades) > MAX_TRADES:
         trades.pop(0)
 
 
@@ -77,13 +76,13 @@ def compute_stats():
 def rolling_pnl(window: int = 50) -> float:
     """Return the rolling P&L for the last `window` trades."""
     recent = trades[-window:]
-    return float(sum(t['pnl'] for t in recent))
+    recent = list(trades)[-window:]
 
 
 def sharpe_ratio(window: int = 50) -> float:
     """Compute the Sharpe ratio for the last `window` trades."""
     recent = trades[-window:]
-    if not recent:
+    recent = list(trades)[-window:]
         return 0.0
     returns = np.array([t['pnl'] for t in recent], dtype=np.float32)
     mean = returns.mean()
