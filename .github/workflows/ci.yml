@@ -100,6 +100,9 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 1
 
+      - name: Install Python dependencies for analytics
+        run: pip install -r requirements.txt
+
       - name: Run Analytics tests
         run: pytest
         working-directory: analytics
