@@ -6,7 +6,13 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 
-if (import.meta.env.VITE_SENTRY_DSN && process.env.NODE_ENV === 'production') {
+const enableSentry = import.meta.env.VITE_ENABLE_SENTRY === 'true'
+
+if (
+  enableSentry &&
+  import.meta.env.VITE_SENTRY_DSN &&
+  process.env.NODE_ENV === 'production'
+) {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
     integrations: [new BrowserTracing()],
