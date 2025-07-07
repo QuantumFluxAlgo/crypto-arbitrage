@@ -1,4 +1,4 @@
-xpackage executor;
+package executor;
 
 /**
  * Holds risk-related configuration values and computes trade sizes
