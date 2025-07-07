@@ -4,6 +4,7 @@ import logging
 import os
 import socket
 import subprocess
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -73,13 +74,18 @@ def main():
 
     # Notify via Node.js CLI alert script
     script = Path(__file__).resolve().parents[1] / 'api' / 'cli' / 'alertModelUpdate.js'
-    try:
-        subprocess.run(
-            ['node', str(script), '--version', version_hash, '--accuracy', f"{win_rate:.2f}"],
-            check=False
-        )
-    except Exception as exc:
-        logger.warning("Failed to send model update alert: %s", exc)
+   node_bin = shutil.which('node')
+    if node_bin:
+        try:
+            subprocess.run(
+                [node_bin, str(script), '--version', version_hash, '--accuracy', f"{win_rate:.2f}"],
+                check=False
+            )
+        except Exception as exc:
+            logger.warning("Failed to send model update alert: %s", exc)
+    else:
+        logger.warning("Node.js not found; skipping model update alert")
+
 
 
 if __name__ == "__main__":
