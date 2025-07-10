@@ -4,7 +4,8 @@ export let settings = {
   shadowOnly: false,
   ghost_mode: false,
   sandbox_mode: process.env.SANDBOX_MODE === 'true',
-  personality_mode: 'Realistic'
+  personality_mode: 'Realistic',
+  sweep_cadence: 'None'
 };
 
 export default async function settingsRoutes(app) {
@@ -18,7 +19,8 @@ export default async function settingsRoutes(app) {
       shadowOnly: { type: 'boolean' },
       ghost_mode: { type: 'boolean' },
       sandbox_mode: { type: 'boolean' },
-      personality_mode: { type: 'string' }
+      personality_mode: { type: 'string' },
+      sweep_cadence: { type: 'string' }
     },
     additionalProperties: false
   };
@@ -49,6 +51,12 @@ export default async function settingsRoutes(app) {
     if (typeof req.body.personality_mode === 'string') {
       settings.personality_mode = req.body.personality_mode;
     }
+    if (typeof req.body.sweep_cadence === 'string') {
+      const allowed = ['Daily', 'Monthly', 'None'];
+      if (allowed.includes(req.body.sweep_cadence)) {
+        settings.sweep_cadence = req.body.sweep_cadence;
+        }
+      }
     return { saved: true };
   };
 
