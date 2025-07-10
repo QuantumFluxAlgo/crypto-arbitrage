@@ -8,7 +8,7 @@ import axios from 'axios';
 jest.mock('axios');
 
 beforeEach(() => {
-  axios.get.mockResolvedValue({ data: { personality_mode: 'Conservative' } });
+  axios.get.mockResolvedValue({ data: { personality_mode: 'Realistic' } });
   axios.patch.mockResolvedValue({});
 });
 
@@ -21,7 +21,7 @@ test('renders personality mode buttons', async () => {
     render(<Settings />);
   });
 
-  expect(await screen.findByRole('button', { name: /Conservative/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Balanced/i })).toBeInTheDocument();
+  expect(await screen.findByRole('button', { name: /Realistic/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Aggressive/i })).toBeInTheDocument();
-});
+  expect(screen.getByRole('button', { name: /Auto/i })).toBeInTheDocument();
+

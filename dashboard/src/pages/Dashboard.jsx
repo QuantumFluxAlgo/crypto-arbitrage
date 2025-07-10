@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import SimulationOverlay from '../components/SimulationOverlay.jsx';
+import LiveMetrics from '../components/LiveMetrics.jsx';
 
 function LineChart({ data = [], color = '#00C8A0' }) {
   if (!data.length) {
@@ -126,7 +126,7 @@ export default function Dashboard() {
             </table>
           </div>
           <div className="md:col-span-2">
-            <SimulationOverlay />
+            <LiveMetrics equity={metrics.equityCurve} latency={metrics.latency} />
           </div>
         </div>
 
