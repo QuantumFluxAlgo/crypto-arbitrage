@@ -17,3 +17,14 @@ CREATE TABLE training_features (
     label INT NOT NULL REFERENCES labels(id),
     timestamp TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE cgt_audit (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    asset TEXT NOT NULL,
+    side TEXT NOT NULL,
+    amount NUMERIC NOT NULL,
+    price NUMERIC NOT NULL,
+    cost_basis NUMERIC,
+    gain NUMERIC
+);

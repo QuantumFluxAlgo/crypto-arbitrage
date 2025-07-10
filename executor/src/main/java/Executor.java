@@ -35,6 +35,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private Connection dbConnection;
     private TradeLogger tradeLogger;
     private FeatureLogger featureLogger;
+    private CGTPool cgtPool;
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -97,6 +98,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                 dbConnection = DriverManager.getConnection(url, user, password);
                 tradeLogger = new TradeLogger(dbConnection);
                 featureLogger = new FeatureLogger(dbConnection);
+                cgtPool = new CGTPool(dbConnection);
                 logger.info("✅ Database connection established");
                 connected = true;
             } catch (SQLException e) {
@@ -195,6 +197,13 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             if (tradeLogger != null) {
                 tradeLogger.logTrade(opp, result.pnl);
             }
+        if (cgtPool != null) {
+            String asset = parseBaseAsset(opp.getPair());
+            double buyPrice = 1.0;
+            double sellPrice = 1.0 + (result.pnl / tradeSize);
+            cgtPool.recordBuy(asset, tradeSize, buyPrice);
+            cgtPool.recordSell(asset, tradeSize, sellPrice);
+            }
             ProfitTracker.record(result.pnl);
             dailyLossPct = ProfitTracker.getDailyLossPct();
         } else {
@@ -283,5 +292,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         } catch (SQLException e) {
             logger.error("Error closing database connection", e);
         }
+    }
+
+    private String parseBaseAsset(String pair) {
+        if (pair == null) return "";
+        int idx = pair.indexOf('/');
+        if (idx == -1) {
+            idx = pair.indexOf('-');
+        }
+        if (idx == -1) {
+            return pair;
+        }
+        return pair.substring(0, idx);
     }
 }

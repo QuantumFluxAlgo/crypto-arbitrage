@@ -14,6 +14,7 @@ import infraRoutes from './routes/infra.js';
 import modelRoutes from './routes/models.js';
 import metricsRoutes from './routes/metrics.js';
 import analyticsRoutes from './routes/analytics.js';
+import cgtRoutes from './routes/cgt.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
@@ -133,6 +134,7 @@ async function apiRoutes(api) {
   api.register(modelRoutes, { pool });
   api.register(metricsRoutes);
   api.register(analyticsRoutes, { pool });
+  api.register(cgtRoutes, { pool });
 }
 
 if (process.env.NODE_ENV !== 'test') {

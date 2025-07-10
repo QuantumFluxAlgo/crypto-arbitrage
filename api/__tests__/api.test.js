@@ -157,6 +157,21 @@ describe('API authentication', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
+    test('/cgt/export requires auth', async () => {
+      const unauth = await request(app.server).get('/api/cgt/export');
+      expect(unauth.statusCode).toBe(401);
+
+      const login = await request(app.server)
+        .post('/api/login')
+        .send({ email: 'user', password: 'pass' });
+      const cookie = login.headers['set-cookie'][0].split(';')[0];
+      const res = await request(app.server)
+        .get('/api/cgt/export')
+        .set('Cookie', cookie);
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+
     test('/infra/status returns fake data in sandbox mode', async () => {
       process.env.SANDBOX_MODE = 'true';
       const login = await request(app.server)
