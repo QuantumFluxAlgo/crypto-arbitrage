@@ -33,6 +33,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install podman
+      - name: Install kubectl and jq
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install kubectl jq
+
 
       - name: Install kubeconform
         run: |
@@ -139,4 +144,6 @@ jobs:
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
+      - name: Run behavior simulation tests
+        run: bash scripts/test-behavior.sh
 
