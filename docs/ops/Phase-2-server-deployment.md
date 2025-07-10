@@ -211,6 +211,19 @@ Rollback:
 helm rollback prism-arbitrage <revision>
 ```
 
+---
+
+## 13. Configure TLS Ingress
+
+Apply the Kubernetes ingress manifest to expose the API and dashboard over HTTPS.
+
+```bash
+kubectl apply -f infra/k8s/ingress.yaml
+```
+
+Ensure the TLS certificate secret `prism-tls-secret` exists in the cluster so the
+ingress controller can terminate HTTPS traffic.
+
 Validate:
 
 ```bash
@@ -220,7 +233,7 @@ kubectl get svc
 
 ---
 
-## 13. Confirm Runtime Health
+## 14. Confirm Runtime Health
 
 ```bash
 kubectl get pods -o wide
@@ -237,7 +250,7 @@ kubectl port-forward svc/dashboard 3000:3000
 
 ---
 
-## 14. Optional Monitoring Setup
+## 15. Optional Monitoring Setup
 
 Add repos:
 
@@ -249,7 +262,7 @@ helm repo update
 
 ---
 
-## 15. Final Deployment Checklist
+## 16. Final Deployment Checklist
 
 * [ ] Ubuntu VM provisioned on Proxmox
 * [ ] Kubernetes initialized and accessible

@@ -4247,12 +4247,38 @@ Read-only replicas recommended for dashboard access if publicly exposed
 
 
 Ingress Configuration Example (TLS):
-yaml
-CopyEdit
-tls:
-  - hosts:
-      - prism.yourdomain.com
-    secretName: prism-tls-secret
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prism-ingress
+spec:
+  tls:
+    - hosts:
+        - prism.yourdomain.com
+      secretName: prism-tls-secret
+  rules:
+    - host: prism.yourdomain.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard
+                port:
+                  number: 3000
+```
+
+Apply this manifest from `infra/k8s/ingress.yaml` after deploying the core services.
 
 Private Network Deployment (default):
 Platform runs behind VPN or isolated LAN
