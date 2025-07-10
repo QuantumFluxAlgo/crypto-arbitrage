@@ -7,6 +7,7 @@ import executor.SandboxExchangeAdapter;
 import executor.PanicBrake;
 import executor.FeatureLogger;
 import executor.ConfigValidator;
+import executor.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private boolean canaryMode;
     private boolean ghostMode;
     private boolean sandboxMode;
+    private CircuitBreaker circuitBreaker;
 
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
