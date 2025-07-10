@@ -57,6 +57,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.profitEstimator = new ProfitEstimator();
         this.simulatedPublisher = new SimulatedPublisher(redisClient, true);
         this.riskSettings = new RiskSettings();
+        double cbWinRate = Double.parseDouble(System.getenv().getOrDefault("CB_WIN_RATE_THRESHOLD", "0.35"));
+        double cbDrawdown = Double.parseDouble(System.getenv().getOrDefault("CB_MAX_DRAWDOWN_PCT", "5.0"));
+        this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
         this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
@@ -125,6 +128,10 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     }
 
     public void handleMessage(String message) {
+        if (circuitBreaker.isTripped()) {
+            logger.warn("Trading halted due to circuit breaker.");
+            return;
+        }
         if (isPanic) {
             logger.warn("Trading halted due to panic brake.");
             return;
@@ -200,6 +207,14 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             featureLogger.logFeatureVector(opp.getPair(), opp.getNetEdge(), slippage, volatility, latencySec, label);
         }
 
+        
+        double drawdown = 0.0;
+        double globalTotal = ProfitTracker.getGlobalTotal();
+        if (globalTotal < 0) {
+            drawdown = (-globalTotal / ProfitTracker.getStartingBalance()) * 100.0;
+        }
+        circuitBreaker.check(winRate, drawdown);
+
         if (PanicBrake.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
             isPanic = true;
             logger.error("PANIC BRAKE TRIGGERED");
@@ -223,11 +238,13 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
     public void resumeTrading() {
         isPanic = false;
+        circuitBreaker.reset();
         logger.info("Trading manually resumed.");
     }
 
     public void resumeFromPanic() {
         isPanic = false;
+        circuitBreaker.reset();
         logger.info("PANIC RESUME SIGNAL RECEIVED");
     }
 

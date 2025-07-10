@@ -96,5 +96,14 @@ public class ProfitTracker {
     public static double getGlobalTotal() {
         return globalTotal;
     }
+    
+    /**
+     * Get the initial starting balance used for drawdown calculations.
+     *
+     * @return starting balance value
+     */
+    public static double getStartingBalance() {
+        return startingBalance;
+    }
 }
 
