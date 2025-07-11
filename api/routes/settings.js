@@ -1,4 +1,5 @@
 export let settings = {
+  schema_version: 1,
   canary_mode: false,
   useEnsemble: true,
   shadowOnly: false,
@@ -14,6 +15,7 @@ export default async function settingsRoutes(app) {
   const bodySchema = {
     type: 'object',
     properties: {
+      schema_version: { type: 'integer' },
       canary_mode: { type: 'boolean' },
       useEnsemble: { type: 'boolean' },
       shadowOnly: { type: 'boolean' },
@@ -26,6 +28,9 @@ export default async function settingsRoutes(app) {
   };
 
   const saveSettings = async req => {
+    if (typeof req.body.schema_version === 'number') {
+      settings.schema_version = req.body.schema_version;
+    }
     if (typeof req.body.canary_mode === 'boolean') {
       settings.canary_mode = req.body.canary_mode;
     }

@@ -3571,6 +3571,7 @@ Sample Response:
 json
 CopyEdit
 {
+  "schema_version": 1,
   "personality_mode": "AUTO",
   "net_edge_threshold": 0.005,
   "max_latency_ms": 250,
