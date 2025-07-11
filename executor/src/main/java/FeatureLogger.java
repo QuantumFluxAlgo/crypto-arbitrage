@@ -15,6 +15,11 @@ public class FeatureLogger {
     private static final Logger logger = LoggerFactory.getLogger(FeatureLogger.class);
     private final Connection connection;
 
+    /**
+     * Create a logger that persists features using the given connection.
+     *
+     * @param connection database connection for writes
+     */
     public FeatureLogger(Connection connection) {
         this.connection = connection;
     }

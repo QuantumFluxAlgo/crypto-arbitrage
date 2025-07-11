@@ -8,6 +8,9 @@ import redis.clients.jedis.JedisPubSub;
 import executor.AlertManager;
 import java.util.function.Consumer;
 
+/**
+ * Lightweight Redis pub/sub client used for messaging between agents.
+ */
 public class RedisClient extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
@@ -21,6 +24,14 @@ public class RedisClient extends Thread {
     private final MessageHandler handler;
     private volatile boolean running = true;
 
+    /**
+     * Create a new Redis client instance.
+     *
+     * @param host    redis host
+     * @param port    redis port
+     * @param channel subscription channel
+     * @param handler callback for incoming messages
+     */
     public RedisClient(String host, int port, String channel, MessageHandler handler) {
         this.host = host;
         this.port = port;
@@ -29,6 +40,12 @@ public class RedisClient extends Thread {
         setName("RedisClientSubscriber");
     }
 
+    /**
+     * Publish a message to the given channel.
+     *
+     * @param channel redis channel
+     * @param message payload to publish
+     */
     public void publish(String channel, String message) {
         try (Jedis jedis = new Jedis(host, port)) {
             jedis.publish(channel, message);
@@ -78,11 +95,15 @@ public class RedisClient extends Thread {
         subscribe(channel, (ch, msg) -> handler.accept(msg));
     }
 
+    /**
+     * Stop the subscription thread and close connections.
+     */
     public void shutdown() {
         running = false;
         interrupt();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void run() {
         int attempt = 0;

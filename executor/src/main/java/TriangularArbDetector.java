@@ -31,6 +31,9 @@ public class TriangularArbDetector {
     private final Executor executor;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * @param executor executor to notify when opportunities arise
+     */
     public TriangularArbDetector(Executor executor) {
         this.executor = executor;
     }

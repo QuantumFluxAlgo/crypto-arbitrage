@@ -11,6 +11,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Tracks realised profit and periodically sends trade data to an
+ * external analytics service.
+ */
 public class ProfitTracker {
     private static final Logger logger = LoggerFactory.getLogger(ProfitTracker.class);
     private static final HttpClient httpClient = HttpClient.newHttpClient();

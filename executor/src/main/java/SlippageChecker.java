@@ -1,5 +1,8 @@
 package executor;
 
+/**
+ * Utility methods for validating trade execution prices.
+ */
 public class SlippageChecker {
     /**
      * Check if the actual value is within the allowed slippage of the expected value.

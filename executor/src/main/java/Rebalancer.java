@@ -24,6 +24,10 @@ public class Rebalancer {
         this(threshold, Collections.emptyMap());
     }
 
+    /**
+     * @param threshold allowed deviation from target before logging
+     * @param adapters  exchange adapters used for optional transfers
+     */
     public Rebalancer(double threshold, Map<String, ExchangeAdapter> adapters) {
         this.threshold = threshold;
         this.adapters = Objects.requireNonNullElse(adapters, Collections.emptyMap());

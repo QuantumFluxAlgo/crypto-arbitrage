@@ -28,6 +28,11 @@ public class ColdSweeper {
         this(minAmountUsd, minCapitalRatio, new MockWalletClient());
     }
 
+    /**
+     * @param minAmountUsd    absolute profit threshold
+     * @param minCapitalRatio relative profit threshold
+     * @param walletClient    wallet client implementation
+     */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient) {
         this.minAmountUsd = minAmountUsd;
         this.minCapitalRatio = minCapitalRatio;

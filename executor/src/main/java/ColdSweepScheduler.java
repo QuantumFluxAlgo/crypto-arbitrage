@@ -23,6 +23,13 @@ public class ColdSweepScheduler {
     private final Supplier<Double> capitalSupplier;
     private final String address;
 
+    /**
+     * @param sweeper          sweeper used to perform transfers
+     * @param cadenceSupplier  supplier of sweep cadence setting
+     * @param profitSupplier   supplier of realised profit
+     * @param capitalSupplier  supplier of working capital
+     * @param address          destination cold wallet address
+     */
     public ColdSweepScheduler(ColdSweeper sweeper,
                               Supplier<String> cadenceSupplier,
                               Supplier<Double> profitSupplier,

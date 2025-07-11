@@ -8,10 +8,16 @@ import java.sql.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Writes executed trades to the database for auditing purposes.
+ */
 public class TradeLogger {
     private static final Logger logger = LoggerFactory.getLogger(TradeLogger.class);
     private final Connection connection;
 
+    /**
+     * @param connection database connection used for inserts
+     */
     public TradeLogger(Connection connection) {
         this.connection = connection;
     }

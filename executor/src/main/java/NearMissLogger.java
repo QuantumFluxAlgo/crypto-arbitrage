@@ -7,15 +7,29 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Persists opportunities that were filtered out so they can be analysed later.
+ */
 public class NearMissLogger {
     private static final Logger logger = LoggerFactory.getLogger(NearMissLogger.class);
 
     private final Connection connection;
 
+    /**
+     * Create a logger using the provided database connection.
+     *
+     * @param connection database connection
+     */
     public NearMissLogger(Connection connection) {
         this.connection = connection;
     }
 
+    /**
+     * Persist an opportunity that did not pass filters.
+     *
+     * @param opp    rejected opportunity
+     * @param reason textual reason for rejection
+     */
     public void log(SpreadOpportunity opp, String reason) {
         String sql = "INSERT INTO near_misses (buy_exchange, sell_exchange, pair, gross_edge, net_edge, reason, latency_ms, round_trip_latency_ms) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -34,4 +48,3 @@ public class NearMissLogger {
         }
     }
 }
-

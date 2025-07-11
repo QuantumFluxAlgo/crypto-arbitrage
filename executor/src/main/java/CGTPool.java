@@ -26,10 +26,22 @@ public class CGTPool {
     private final Map<String, PoolEntry> pools = new HashMap<>();
     private final Connection connection;
 
+    /**
+     * Create a new CGT pool using the provided database connection.
+     *
+     * @param connection active database connection for audit logging
+     */
     public CGTPool(Connection connection) {
         this.connection = connection;
     }
 
+    /**
+     * Record a buy operation and update the pooled quantity/cost.
+     *
+     * @param asset  asset symbol
+     * @param amount amount purchased
+     * @param price  execution price
+     */
     public synchronized void recordBuy(String asset, double amount, double price) {
         PoolEntry entry = pools.computeIfAbsent(asset, a -> new PoolEntry());
         entry.quantity += amount;
@@ -37,6 +49,14 @@ public class CGTPool {
         logEvent(asset, "BUY", amount, price, amount * price, 0.0);
     }
 
+    /**
+     * Record a sell operation, updating pooled cost basis and returning the realised gain.
+     *
+     * @param asset  asset symbol
+     * @param amount amount sold
+     * @param price  execution price
+     * @return realised gain from the sale
+     */
     public synchronized double recordSell(String asset, double amount, double price) {
         PoolEntry entry = pools.get(asset);
         if (entry == null || entry.quantity < amount) {
@@ -71,6 +91,12 @@ public class CGTPool {
         }
     }
 
+    /**
+     * Retrieve the pool entry for the given asset.
+     *
+     * @param asset asset symbol
+     * @return pool entry or {@code null} if none exists
+     */
     public PoolEntry getEntry(String asset) {
         return pools.get(asset);
     }

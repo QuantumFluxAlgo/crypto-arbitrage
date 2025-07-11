@@ -26,6 +26,9 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
     private final RedisClient redisClient;
     private final ModelPredictor predictor;
 
+    /**
+     * Construct using environment configured parameters.
+     */
     public SandboxExchangeAdapter(RedisClient redisClient,
                                   ModelPredictor predictor) {
         this("Sandbox", redisClient, predictor,
@@ -34,6 +37,9 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
              Long.parseLong(System.getenv().getOrDefault("SANDBOX_LATENCY_MS", "50")));
     }
 
+    /**
+     * Create a sandbox adapter with explicit settings.
+     */
     public SandboxExchangeAdapter(String name,
                                   RedisClient redisClient,
                                   ModelPredictor predictor,

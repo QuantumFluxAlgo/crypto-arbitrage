@@ -49,6 +49,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private boolean sandboxMode;
     private CircuitBreaker circuitBreaker;
 
+    /**
+     * Create a new executor instance.
+     *
+     * @param redisClient   Redis client used for feed subscription
+     * @param redisHost     Redis host name
+     * @param redisPort     Redis port number
+     * @param riskFilter    risk filter instance
+     * @param nearMissLogger logger used for near miss events
+     */
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
         this.redisClient = redisClient;
         this.redisHost = redisHost;
@@ -68,6 +77,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
     }
 
+    /**
+     * Initialize connections and start background threads.
+     */
     public void start() {
         // ✅ Config validation for runtime safety
         try {
@@ -124,6 +136,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         resumeHandler.start();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void execute(Runnable command) {
         if (command != null) {
@@ -131,6 +144,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         }
     }
 
+    /**
+     * Process a serialized {@link SpreadOpportunity} message from Redis.
+     *
+     * @param message JSON encoded opportunity
+     */
     public void handleMessage(String message) {
         if (circuitBreaker.isTripped()) {
             logger.warn("Trading halted due to circuit breaker.");
@@ -247,42 +265,75 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         logger.debug("Metrics: latency={}ms, winRate={}, totalTrades={}", result.latencyMs, winRate, totalTrades);
     }
 
+    /**
+     * Manually resume trading after a user initiated halt.
+     */
     public void resumeTrading() {
         isPanic = false;
         circuitBreaker.reset();
         logger.info("Trading manually resumed.");
     }
 
+    /**
+     * Resume trading after a panic brake was triggered.
+     */
     public void resumeFromPanic() {
         isPanic = false;
         circuitBreaker.reset();
         logger.info("PANIC RESUME SIGNAL RECEIVED");
     }
 
+    /**
+     * Enable or disable canary mode.
+     *
+     * @param mode {@code true} to enable
+     */
     public void setCanaryMode(boolean mode) {
         this.canaryMode = mode;
     }
 
+    /**
+     * @return whether canary mode is active
+     */
     public boolean isCanaryMode() {
         return canaryMode;
     }
 
+    /**
+     * Enable or disable ghost mode broadcasting.
+     *
+     * @param mode {@code true} to enable
+     */
     public void setGhostMode(boolean mode) {
         this.ghostMode = mode;
     }
 
+    /**
+     * @return whether ghost mode is active
+     */
     public boolean isGhostMode() {
         return ghostMode;
     }
 
+    /**
+     * Enable or disable sandbox trading mode.
+     *
+     * @param mode {@code true} to enable
+     */
     public void setSandboxMode(boolean mode) {
         this.sandboxMode = mode;
     }
 
+    /**
+     * @return whether sandbox mode is active
+     */
     public boolean isSandboxMode() {
         return sandboxMode;
     }
 
+    /**
+     * Cleanly shutdown all resources and connections.
+     */
     public void shutdown() {
         redisClient.shutdown();
         try {

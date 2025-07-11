@@ -4,7 +4,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Entry point for launching the executor from the command line.
+ */
 public class Main {
+
+    /**
+     * Configure dependencies and start the {@link Executor}.
+     *
+     * @param args unused
+     */
     public static void main(String[] args) {
         String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
         int redisPort = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));

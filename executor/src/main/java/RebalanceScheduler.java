@@ -19,11 +19,18 @@ public class RebalanceScheduler {
     private final Rebalancer rebalancer;
     private final Map<String, ExchangeAdapter> adapters;
 
+    /**
+     * Create a scheduler that delegates to the given rebalancer.
+     *
+     * @param rebalancer rebalancer instance
+     * @param adapters   mapping of exchange name to adapter
+     */
     public RebalanceScheduler(Rebalancer rebalancer, Map<String, ExchangeAdapter> adapters) {
         this.rebalancer = rebalancer;
         this.adapters = adapters;
     }
 
+    
     /** Start the 15 minute rebalance job. */
     public void start() {
         scheduler.scheduleAtFixedRate(this::runOnce, 0, 15, TimeUnit.MINUTES);

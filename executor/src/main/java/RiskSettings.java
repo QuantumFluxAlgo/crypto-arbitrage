@@ -8,6 +8,9 @@ public class RiskSettings {
     private final double startingBalance;
     private final double coinCapPct;
 
+    /**
+     * Load risk configuration from environment variables.
+     */
     public RiskSettings() {
         this.startingBalance = Double.parseDouble(
                 System.getenv().getOrDefault("STARTING_BALANCE", "10000"));

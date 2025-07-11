@@ -3,6 +3,9 @@ package executor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Represents an executable arbitrage opportunity between two exchanges.
+ */
 public class SpreadOpportunity {
     private final String pair;
     private final String buyExchange;
@@ -14,6 +17,9 @@ public class SpreadOpportunity {
     private long latencyMicros;
     private long roundTripLatencyMicros;
 
+    /**
+     * Create an opportunity with the given parameters.
+     */
     public SpreadOpportunity(String pair,
                              String buyExchange,
                              String sellExchange,
@@ -26,6 +32,9 @@ public class SpreadOpportunity {
         this.netEdge = netEdge;
     }
 
+    /**
+     * Parse an opportunity from a JSON payload.
+     */
     public static SpreadOpportunity fromJson(String json) {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -42,6 +51,9 @@ public class SpreadOpportunity {
         }
     }
 
+    /**
+     * Convert a simple spread into a SpreadOpportunity instance.
+     */
     public static SpreadOpportunity fromSpread(Spread spread) {
         SpreadOpportunity opp = new SpreadOpportunity(
             "",
@@ -57,6 +69,9 @@ public class SpreadOpportunity {
         return opp;
     }
 
+    /**
+     * Execute the opportunity using mock exchanges.
+     */
     public TradeResult execute(double size, double price) {
         MockExchangeAdapter buy = new MockExchangeAdapter(buyExchange);
         MockExchangeAdapter sell = new MockExchangeAdapter(sellExchange);
@@ -77,14 +92,23 @@ public class SpreadOpportunity {
         return new TradeResult(success, success ? pnl : 0.0, latencyMs);
     }
 
+    /** @return trading pair */
     public String getPair() { return pair; }
+    /** @return buy exchange name */
     public String getBuyExchange() { return buyExchange; }
+    /** @return sell exchange name */
     public String getSellExchange() { return sellExchange; }
+    /** @return gross edge value */
     public double getGrossEdge() { return grossEdge; }
+    /** @return net edge value */
     public double getNetEdge() { return netEdge; }
+    /** @return measured latency in ms */
     public long getLatencyMs() { return latencyMs; }
+    /** @return round trip latency in ms */
     public long getRoundTripLatencyMs() { return roundTripLatencyMs; }
+    /** @return latency in microseconds */
     public long getLatencyMicros() { return latencyMicros; }
+    /** @return round trip latency in microseconds */
     public long getRoundTripLatencyMicros() { return roundTripLatencyMicros; }
 }
 

@@ -1,5 +1,8 @@
 package executor;
 
+/**
+ * Abstraction for exchange specific order and balance operations.
+ */
 public interface ExchangeAdapter {
     /**
      * Place an order on the exchange.
