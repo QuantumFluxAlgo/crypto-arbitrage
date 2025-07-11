@@ -144,6 +144,17 @@ jobs:
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
+
+  behavior-tests:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install kubectl and jq
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install kubectl jq
       - name: Run behavior simulation tests
         run: bash scripts/test-behavior.sh
 
