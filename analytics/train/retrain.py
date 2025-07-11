@@ -1,6 +1,6 @@
 import json
 import glob
-import logging
+from analytics.logger import loggerimport os
 import os
 from datetime import datetime
 
@@ -9,9 +9,7 @@ import tensorflow as tf
 
 from analytics.lstm import SpreadLSTM
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger(__name__)
+
 
 
 def load_latest_features(pattern="**/features*.npz"):

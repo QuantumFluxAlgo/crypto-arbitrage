@@ -2,9 +2,9 @@
 
 import os
 import sys
-import logging
+from .logger import logger
 
-from .app import app, logger, model
+from .app import app, model
 
 
 def main() -> None:
@@ -18,6 +18,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
-  
+    main()

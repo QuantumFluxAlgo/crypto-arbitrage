@@ -1,4 +1,4 @@
-import logging
+from .logger import logger
 import argparse
 import numpy as np
 import joblib
@@ -11,9 +11,7 @@ from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.models import save_model
 
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger(__name__)
+# Configure logging via centralized logger
 
 
 def generate_data(num_samples=10000, threshold=0.0, reshape_for_lstm=False):

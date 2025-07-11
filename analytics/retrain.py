@@ -1,6 +1,6 @@
 import argparse
 import hashlib
-import logging
+from .logger import logger
 import os
 import socket
 import subprocess
@@ -14,8 +14,6 @@ from tensorflow.keras.layers import LSTM, Dense
 from .train import generate_data
 from .model_tracker import insert_metadata, send_event
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger(__name__)
 
 
 def train_model(epochs: int = 5):

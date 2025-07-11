@@ -5,12 +5,10 @@ import shutil
 import socket
 import subprocess
 import time
-import logging
+from .logger import logger
 
 from .model_tracker import insert_metadata, send_event
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger(__name__)
 
 MODEL_FILE = os.path.join(os.path.dirname(__file__), "model.h5")
 ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), "models", "archive")
