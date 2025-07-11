@@ -21,25 +21,21 @@ public class ColdSweepScheduler {
     private final Supplier<String> cadenceSupplier;
     private final Supplier<Double> profitSupplier;
     private final Supplier<Double> capitalSupplier;
-    private final String address;
 
     /**
      * @param sweeper          sweeper used to perform transfers
      * @param cadenceSupplier  supplier of sweep cadence setting
      * @param profitSupplier   supplier of realised profit
      * @param capitalSupplier  supplier of working capital
-     * @param address          destination cold wallet address
      */
     public ColdSweepScheduler(ColdSweeper sweeper,
                               Supplier<String> cadenceSupplier,
                               Supplier<Double> profitSupplier,
-                              Supplier<Double> capitalSupplier,
-                              String address) {
+                              Supplier<Double> capitalSupplier) {
         this.sweeper = sweeper;
         this.cadenceSupplier = cadenceSupplier;
         this.profitSupplier = profitSupplier;
         this.capitalSupplier = capitalSupplier;
-        this.address = address;
     }
 
     /** Start the daily evaluation job. */
@@ -68,7 +64,7 @@ public class ColdSweepScheduler {
         double capital = capitalSupplier.get();
         if (sweeper.shouldSweep(profit, capital)) {
             logger.info("Cold sweep triggered");
-            sweeper.sweepToColdWallet(address);
+            sweeper.sweepToColdWallet();
         }
     }
 

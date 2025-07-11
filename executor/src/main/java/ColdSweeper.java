@@ -12,12 +12,13 @@ public class ColdSweeper {
     private final double minAmountUsd;
     private final double minCapitalRatio;
     private final WalletClient walletClient;
+    private final ColdSweeperConfig config;
 
     /**
      * Default: sweep when profit ≥ $5,000 or ≥ 30% of capital.
      */
     public ColdSweeper() {
-        this(5000.0, 0.30, new MockWalletClient());
+        this(5000.0, 0.30, new MockWalletClient(), new ColdSweeperConfig());
     }
 
     /**
@@ -25,7 +26,7 @@ public class ColdSweeper {
      * @param minCapitalRatio relative profit threshold (e.g. 0.30 = 30%)
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio) {
-        this(minAmountUsd, minCapitalRatio, new MockWalletClient());
+        this(minAmountUsd, minCapitalRatio, new MockWalletClient(), new ColdSweeperConfig());
     }
 
     /**
@@ -34,9 +35,20 @@ public class ColdSweeper {
      * @param walletClient    wallet client implementation
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient) {
+        this(minAmountUsd, minCapitalRatio, walletClient, new ColdSweeperConfig());
+    }
+
+    /**
+     * @param minAmountUsd    absolute profit threshold
+     * @param minCapitalRatio relative profit threshold
+     * @param walletClient    wallet client implementation
+     * @param config          configuration loader
+     */
+    public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient, ColdSweeperConfig config) {
         this.minAmountUsd = minAmountUsd;
         this.minCapitalRatio = minCapitalRatio;
         this.walletClient = walletClient;
+        this.config = config;
     }
 
     /**
@@ -58,6 +70,16 @@ public class ColdSweeper {
 
     /**
      * Logs the sweep action. Stub for actual wallet transfer.
+     * Uses the address from {@link ColdSweeperConfig}.
+     */
+    public void sweepToColdWallet() {
+        String address = config.getTestColdWalletAddress();
+        logger.info("Sweeping to cold wallet: {}", address);
+        walletClient.withdraw(address);
+    }
+
+    /**
+     * Logs the sweep action to a custom address.
      *
      * @param address destination cold wallet address
      */

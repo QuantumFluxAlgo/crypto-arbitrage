@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Scheduled cold wallet sweeps according to user-defined cadence
+### Added
+- ColdSweeper now reads `TEST_COLD_WALLET_ADDRESS` from environment variables
 
 ## [Batch 19] - 2025-07-13
 

@@ -23,8 +23,7 @@ public class ColdSweepSchedulerTest {
                 sweeper,
                 () -> "None",
                 () -> 10.0,
-                () -> 10.0,
-                "addr");
+                () -> 10.0);
         scheduler.runOnce(LocalDate.of(2025,1,1));
         assertFalse(wallet.called);
     }
@@ -37,8 +36,7 @@ public class ColdSweepSchedulerTest {
                 sweeper,
                 () -> "Daily",
                 () -> 10.0,
-                () -> 10.0,
-                "addr");
+                () -> 10.0);
         scheduler.runOnce(LocalDate.of(2025,1,2));
         assertTrue(wallet.called);
     }
@@ -51,8 +49,7 @@ public class ColdSweepSchedulerTest {
                 sweeper,
                 () -> "Monthly",
                 () -> 10.0,
-                () -> 10.0,
-                "addr");
+                () -> 10.0);
         scheduler.runOnce(LocalDate.of(2025,1,2));
         assertFalse(wallet.called);
         scheduler.runOnce(LocalDate.of(2025,1,1));
