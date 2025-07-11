@@ -15,6 +15,7 @@
 ## Features
 
 - Real-time order book aggregation across 14 exchanges
+- Feed aggregator service publishes normalized books to Redis
 - Java executor for sub-60µs trade execution
 - REST API with JWT authentication
 - React dashboard for live monitoring
@@ -95,6 +96,11 @@ Environment examples are provided in `api/.env.example` and `analytics/.env.exam
   ```bash
   ./gradlew test
   ```
+  - **Feed Aggregator** service:
+  ```bash
+  npm install --prefix feed-aggregator
+  npm test --prefix feed-aggregator
+  
   
 ### Live Trade Simulation
 

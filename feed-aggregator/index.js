@@ -2,6 +2,7 @@ const WebSocket = require("ws");
 const Redis = require("ioredis");
 const Fastify = require("fastify");
 const winston = require("winston");
+const normalize = require("./lib/normalize");
 
 const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
 const CHANNEL = "orderbook";
@@ -36,17 +37,6 @@ function sendAlert(type, message) {
   });
 }
 
-function normalize(data) {
-  const bids = (data.bids || data.b || []).map((p) => [
-    Number(p[0]),
-    Number(p[1]),
-  ]);
-  const asks = (data.asks || data.a || []).map((p) => [
-    Number(p[0]),
-    Number(p[1]),
-  ]);
-  return { bids, asks };
-}
 
 function connect() {
   const ws = new WebSocket(FEED_URL);
@@ -59,8 +49,6 @@ function connect() {
           "email",
           "Feed reconnect attempts exceeded. Manual intervention required."
         );
-        return;
-      }
         return;
       }
     if (
@@ -117,3 +105,7 @@ app.get("/health", async () => ({ ok: true }));
 app.listen({ port: HEALTH_PORT, host: "0.0.0.0" });
 
 connect();
+
+module.exports = {
+  normalize,
+};

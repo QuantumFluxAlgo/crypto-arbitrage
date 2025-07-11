@@ -39,6 +39,7 @@ This document outlines the roles, responsibilities, and interfaces of each auton
 - **Purpose**: WebSocket/REST aggregator for 10 CEXs and 4 DEXs.
 - **Pushes to**: Redis pub/sub.
 - **Special Handling**: Free-tier rate-limit compliance.
+- **Active**: Runs continuously by default.
 
 ---
 
