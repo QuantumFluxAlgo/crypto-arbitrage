@@ -39,6 +39,20 @@ public class TriangularArbDetector {
     }
 
     /**
+     * Validate that bid/ask values appear sane. This helps catch
+     * obviously incorrect feed data which could indicate fraudulent
+     * manipulation or feed errors.
+     */
+    private boolean validBook(double bid, double ask) {
+        if (bid <= 0 || ask <= 0) return false;
+        if (bid >= ask) {
+            logger.warn("Order book bid {} >= ask {} - possible fraud", bid, ask);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Update the order book for a trading pair.
      * When all three legs of a loop are present, potential arbitrage
      * opportunities are evaluated.
@@ -48,6 +62,9 @@ public class TriangularArbDetector {
      * @param bestAsk lowest ask price
      */
     public synchronized void update(String pair, double bestBid, double bestAsk) {
+        if (!validBook(bestBid, bestAsk)) {
+            return;
+        }
         books.put(pair, new OrderBook(bestBid, bestAsk));
         scan();
     }
