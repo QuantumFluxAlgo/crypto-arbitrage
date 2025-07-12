@@ -13,8 +13,9 @@ if (
   import.meta.env.VITE_SENTRY_DSN &&
   process.env.NODE_ENV === 'production'
 ) {
+  const sentryDsn = import.meta.env.VITE_SENTRY_DSN
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
+    dsn: sentryDsn,
     integrations: [new BrowserTracing()],
     tracesSampleRate: 1.0,
   })

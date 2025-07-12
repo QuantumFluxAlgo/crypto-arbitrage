@@ -37,7 +37,7 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           envFrom:
-            - secretRef:
+            - secretRef: # environment secrets
                 name: api-secrets
 ---
 apiVersion: v1
