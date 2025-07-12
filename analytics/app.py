@@ -161,6 +161,15 @@ def predict():
         if len(features.shape) == 1:
             features = features.reshape(1, -1)
 
+        expected_shape = None
+        if hasattr(model, "input_shape"):
+            expected_shape = tuple(model.input_shape[1:])
+        elif hasattr(model, "n_features_in_"):
+            expected_shape = (int(model.n_features_in_),)
+        if expected_shape and tuple(features.shape[1:]) != expected_shape:
+            logger.warning("Invalid input shape: expected %s, got %s", expected_shape, features.shape)
+            return jsonify({'error': 'invalid input shape'}), 400
+
         logger.info("Input shape: %s", features.shape)
         preds = model.predict(features)
         logger.info("Output shape: %s", np.array(preds).shape)

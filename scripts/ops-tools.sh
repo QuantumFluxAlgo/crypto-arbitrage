@@ -47,7 +47,8 @@ case "$cmd" in
     ;;
   backup)
     pod=$(kubectl get pods -n "$NAMESPACE" -l app=postgres -o jsonpath='{.items[0].metadata.name}')
-    kubectl exec -n "$NAMESPACE" "$pod" -- pg_dump -U postgres -d arbdb > "$ROOT_DIR/postgres-backup.sql"
+    ts=$(date +%Y%m%d%H%M%S)
+    kubectl exec -n "$NAMESPACE" "$pod" -- pg_dump -U postgres -d arbdb > "$ROOT_DIR/postgres-backup-$ts.sql"
     ;;
   *)
     usage
