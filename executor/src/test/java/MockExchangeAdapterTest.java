@@ -20,7 +20,7 @@ public class MockExchangeAdapterTest {
     }
 
     @Test
-    void placeOrderSucceedsRoughlyNinetyPercent() {
+    void placeOrderSucceedsRoughlyEightyPercent() {
         MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
         int success = 0;
         int total = 1000;
@@ -30,7 +30,22 @@ public class MockExchangeAdapterTest {
             }
         }
         double ratio = success / (double) total;
-        assertTrue(ratio > 0.85 && ratio < 0.95, "success ratio was " + ratio);
+        assertTrue(ratio > 0.75 && ratio < 0.85, "success ratio was " + ratio);
+    }
+
+    @Test
+    void partialFillSetsFeeAndSize() {
+        MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        boolean observed = false;
+        for (int i = 0; i < 1000 && !observed; i++) {
+            boolean filled = adapter.placeOrder("BTC/USDT", "BUY", 1.0, 50000.0);
+            if (!filled && adapter.getLastFillSize() > 0) {
+                observed = true;
+                double expectedFee = (1.0 - adapter.getLastFillSize()) * 50000.0 * adapter.getCancelFeeRate();
+                assertEquals(expectedFee, adapter.getLastCancelFee(), 1e-9);
+            }
+        }
+        assertTrue(observed, "no partial fill encountered");
     }
 
     @Test
