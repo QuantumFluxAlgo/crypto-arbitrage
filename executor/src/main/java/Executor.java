@@ -8,6 +8,12 @@ import executor.PanicBrake;
 import executor.FeatureLogger;
 import executor.ConfigValidator;
 import executor.CircuitBreaker;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +42,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private TradeLogger tradeLogger;
     private FeatureLogger featureLogger;
     private CGTPool cgtPool;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String predictUrl;
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -69,6 +78,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.profitEstimator = new ProfitEstimator();
         this.simulatedPublisher = new SimulatedPublisher(redisClient, true);
         this.riskSettings = new RiskSettings();
+        this.predictUrl = System.getenv().getOrDefault("PREDICT_URL", "");
         double cbWinRate = Double.parseDouble(System.getenv().getOrDefault("CB_WIN_RATE_THRESHOLD", "0.35"));
         double cbDrawdown = Double.parseDouble(System.getenv().getOrDefault("CB_MAX_DRAWDOWN_PCT", "5.0"));
         this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
@@ -163,7 +173,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
 
-        double predictedProb = scoringEngine.predict(opp);
+        double predictedProb = fetchModelScore(opp);
+        logger.info("Model score for {}: {}", opp.getPair(), predictedProb);
         double simulatedPnl = profitEstimator.estimate(opp);
 
         if (sandboxMode) {
@@ -250,6 +261,39 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
             redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
         }
+    }
+
+    private double fetchModelScore(SpreadOpportunity opp) {
+        if (predictUrl == null || predictUrl.isEmpty()) {
+            return 0.0;
+        }
+        try {
+            double slippage = opp.getGrossEdge() - opp.getNetEdge();
+            double latency = opp.getRoundTripLatencyMs() / 1000.0;
+            double[] features = { opp.getNetEdge(), slippage, 0.0, latency };
+            String body = objectMapper.writeValueAsString(java.util.Map.of("features", features));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(predictUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                JsonNode node = objectMapper.readTree(response.body());
+                JsonNode pred = node.get("prediction");
+                if (pred != null && pred.isArray() && pred.size() > 0
+                        && pred.get(0).isArray() && pred.get(0).size() > 0) {
+                    return pred.get(0).get(0).asDouble();
+                }
+            } else {
+                logger.warn("Prediction request failed: HTTP {}", response.statusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Prediction request error", e);
+        }
+        return 0.0;
     }
 
     private void updatePerformanceMetrics(TradeResult result) {
