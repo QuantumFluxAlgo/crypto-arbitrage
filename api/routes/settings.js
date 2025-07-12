@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export let settings = {
   schema_version: 1,
   canary_mode: false,
@@ -12,19 +14,26 @@ export let settings = {
 export default async function settingsRoutes(app) {
   app.get('/settings', async () => settings);
 
-  const bodySchema = {
-    type: 'object',
-    properties: {
-      schema_version: { type: 'integer' },
-      canary_mode: { type: 'boolean' },
-      useEnsemble: { type: 'boolean' },
-      shadowOnly: { type: 'boolean' },
-      ghost_mode: { type: 'boolean' },
-      sandbox_mode: { type: 'boolean' },
-      personality_mode: { type: 'string' },
-      sweep_cadence: { type: 'string' }
-    },
-    additionalProperties: false
+    const schema = z
+      .object({
+        schema_version: z.number().int().optional(),
+        canary_mode: z.boolean().optional(),
+        useEnsemble: z.boolean().optional(),
+        shadowOnly: z.boolean().optional(),
+        ghost_mode: z.boolean().optional(),
+        sandbox_mode: z.boolean().optional(),
+        personality_mode: z.string().optional(),
+        sweep_cadence: z.string().optional(),
+      })
+      .strict();
+
+    const validateSettings = async (req, reply) => {
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        reply.code(400);
+        return { error: 'invalid settings' };
+      }
+      req.body = result.data;
   };
 
   const saveSettings = async req => {
@@ -68,7 +77,7 @@ export default async function settingsRoutes(app) {
   app.route({
     method: ['POST', 'PATCH'],
     url: '/settings',
-    schema: { body: bodySchema },
+    preHandler: validateSettings,
     handler: saveSettings
   });
 }
