@@ -19,6 +19,18 @@ spec:
           image: arb-analytics
           ports:
             - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
           resources:
             requests:
               cpu: "500m"
