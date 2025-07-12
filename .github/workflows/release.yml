@@ -52,7 +52,7 @@ jobs:
           syft analytics:latest -o json > sbom-analytics.json
           syft feed-aggregator:latest -o json > sbom-feed-aggregator.json
 
-      - name: Upload release assets
+      - name: Upload SBOMs to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
