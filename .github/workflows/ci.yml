@@ -10,6 +10,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Prepare test results directory
+        run: mkdir -p test-results
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -49,8 +52,17 @@ jobs:
         run: kubeconform -strict -ignore-missing-schemas -summary infra/k8s/
 
       - name: Run API tests
-        run: npm test
+        run: |
+          mkdir -p ../test-results
+          npm test -- --json --outputFile=../test-results/api-jest.json
         working-directory: api
+
+      - name: Upload API test report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-jest-report
+          path: test-results/api-jest.json
 
       - name: Run API ESLint
         run: npx eslint .
@@ -68,8 +80,17 @@ jobs:
           exit-code: 1
 
       - name: Run Dashboard tests
-        run: npx jest
+        run: |
+          mkdir -p ../test-results
+          npx jest --json --outputFile=../test-results/dashboard-jest.json
         working-directory: dashboard
+
+      - name: Upload Dashboard test report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: dashboard-jest-report
+          path: test-results/dashboard-jest.json
 
       - name: Run Dashboard ESLint
         run: npx eslint .
@@ -91,8 +112,17 @@ jobs:
         working-directory: feed-aggregator
 
       - name: Run feed-aggregator tests
-        run: pytest
+        run: |
+          mkdir -p ../test-results
+          pytest --junitxml=../test-results/feed-aggregator-pytest.xml
         working-directory: feed-aggregator
+
+      - name: Upload feed-aggregator test report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: feed-aggregator-pytest-report
+          path: test-results/feed-aggregator-pytest.xml
 
       - name: Build feed-aggregator image
         run: podman build -t feed-aggregator ./feed-aggregator
@@ -109,9 +139,18 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Analytics tests
-        run: pytest
+        run: |
+          mkdir -p ../test-results
+          pytest --junitxml=../test-results/analytics-pytest.xml
         working-directory: analytics
         
+      - name: Upload analytics test report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: analytics-pytest-report
+          path: test-results/analytics-pytest.xml
+          
       - name: Run flake8
         run: flake8 analytics/
         
@@ -127,8 +166,18 @@ jobs:
           exit-code: 1
 
       - name: Run Executor tests
-        run: mvn test
+        run: |
+          mkdir -p ../test-results/maven
+          mvn test
+          cp -r target/surefire-reports ../test-results/maven || true
         working-directory: executor
+
+      - name: Upload Executor test report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: executor-maven-report
+          path: test-results/maven
         
       - name: Run Maven Checkstyle
         run: mvn checkstyle:check
