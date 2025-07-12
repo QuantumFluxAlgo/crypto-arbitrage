@@ -856,6 +856,23 @@ infra/helm/Chart.yaml — chart definition
 
 infra/helm/values.yaml — deployment settings
 
+Config Example (values.yaml):
+yaml
+CopyEdit
+api:
+  env:
+    JWT_SECRET: "change-me"
+analytics:
+  env:
+    MODEL_PATH: "/models/model.h5"
+dashboard:
+  env:
+    PUBLIC_URL: "https://arb.example.com"
+executor:
+  env:
+    REDIS_HOST: "redis"
+
+
 
 infra/helm/templates/ — service manifests
 

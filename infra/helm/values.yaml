@@ -1,3 +1,38 @@
 replicaCount: 1
 secrets:
   useSealed: true
+
+# ---------------------------------------------------------------------
+# Service-level configuration
+# Override environment variables for each service by editing the
+# `env` section below. Commented keys show typical values that can be
+# customized per deployment.
+# ---------------------------------------------------------------------
+
+api:
+  env:
+    # JWT_SECRET: "change-me"
+    # PGHOST: "postgres"
+    # PGUSER: "arb_user"
+    # PGPASSWORD: "secret"
+    # PGDATABASE: "arbitrage"
+    # SANDBOX_MODE: "false"
+
+analytics:
+  env:
+    # MODEL_PATH: "/models/model.h5"
+    # GPU_ENABLED: "true"
+    # LOG_LEVEL: "INFO"
+
+dashboard:
+  env:
+    # PUBLIC_URL: "https://arb.example.com"
+    # NODE_ENV: "production"
+
+executor:
+  env:
+    # REDIS_HOST: "redis"
+    # REDIS_PORT: "6379"
+    # ANALYTICS_URL: "http://analytics:5000/trade"
+    # PERSONALITY_MODE: "REALISTIC"
+    # STARTING_BALANCE: "10000"
