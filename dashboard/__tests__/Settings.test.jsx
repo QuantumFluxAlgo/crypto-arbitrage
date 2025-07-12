@@ -1,27 +1,20 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { act } from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Settings from '../src/pages/Settings.jsx';
-import axios from 'axios';
 
 jest.mock('axios');
 
-beforeEach(() => {
-  axios.get.mockResolvedValue({ data: { personality_mode: 'Realistic' } });
-  axios.patch.mockResolvedValue({});
+test('toggle buttons update mode state', () => {
+  render(<Settings />);
+  const autoBtn = screen.getByRole('button', { name: /auto/i });
+  const aggBtn = screen.getByRole('button', { name: /aggressive/i });
+  const realBtn = screen.getByRole('button', { name: /realistic/i });
+
+  expect(autoBtn).toBeInTheDocument();
+  expect(aggBtn).toBeInTheDocument();
+  expect(realBtn).toBeInTheDocument();
+
+  fireEvent.click(aggBtn);
+  expect(aggBtn).toHaveClass('bg-blue-600');
 });
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
-
-test('renders personality mode buttons', async () => {
-  await act(async () => {
-    render(<Settings />);
-  });
-
-  expect(await screen.findByRole('button', { name: /Realistic/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Aggressive/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Auto/i })).toBeInTheDocument();
-

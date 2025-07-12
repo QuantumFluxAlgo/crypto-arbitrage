@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { act } from 'react';
 import '@testing-library/jest-dom';
 import Dashboard from '../pages/Dashboard.jsx';
 
@@ -8,44 +7,15 @@ jest.mock('recharts', () => {
   const actual = jest.requireActual('recharts');
   return {
     ...actual,
-    ResponsiveContainer: ({ children }) => (
-      <div style={{ width: 800, height: 600 }}>{children}</div>
-    )
+    ResponsiveContainer: ({ children }) => <div>{children}</div>,
   };
 });
 
-beforeEach(() => {
-  global.fetch = jest.fn((url) => {
-    if (url === '/api/metrics') {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({
-          equityCurve: [],
-          openTrades: [],
-          panicActive: false,
-          alertsEnabled: false,
-          latency: [],
-          winRate: [],
-        }),
-      });
-    }
-    if (url === '/api/resume') {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-    }
-    return Promise.reject(new Error('unknown url'));
+test('shows trading mode buttons and status', () => {
+  render(<Dashboard />);
+  expect(screen.getByTestId('wallet-balance')).toBeInTheDocument();
+  expect(screen.getByTestId('system-status')).toBeInTheDocument();
+  ['auto', 'realistic', 'aggressive'].forEach((label) => {
+    expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
   });
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
-test('displays loading then shows resume trading button', async () => {
-  await act(async () => {
-    render(<Dashboard />);
-  });
-
-  expect(
-    await screen.findByRole('button', { name: /resume trading/i })
-  ).toBeInTheDocument();
-  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
 });
