@@ -1,6 +1,7 @@
 # 🪙 Crypto Arbitrage
 
 ![CI](https://github.com/QuantumFluxAlgo/crypto-arbitrage/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/QuantumFluxAlgo/crypto-arbitrage/actions/workflows/release.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Sentry](https://img.shields.io/badge/sentry-monitoring-orange)
 
