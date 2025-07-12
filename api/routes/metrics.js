@@ -3,7 +3,7 @@ import { settings } from './settings.js';
 
 const PROM_URL = process.env.PROM_URL || 'http://localhost:9090';
 
-export default async function metricsRoutes(app) {
+export default async function metricsRoutes(app, { testState } = {}) {
   const seeded = {
     equityCurve: Array.from({ length: 20 }, (_, i) => i * 5),
     latency: Array.from({ length: 20 }, () => 30 + Math.random() * 10),
@@ -14,8 +14,8 @@ export default async function metricsRoutes(app) {
   };
 
   app.get('/metrics', async (req) => {
-    if (settings.sandbox_mode) {
-      return seeded;
+    if (settings.sandbox_mode || process.env.NODE_ENV === 'test') {
+     return { ...seeded, panicActive: testState?.panic ?? false };
     }
 
     try {

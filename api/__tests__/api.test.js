@@ -2,10 +2,11 @@ import request from 'supertest';
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_TOKEN = 'testadmintoken';
 process.env.SANDBOX_MODE = 'true';
-import { buildApp } from '../index.js';
+let buildApp;
 let app;
 
 beforeAll(async () => {
+  ({ buildApp } = await import('../index.js'));
   app = buildApp();
   await app.listen({ port: 8080 });
 });

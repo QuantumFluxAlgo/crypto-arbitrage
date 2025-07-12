@@ -27,11 +27,44 @@ if (process.env.SENTRY_DSN && process.env.NODE_ENV === 'production') {
   });
 }
 
+const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
+const testState = { panic: false };
+
+let redis;
+let pool;
+
 function buildApp() {
   const app = Fastify();
   app.register(fastifyCookie);
   app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
-  app.register(apiRoutes, { prefix: '/api' });
+
+    pool = new Pool({
+      host: process.env.PGHOST || 'localhost',
+      port: process.env.PGPORT || 5432,
+      database: process.env.PGDATABASE || 'arbdb',
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || '',
+    });
+
+    if (isTest) {
+      redis = { publish: async () => 1 };
+    } else {
+      redis = new Redis({
+        host: process.env.REDIS_HOST || '127.0.0.1',
+        port: process.env.REDIS_PORT || 6379,
+      });
+    }
+
+    app.register(apiRoutes, { prefix: '/api', testState, redis, pool });
+
+    // Ensure external connections close gracefully when the server shuts down
+    app.addHook('onClose', async () => {
+      await pool.end();
+      if (redis && typeof redis.quit === 'function') {
+        await redis.quit();
+      }
+    });
+
   return app;
 }
 
@@ -42,32 +75,6 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: process.env.PGPORT || 5432,
-  database: process.env.PGDATABASE || 'arbdb',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || '',
-});
-
-let redis;
-if (process.env.NODE_ENV === 'test') {
-  redis = { publish: async () => 1 };
-} else {
-  redis = new Redis({
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: process.env.REDIS_PORT || 6379,
-  });
-}
-
-// Ensure external connections close gracefully when the server shuts down
-app.addHook('onClose', async () => {
-  await pool.end();
-  if (redis && typeof redis.quit === 'function') {
-    await redis.quit();
-  }
-});
-
 const alertSettings = {
   smtp_user: '',
   smtp_pass: '',
@@ -75,8 +82,7 @@ const alertSettings = {
   webhook_url: '',
 };
 
-async function apiRoutes(api) {
-  api.register(loginRoute);
+async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginRoute);
   api.register(authRoute);
   api.register(settingsRoutes, { redis });
   api.register(auditLogger, { pool });
@@ -87,6 +93,7 @@ async function apiRoutes(api) {
       '/login',
       '/api/reset-password',
       '/reset-password',
+      ...(isTest ? ['/api/test/panic', '/api/test/resume'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
@@ -125,19 +132,32 @@ async function apiRoutes(api) {
   });
 
   api.post('/resume', async () => {
+    if (testState) testState.panic = false;
     await redis.publish('control-feed', 'resume');
     return { resumed: true };
   });
 
+    if (isTest) {
+      api.post('/test/panic', async () => {
+        testState.panic = true;
+        return { triggered: true };
+      });
+
+      api.post('/test/resume', async () => {
+        testState.panic = false;
+        return { resumed: true };
+      });
+    }
+
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
   api.register(modelRoutes, { pool });
-  api.register(metricsRoutes);
+  api.register(metricsRoutes, { testState });
   api.register(analyticsRoutes, { pool });
   api.register(cgtRoutes, { pool });
 }
 
-if (process.env.NODE_ENV !== 'test') {
+if (!isTest) {
   startWsServer();
   app.listen({ port: 8080, host: '0.0.0.0' }, err => {
     if (err) {
@@ -149,5 +169,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
-export { buildApp, logReplayCLI };
-
+export { buildApp, logReplayCLI, testState };
