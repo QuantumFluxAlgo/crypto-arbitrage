@@ -1,6 +1,8 @@
 package executor;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,13 @@ import org.slf4j.LoggerFactory;
  */
 public class MockExchangeAdapter implements ExchangeAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MockExchangeAdapter.class);
+    /** Fee rates keyed by exchange name. */
+    private static final Map<String, Double> FEE_RATES = new ConcurrentHashMap<>();
+
+    static {
+        FEE_RATES.put("Mock", 0.001);
+    }
+
     private final Random random = new Random();
     private final String name;
     private final double cancelFeeRate;
@@ -38,6 +47,23 @@ public class MockExchangeAdapter implements ExchangeAdapter {
         this.cancelFeeRate = cancelFeeRate;
     }
 
+    /**
+     * Set the trading fee rate for a specific exchange name.
+     *
+     * @param exchange exchange identifier
+     * @param rate     fee rate (e.g. 0.001 for 0.1%)
+     */
+    public static void setFeeRate(String exchange, double rate) {
+        FEE_RATES.put(exchange, rate);
+    }
+
+    /**
+     * @return adapter name used for fee lookup
+     */
+    public String getName() {
+        return name;
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean placeOrder(String pair, String side, double size, double price) {
@@ -61,10 +87,13 @@ public class MockExchangeAdapter implements ExchangeAdapter {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Fee rate for this adapter pulled from the shared map. If no specific
+     * entry exists for the adapter name, the default "Mock" rate is used.
+     */
     @Override
     public double getFeeRate(String pair) {
-        return 0.001;
+        return FEE_RATES.getOrDefault(name, FEE_RATES.getOrDefault("Mock", 0.001));
     }
 
     /** {@inheritDoc} */

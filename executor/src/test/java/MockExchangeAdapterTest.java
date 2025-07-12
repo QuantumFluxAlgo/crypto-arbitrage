@@ -8,9 +8,12 @@ import executor.ExchangeAdapter;
 
 public class MockExchangeAdapterTest {
     @Test
-    void feeRateIsConstant() {
+    void feeRateCanBeOverridden() {
         MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
         assertEquals(0.001, adapter.getFeeRate("BTC/USDT"), 1e-9);
+        MockExchangeAdapter.setFeeRate("Test", 0.002);
+        assertEquals(0.002, adapter.getFeeRate("BTC/USDT"), 1e-9);
+        MockExchangeAdapter.setFeeRate("Test", 0.001);
     }
 
     @Test

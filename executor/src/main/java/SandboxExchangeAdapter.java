@@ -21,7 +21,6 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
 
     private final Random random = new Random();
     private final double slippagePct;
-    private final double feeRate;
     private final long latencyMs;
     private final RedisClient redisClient;
     private final ModelPredictor predictor;
@@ -50,7 +49,8 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         this.redisClient = redisClient;
         this.predictor = predictor;
         this.slippagePct = slippagePct;
-        this.feeRate = feeRate;
+        // Store fee rate in the shared map so it can be retrieved dynamically
+        MockExchangeAdapter.setFeeRate(name, feeRate);
         this.latencyMs = latencyMs;
     }
 
@@ -69,11 +69,6 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
     @Override
     public boolean placeIocOrder(String pair, String side, double size, double price) {
         return placeOrder(pair, side, size, price);
-    }
-
-    @Override
-    public double getFeeRate(String pair) {
-        return feeRate;
     }
 
     /**
