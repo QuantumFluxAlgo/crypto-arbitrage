@@ -8,3 +8,5 @@ joblib==1.5.1
 
 psycopg2-binary==2.9.9
 matplotlib==3.9.0
+
+redis==5.0.1
