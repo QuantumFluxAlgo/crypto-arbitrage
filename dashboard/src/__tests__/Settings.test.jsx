@@ -1,32 +1,18 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Settings from '../pages/Settings.jsx';
-import axios from 'axios';
 
 jest.mock('axios');
 
-beforeEach(() => {
-  axios.get.mockResolvedValue({ data: {
-    personality_mode: 'Aggressive',
-    coin_cap_pct: 10,
-    loss_limit_pct: 1,
-    latency_limit_ms: 100,
-    sweep_cadence_s: 30,
-  }});
-  axios.patch.mockResolvedValue({});
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
-
-test('loads settings and shows save button', async () => {
-  await act(async () => {
-    render(<Settings />);
-  });
-
-  expect(await screen.findByRole('button', { name: /save/i })).toBeInTheDocument();
-  expect(screen.getByText(/aggressive/i)).toBeInTheDocument();
+test('renders mode buttons and handles click', () => {
+  render(<Settings />);
+  const auto = screen.getByRole('button', { name: /auto/i });
+  const aggressive = screen.getByRole('button', { name: /aggressive/i });
+  const realistic = screen.getByRole('button', { name: /realistic/i });
+  expect(auto).toBeInTheDocument();
+  expect(aggressive).toBeInTheDocument();
+  expect(realistic).toBeInTheDocument();
+  fireEvent.click(realistic);
+  expect(realistic).toHaveClass('bg-blue-600');
 });

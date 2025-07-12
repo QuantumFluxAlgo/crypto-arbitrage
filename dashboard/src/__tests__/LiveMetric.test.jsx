@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import LiveMetrics from '../components/LiveMetrics.jsx';
+import LiveMetrics from '../../components/LiveMetrics.jsx';
 
-let received;
+let captured;
 jest.mock('recharts', () => ({
   LineChart: ({ data, children }) => {
-    received = data;
+    captured = data;
     return <div data-testid="line-chart">{children}</div>;
   },
   Line: () => <div />,
@@ -18,8 +18,8 @@ jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
 }));
 
-test('renders chart container and uses mocked data', () => {
+test('renders without crashing and provides mocked data', () => {
   render(<LiveMetrics />);
   expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-  expect(received).toHaveLength(10);
+  expect(captured).toHaveLength(10);
 });
