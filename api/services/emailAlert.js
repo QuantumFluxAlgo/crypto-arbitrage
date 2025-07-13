@@ -4,9 +4,12 @@ import logger from './logger.js';
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
 const recipient = process.env.ALERT_RECIPIENT;
+const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+
+logger.info(`Using SMTP host: ${host}`);
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+    host,
   auth: {
     user,
     pass,
