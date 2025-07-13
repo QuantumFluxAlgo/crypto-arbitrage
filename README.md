@@ -38,6 +38,15 @@ graph TD
   Executor --> Postgres[(PostgreSQL)]
 ```
 
+## Folder Structure
+
+- `api/` – Fastify API server
+- `dashboard/` – React frontend
+- `analytics/` – Flask ML microservice
+- `executor/` – Java trading engine
+- `scripts/` – helper CLI tools
+- `infra/` – Kubernetes Helm charts
+
 ---
 
 ## Required Tools
@@ -54,7 +63,7 @@ Ensure these tools are available in your `PATH` so `githooks/pre-push` can execu
 
 ---
 
-## Setup
+## Dev Setup
 
 1. Start Colima using the Podman runtime:
    ```bash

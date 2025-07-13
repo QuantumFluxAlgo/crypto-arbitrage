@@ -7,6 +7,7 @@ RUN yarn install --production
 
 COPY . .
 
+# Expose Fastify API port
 EXPOSE 8080
 
 CMD ["node", "index.js"]
