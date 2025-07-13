@@ -1,6 +1,6 @@
 replicaCount: 1
 secrets:
-  useSealed: true
+  useSealed: true  # use Bitnami SealedSecrets by default
 
 # ---------------------------------------------------------------------
 # Service-level configuration

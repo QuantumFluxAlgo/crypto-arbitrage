@@ -193,7 +193,7 @@ jobs:
           path: test-results/maven
         
       - name: Run Maven Checkstyle
-        run: mvn checkstyle:check
+        run: mvn -B checkstyle:check
         working-directory: executor
         
       - name: Build executor image
