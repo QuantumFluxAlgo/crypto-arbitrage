@@ -55,7 +55,7 @@ The pre-push hook runs tests across multiple languages. Make sure the following 
 
 - **Node.js 18** with `npm`
 - **Python 3.10** with `pytest`
-- **Java 17** with `gradle` (or `mvn`)
+- **Java 17** with `gradle`
 - **Podman** for building container images
 - **Helm** and `kubectl` for Kubernetes
 

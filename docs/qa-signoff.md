@@ -29,7 +29,7 @@ Before pushing to `main`, ensure ALL items are ✅:
 
 ## CI & Testing
 
-- [ ] All Jest, PyTest, Maven tests pass
+- [ ] All Jest, PyTest, Gradle tests pass
 - [ ] `test-behavior.sh` passes end-to-end checks
 - [ ] Coverage thresholds met or improved
 

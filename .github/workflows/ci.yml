@@ -184,20 +184,20 @@ jobs:
 
       - name: Run Executor tests
         run: |
-          mkdir -p ../test-results/maven
-          mvn test
-          cp -r target/surefire-reports ../test-results/maven || true
+          mkdir -p ../test-results/executor
+          ./gradlew test
+          cp -r build/test-results/test ../test-results/executor || true
         working-directory: executor
 
       - name: Upload Executor test report
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: executor-maven-report
-          path: test-results/maven
+          name: executor-gradle-report
+          path: test-results/executor
         
-      - name: Run Maven Checkstyle
-        run: mvn -B checkstyle:check
+      - name: Run Gradle Checkstyle
+        run: ./gradlew checkstyleMain
         working-directory: executor
         
       - name: Build executor image

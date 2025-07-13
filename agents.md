@@ -155,7 +155,7 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Tools**: GitHub Actions + Podman
 - **Checks**:
   - Jest (dashboard, api)
-  - Maven (executor)
+  - Gradle (executor)
   - PyTest (analytics)
   - Trivy CVE Scan
 - **Deploy**:

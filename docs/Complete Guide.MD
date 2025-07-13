@@ -488,11 +488,11 @@ CopyEdit
 pip install tensorflow prometheus_client python-dotenv flask
 
 
-Install Java & Maven (if needed)
+Install Java (if needed)
 
  css
 CopyEdit
-brew install openjdk@17 maven
+brew install openjdk@17
 
 
 Add Node.js Packages for Dashboard
@@ -684,11 +684,11 @@ CopyEdit
 cd analytics/ && pytest
 
 
-Maven (Java Executor)
+Gradle (Java Executor)
 
  bash
 CopyEdit
-cd executor/ && mvn test
+cd executor/ && ./gradlew test
 
 
 If any test fails, the pre-push Git hook will block your commit from being pushed to GitHub (as designed in Batch 1 setup).
@@ -3138,7 +3138,7 @@ Jest for JS/TS services
 PyTest for analytics
 
 
-Maven for Java executor
+Gradle for Java executor
 
 
 Test Verifier Script
@@ -3232,7 +3232,7 @@ What Trivy Checks:
 OS-level CVEs (e.g., Debian base)
 
 
-Node packages (npm), Python packages (pip), Java packages (Maven)
+Node packages (npm), Python packages (pip), Java packages (Gradle)
 
 
 Configuration risks (optional mode)
@@ -3271,7 +3271,7 @@ Flake8
 flake8 analytics/
 Java
 Checkstyle
-mvn checkstyle:check
+./gradlew checkstyleMain
 
 CI Behavior:
 Runs after unit tests
