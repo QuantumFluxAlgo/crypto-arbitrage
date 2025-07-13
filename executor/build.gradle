@@ -17,10 +17,10 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:2.0.13'
 
     // ✅ Redis
-    implementation 'redis.clients:jedis:5.1.0'
+    implementation 'redis.clients:jedis:6.0.0'
 
     // ✅ JSON parsing
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
 
     // ✅ Unit testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
