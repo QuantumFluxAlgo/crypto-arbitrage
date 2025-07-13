@@ -22,6 +22,7 @@ public class ProfitTracker {
     private static final int MAX_RETRIES = 3;
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
+    private static double cumulativeProfit = 0.0;
 
     private static double startingBalance = 10_000.0;
     private static String analyticsUrl = "http://localhost:5000/trade";
@@ -47,6 +48,7 @@ public class ProfitTracker {
     public static void record(double pnl) {
         dailyTotal += pnl;
         globalTotal += pnl;
+        cumulativeProfit += pnl;
         sendWithRetry(pnl, 0);
     }
 
@@ -99,6 +101,15 @@ public class ProfitTracker {
      */
     public static double getGlobalTotal() {
         return globalTotal;
+    }
+
+    /**
+     * Get the cumulative profit across all trades.
+     *
+     * @return cumulative profit
+     */
+    public static double getCumulativeProfit() {
+        return cumulativeProfit;
     }
     
     /**

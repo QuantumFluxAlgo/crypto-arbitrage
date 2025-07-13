@@ -163,6 +163,9 @@ jobs:
       - name: Build analytics image
         run: podman build -t analytics ./analytics
 
+      - name: Test analytics container
+        run: podman run --rm analytics python --version
+
       - name: Run Trivy scan on analytics
         uses: aquasecurity/trivy-action@master
         with:
@@ -192,6 +195,9 @@ jobs:
         
       - name: Build executor image
         run: podman build -t executor ./executor
+
+      - name: Test executor container
+        run: podman run --rm executor java -version
 
       - name: Run Trivy scan on executor
         uses: aquasecurity/trivy-action@master
