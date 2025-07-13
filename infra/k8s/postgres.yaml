@@ -19,6 +19,9 @@ spec:
           image: postgres:16-alpine
           ports:
             - containerPort: 5432
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
           env:
             - name: POSTGRES_USER
               value: sandbox
@@ -43,6 +46,10 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
 ---
 apiVersion: v1
 kind: Service

@@ -19,6 +19,9 @@ spec:
           image: arb-api
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: prism-logs
+              mountPath: /var/log/prism
           livenessProbe:
             httpGet:
               path: /api/metrics
@@ -43,6 +46,10 @@ spec:
           envFrom:
             - secretRef: # environment secrets
                 name: api-secrets
+      volumes:
+        - name: prism-logs
+          persistentVolumeClaim:
+            claimName: prism-logs
 ---
 apiVersion: v1
 kind: Service
