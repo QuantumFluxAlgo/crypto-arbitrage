@@ -37,7 +37,8 @@ public class TradeLogger {
             stmt.setString(3, opp.getPair());
             stmt.setDouble(4, opp.getNetEdge());
             stmt.setDouble(5, pnl);
-            stmt.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            Timestamp ts = new Timestamp(System.currentTimeMillis());
+            stmt.setTimestamp(6, ts);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 logger.info("Trade executed: BUY on {} / SELL on {} | Pair: {} | Net Edge: {} | PnL: {}",

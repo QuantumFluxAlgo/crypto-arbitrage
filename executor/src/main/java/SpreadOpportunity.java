@@ -24,12 +24,17 @@ public class SpreadOpportunity {
                              String buyExchange,
                              String sellExchange,
                              double grossEdge,
-                             double netEdge) {
+                             double netEdge,
+                             long latencyMs) {
         this.pair = pair;
         this.buyExchange = buyExchange;
         this.sellExchange = sellExchange;
         this.grossEdge = grossEdge;
         this.netEdge = netEdge;
+        this.latencyMs = latencyMs;
+        this.roundTripLatencyMs = latencyMs;
+        this.latencyMicros = latencyMs * 1000;
+        this.roundTripLatencyMicros = latencyMs * 1000;
     }
 
     /**
@@ -39,12 +44,14 @@ public class SpreadOpportunity {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode node = mapper.readTree(json);
+            long latency = node.has("latencyMs") ? node.get("latencyMs").asLong() : 0L;
             return new SpreadOpportunity(
                 node.get("pair").asText(),
                 node.get("buyExchange").asText(),
                 node.get("sellExchange").asText(),
                 node.get("grossEdge").asDouble(),
-                node.get("netEdge").asDouble()
+                node.get("netEdge").asDouble(),
+                latency
             );
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid opportunity JSON", e);
@@ -60,9 +67,9 @@ public class SpreadOpportunity {
             "",
             "",
             spread.getEdge(),
-            spread.getEdge()
+            spread.getEdge(),
+            spread.getLatencyMs()
         );
-        opp.latencyMs = spread.getLatencyMs();
         opp.roundTripLatencyMs = spread.getLatencyMs();
         opp.latencyMicros = spread.getLatencyMs() * 1000;
         opp.roundTripLatencyMicros = spread.getLatencyMs() * 1000;
@@ -110,5 +117,17 @@ public class SpreadOpportunity {
     public long getLatencyMicros() { return latencyMicros; }
     /** @return round trip latency in microseconds */
     public long getRoundTripLatencyMicros() { return roundTripLatencyMicros; }
+
+    @Override
+    public String toString() {
+        return "SpreadOpportunity{" +
+                "pair='" + pair + '\'' +
+                ", buyExchange='" + buyExchange + '\'' +
+                ", sellExchange='" + sellExchange + '\'' +
+                ", grossEdge=" + grossEdge +
+                ", netEdge=" + netEdge +
+                ", latencyMs=" + latencyMs +
+                '}';
+    }
 }
 
