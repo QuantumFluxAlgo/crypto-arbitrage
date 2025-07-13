@@ -47,4 +47,11 @@ Create one HTTP test for each service using your server IP address:
 
 ---
 
+## Step 5 – Verify alerts
+
+1. Temporarily disable a test to trigger an alert.
+2. Confirm you receive the notification via email or webhook.
+
+---
+
 Follow these steps to keep your services monitored and receive alerts if any endpoint becomes unavailable.

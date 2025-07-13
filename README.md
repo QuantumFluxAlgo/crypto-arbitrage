@@ -175,6 +175,14 @@ curl http://localhost:3000/api/model/version
 
 The platform runs on a Xeon host and is orchestrated by Kubernetes. Deploy or upgrade services using Helm charts located in `infra/helm`.
 
+## SBOM Generation
+
+Each container build produces a Software Bill of Materials using Syft. The JSON artifacts are uploaded to GitHub Releases so dependencies remain transparent.
+
+## Rollback Procedures
+
+Refer to [docs/ops/helm-rollback-guide.MD](docs/ops/helm-rollback-guide.MD) for step-by-step instructions on rolling back a failed deployment using Helm.
+
 ---
 
 ## AI & ML Model Registry Lifecycle
