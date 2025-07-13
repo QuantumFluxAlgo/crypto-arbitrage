@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
+import { useSystemStatus } from '../context/SystemStatusContext.jsx';
 import LiveMetrics from '../../components/LiveMetrics.jsx';
 
 export default function Dashboard() {
   const [mode, setMode] = useState('auto');
   const [status] = useState('green');
   const walletBalance = '$0.00';
+  const { panic, reason, refreshStatus } = useSystemStatus();
+
+  async function handleResume() {
+    try {
+      const res = await fetch('/api/resume', { method: 'POST' });
+      if (res.ok) {
+        await refreshStatus();
+      }
+    } catch (err) {
+      console.error('Failed to resume trading', err);
+    }
+  }
 
   return (
     <div className="p-4 space-y-4 text-text">
@@ -38,6 +51,14 @@ export default function Dashboard() {
             {status}
           </span>
         </div>
+        <button
+          className="bg-green-600 text-white px-3 py-1 rounded disabled:bg-gray-300 disabled:text-gray-500"
+          disabled={!panic}
+          title={`Panic triggered: ${reason} — click to resume`}
+          onClick={handleResume}
+        >
+          Resume Trading
+        </button>
       </div>
     </div>
   );
