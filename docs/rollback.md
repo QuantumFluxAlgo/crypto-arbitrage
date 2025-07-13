@@ -35,3 +35,16 @@ kubectl get pods
 ```
 
 A `Running` status indicates the rollback succeeded.
+
+---
+
+## Step 4 – Record release snapshot
+
+Before performing any rollback, capture the current deployment state for auditing:
+
+```bash
+helm get values arb > snapshots/$(date +%Y%m%d)-values.yaml
+git rev-parse HEAD > snapshots/$(date +%Y%m%d)-commit.txt
+```
+
+Add any additional notes about the release to `snapshots/<date>-notes.txt`.

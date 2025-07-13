@@ -44,6 +44,7 @@ case "$cmd" in
     ;;
   status)
     kubectl get pods -n "$NAMESPACE"
+    kubectl get svc -n "$NAMESPACE"
     ;;
   backup)
     pod=$(kubectl get pods -n "$NAMESPACE" -l app=postgres -o jsonpath='{.items[0].metadata.name}')

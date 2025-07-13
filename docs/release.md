@@ -14,10 +14,10 @@ Use these steps to package and publish a new release of the Crypto Arbitrage pla
 ## Step 2 – Tag the commit
 
 1. Identify the commit you want to tag (usually the tip of `main`).
-2. Create a tag named `batch-10-complete`:
+2. Create an annotated tag named `batch-10-complete`:
 
 ```bash
-git tag batch-10-complete
+git tag -a batch-10-complete -m "batch-10-complete"
 ```
 
 ---
@@ -40,10 +40,11 @@ git push origin batch-10-complete
 
 ---
 
-## Step 5 – Paste the changelog and verify artifacts
+## Step 5 – Include the changelog and verify artifacts
 
-1. Copy the relevant entries from `changelog.md` and paste them into the release notes.
-2. Download any release artifacts and confirm they work as expected.
+1. Copy the relevant entries from `CHANGELOG.md` and paste them into the release notes.
+2. Upload `CHANGELOG.md` as an attachment when drafting the release.
+3. Download any release artifacts and confirm they work as expected.
 
 Follow this checklist every time you ship a new version.
 

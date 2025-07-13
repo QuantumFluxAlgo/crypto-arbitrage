@@ -39,7 +39,7 @@ public class ResumeHandler {
                             @Override
                             public void onMessage(String channel, String message) {
                                 if ("resume".equalsIgnoreCase(message)) {
-                                    logger.info("RESUMING EXECUTION");
+                                    logger.info("Received 'resume' command from Redis");
                                     executor.resumeFromPanic();
                                 }
                             }
@@ -49,7 +49,7 @@ public class ResumeHandler {
                             @Override
                             public void onMessage(String channel, String message) {
                                 if ("resume".equalsIgnoreCase(message)) {
-                                    logger.info("RESUMING EXECUTION");
+                                    logger.info("Received 'resume' command from Redis");
                                     executor.resumeFromPanic();
                                 }
                             }
