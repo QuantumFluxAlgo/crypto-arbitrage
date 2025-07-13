@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.env("local")
+
+
 def test_predict_returns_valid_shape(analytics_app):
     client = analytics_app.app.test_client()
     payload = {"features": [1.23, 4.56]}

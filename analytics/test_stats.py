@@ -1,4 +1,7 @@
+import pytest
 from pytest import approx
+
+pytestmark = pytest.mark.env("local")
 
 def test_stats_endpoint_returns_metrics(analytics_app):
     analytics_app.trades.clear()

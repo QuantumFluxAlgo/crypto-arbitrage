@@ -1,10 +1,12 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Ensures Executor continues processing after Redis reconnects. */
+@Tag("local")
 public class ExecutorRedisRecoveryTest {
     /** Redis client stub emitting a message, a disconnect, then another message. */
     static class FlakyRedisClient extends RedisClient {

@@ -1,11 +1,13 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 // For using ExchangeAdapter interface in tests
 import executor.ExchangeAdapter;
 
+@Tag("local")
 public class MockExchangeAdapterTest {
     @Test
     void feeRateCanBeOverridden() {

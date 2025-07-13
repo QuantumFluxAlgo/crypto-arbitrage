@@ -1,5 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+
+const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import Infrastructure from '../src/pages/Infrastructure.jsx';
@@ -23,10 +25,12 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-test('shows infrastructure status table', async () => {
-  await act(async () => {
-    render(<Infrastructure />);
-  });
+describeLocal('infrastructure page', () => {
+  test('shows infrastructure status table', async () => {
+    await act(async () => {
+      render(<Infrastructure />);
+    });
 
-  expect(await screen.findByText('app')).toBeInTheDocument();
+    expect(await screen.findByText('app')).toBeInTheDocument();
+  });
 });

@@ -1,6 +1,7 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -9,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for {@link ResumeHandler}.
  */
+@Tag("local")
 public class ResumeHandlerTest {
 
     /** Simple stub of the Redis client that immediately sends a resume message. */

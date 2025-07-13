@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Simulates fraudulent order book data to ensure it is ignored. */
+@Tag("local")
 public class FraudDetectionTest {
     static class DummyRedisClient extends RedisClient {
         DummyRedisClient() { super("localhost", 6379, "chan", (c,m) -> {}); }

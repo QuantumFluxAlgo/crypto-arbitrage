@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Verifies trade size respects order book depth limit. */
+@Tag("local")
 public class RiskSettingsTest {
     @Test
     void tradeSizeCappedByOrderBookDepth() {

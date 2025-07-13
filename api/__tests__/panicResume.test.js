@@ -1,4 +1,6 @@
 import request from 'supertest';
+
+const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;
 process.env.NODE_ENV = 'test';
 let buildApp;
 let testState;
@@ -14,19 +16,21 @@ afterAll(async () => {
   await app.close();
 });
 
-test('panic and resume cycle updates metrics', async () => {
-  const panicRes = await request(app.server).post('/api/test/panic');
-  expect(panicRes.statusCode).toBe(200);
-  expect(testState.panic).toBe(true);
+describeLocal('panic resume cycle', () => {
+  test('panic and resume cycle updates metrics', async () => {
+    const panicRes = await request(app.server).post('/api/test/panic');
+    expect(panicRes.statusCode).toBe(200);
+    expect(testState.panic).toBe(true);
 
-  const metrics1 = await request(app.server).get('/api/metrics');
-  expect(metrics1.body.panicActive).toBe(true);
+    const metrics1 = await request(app.server).get('/api/metrics');
+    expect(metrics1.body.panicActive).toBe(true);
 
-  const resumeRes = await request(app.server).post('/api/resume');
-  expect(resumeRes.statusCode).toBe(200);
-  expect(testState.panic).toBe(false);
+    const resumeRes = await request(app.server).post('/api/resume');
+    expect(resumeRes.statusCode).toBe(200);
+    expect(testState.panic).toBe(false);
 
-  const metrics2 = await request(app.server).get('/api/metrics');
-  expect(metrics2.body.panicActive).toBe(false);
+    const metrics2 = await request(app.server).get('/api/metrics');
+    expect(metrics2.body.panicActive).toBe(false);
+  });
 });
 

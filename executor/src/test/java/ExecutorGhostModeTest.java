@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests that Executor publishes opportunities instead of executing when ghost mode is enabled. */
+@Tag("local")
 public class ExecutorGhostModeTest {
     static class DummyRedisClient extends RedisClient {
         String publishedChannel;

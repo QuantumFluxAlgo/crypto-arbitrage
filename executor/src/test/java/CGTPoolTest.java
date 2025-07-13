@@ -3,7 +3,9 @@ package executor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
+@Tag("local")
 public class CGTPoolTest {
     @Test
     void calculatesAverageCost() {
