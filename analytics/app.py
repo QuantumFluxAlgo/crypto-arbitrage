@@ -39,6 +39,11 @@ request_latency = Histogram(
     'Request latency in seconds',
     registry=registry,
 )
+inference_latency = Histogram(
+    'inference_latency_seconds',
+    'Model inference latency in seconds',
+    registry=registry,
+)
 
 # In-memory trade store
 MAX_TRADES = 1000
@@ -121,8 +126,17 @@ def load_model(path: str):
         logger.exception("Model loading failed: %s", e)
         return None
 
-model = load_model(MODEL_PATH)
-shadow_model = load_model(SHADOW_MODEL_PATH)
+try:
+    model = load_model(MODEL_PATH)
+except Exception as e:
+    logger.error("Failed to load model from %s: %s", MODEL_PATH, e)
+    model = None
+
+try:
+    shadow_model = load_model(SHADOW_MODEL_PATH)
+except Exception as e:
+    logger.error("Failed to load shadow model from %s: %s", SHADOW_MODEL_PATH, e)
+    shadow_model = None
 
 @app.before_request
 def before_request():
@@ -171,7 +185,9 @@ def predict():
             return jsonify({'error': 'invalid input shape'}), 400
 
         logger.info("Input shape: %s", features.shape)
+        start_inf = time.time()
         preds = model.predict(features)
+        inference_latency.observe(time.time() - start_inf)
         logger.info("Output shape: %s", np.array(preds).shape)
 
         shadow_preds = None

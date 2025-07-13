@@ -29,32 +29,47 @@ public class ResumeHandler {
     /**
      * Begin listening for resume messages.
      */
-     public void start() {
-         thread = new Thread(() -> {
-             if (redis instanceof redis.clients.jedis.Jedis jedis) {
-                 jedis.subscribe(new redis.clients.jedis.JedisPubSub() {
-                     @Override
-                     public void onMessage(String channel, String message) {
-                         if ("resume".equalsIgnoreCase(message)) {
-                             logger.info("RESUMING EXECUTION");
-                             executor.resumeFromPanic();
-                         }
-                     }
-                 }, CHANNEL);
-            } else if (redis instanceof RedisClient client) {
-                client.subscribe(new redis.clients.jedis.JedisPubSub() {
-                    @Override
-                    public void onMessage(String channel, String message) {
-                        if ("resume".equalsIgnoreCase(message)) {
-                            logger.info("RESUMING EXECUTION");
-                            executor.resumeFromPanic();
-                        }
+    public void start() {
+        thread = new Thread(() -> {
+            int attempt = 0;
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    if (redis instanceof redis.clients.jedis.Jedis jedis) {
+                        jedis.subscribe(new redis.clients.jedis.JedisPubSub() {
+                            @Override
+                            public void onMessage(String channel, String message) {
+                                if ("resume".equalsIgnoreCase(message)) {
+                                    logger.info("RESUMING EXECUTION");
+                                    executor.resumeFromPanic();
+                                }
+                            }
+                        }, CHANNEL);
+                    } else if (redis instanceof RedisClient client) {
+                        client.subscribe(new redis.clients.jedis.JedisPubSub() {
+                            @Override
+                            public void onMessage(String channel, String message) {
+                                if ("resume".equalsIgnoreCase(message)) {
+                                    logger.info("RESUMING EXECUTION");
+                                    executor.resumeFromPanic();
+                                }
+                            }
+                        }, CHANNEL);
                     }
-                }, CHANNEL);
+                    attempt = 0;
+                } catch (Exception e) {
+                    long delay = Math.min(30000L, (1L << attempt) * 1000L);
+                    logger.error("Redis subscription failed: {}", e.getMessage());
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                    attempt++;
+                }
             }
-         });
-         thread.start();
-     }
+        });
+        thread.start();
+    }
 
     /**
      * Simple capability interface implemented by classes that can resume

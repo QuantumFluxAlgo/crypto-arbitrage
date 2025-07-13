@@ -160,12 +160,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * @param message JSON encoded opportunity
      */
     public void handleMessage(String message) {
-        if (circuitBreaker.isTripped()) {
-            logger.warn("Trading halted due to circuit breaker.");
-            return;
-        }
         if (isPanic) {
             logger.warn("Trading halted due to panic brake.");
+            return;
+        }
+        if (circuitBreaker.isTripped()) {
+            logger.warn("Trading halted due to circuit breaker.");
             return;
         }
 
@@ -204,6 +204,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         if (canaryMode) {
             logger.info("CANARY MODE — trade bypassed");
+            return;
+        }
+
+        if (isPanic) {
+            logger.warn("Panic brake active; skipping execution.");
             return;
         }
 
