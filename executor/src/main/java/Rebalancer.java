@@ -87,4 +87,70 @@ public class Rebalancer {
     public void rebalance(Map<String, Double> balances, double target) {
         scan(balances, target);
     }
+
+    /**
+     * Simulate routing funds from overbalanced exchanges to those below the
+     * target. The target is calculated as 30% of the total NAV across the
+     * provided balances. Only logs are emitted; no real transfers occur.
+     *
+     * @param balances map of exchange name to current balance
+     */
+    public void performRebalance(Map<String, Double> balances) {
+        if (balances == null || balances.isEmpty()) {
+            logger.warn("No balances provided for performRebalance");
+            return;
+        }
+
+        double total = 0.0;
+        for (double bal : balances.values()) {
+            total += bal;
+        }
+
+        double target = total * 0.30;
+
+        Map<String, Double> surplus = new HashMap<>();
+        Map<String, Double> deficit = new HashMap<>();
+
+        for (Map.Entry<String, Double> entry : balances.entrySet()) {
+            double balance = entry.getValue();
+            double diff = balance - target;
+            if (diff > threshold) {
+                surplus.put(entry.getKey(), diff);
+            } else if (-diff > threshold) {
+                deficit.put(entry.getKey(), -diff);
+            }
+        }
+
+        for (Map.Entry<String, Double> deficitEntry : new HashMap<>(deficit).entrySet()) {
+            String under = deficitEntry.getKey();
+            double needed = deficitEntry.getValue();
+            for (Map.Entry<String, Double> surplusEntry : new HashMap<>(surplus).entrySet()) {
+                if (needed <= 0) break;
+                String over = surplusEntry.getKey();
+                double available = surplusEntry.getValue();
+
+                if (available <= 0) {
+                    surplus.remove(over);
+                    continue;
+                }
+
+                double amount = Math.min(available, needed);
+                logger.info("[REBALANCER] Rebalancing ${} from {} \u2192 {} (imbalance threshold exceeded)",
+                        String.format("%.2f", amount), over, under);
+
+                available -= amount;
+                needed -= amount;
+
+                if (available <= 0) {
+                    surplus.remove(over);
+                } else {
+                    surplus.put(over, available);
+                }
+            }
+            if (needed > 0) {
+                logger.warn("[REBALANCER] Unable to fully cover deficit for {} (short ${})",
+                        under, String.format("%.2f", needed));
+            }
+        }
+    }
 }
