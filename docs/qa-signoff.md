@@ -29,8 +29,8 @@ Before pushing to `main`, ensure ALL items are ✅:
 
 ## CI & Testing
 
-- [ ] All Jest, PyTest, Gradle tests pass
-- [ ] `test-behavior.sh` passes end-to-end checks
-- [ ] Coverage thresholds met or improved
+- [ ] test/run-local.sh passes
+- [ ] test/run-live.sh passes
+- [ ] test-behavior.sh passes end-to-end checks
 
 > 🛑 Don’t release unless every item is ✅.
