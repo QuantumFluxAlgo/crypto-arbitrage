@@ -119,6 +119,10 @@ jobs:
         run: npm install
         working-directory: feed-aggregator
 
+      - name: Run feed-aggregator ESLint
+        run: npx eslint .
+        working-directory: feed-aggregator
+
       - name: Run feed-aggregator tests
         run: |
           mkdir -p ../test-results
