@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
 
+async function saveSettings(mode) {
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personality_mode: mode }),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to save');
+    }
+  } catch (err) {
+    console.error('Error saving settings', err);
+  }
+}
+
 export default function Settings() {
   const [mode, setMode] = useState('auto');
 
@@ -18,6 +33,12 @@ export default function Settings() {
           </button>
         ))}
       </div>
+      <button
+        className="bg-blue-600 text-white px-3 py-1 rounded"
+        onClick={() => saveSettings(mode)}
+      >
+        Save
+      </button>
     </div>
   );
 }
