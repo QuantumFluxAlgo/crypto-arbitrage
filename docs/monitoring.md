@@ -1,6 +1,13 @@
 # StatusCake Monitoring Setup
 
 Use StatusCake to monitor the Dashboard, API, and Analytics services on your server.
+These checks ensure you are alerted when any endpoint goes offline.
+
+Visual Placeholder Note:
+ Include screenshots of:
+  - StatusCake dashboard after login
+  - Add New Test form with URL field populated
+  - Contact group creation screen
 
 ---
 
@@ -51,6 +58,20 @@ Create one HTTP test for each service using your server IP address:
 
 1. Temporarily disable a test to trigger an alert.
 2. Confirm you receive the notification via email or webhook.
+
+---
+
+## Environment variables
+
+Add these keys to `.env.example` so automation can create or update tests:
+
+```bash
+STATUSCAKE_API_TOKEN=
+STATUSCAKE_CONTACT_GROUP=
+```
+
+The API token authenticates Terraform or scripts. `STATUSCAKE_CONTACT_GROUP` is the name or ID
+of the contact group to receive alerts.
 
 ---
 
