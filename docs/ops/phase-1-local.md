@@ -177,7 +177,7 @@ This will run:
 
 * Jest tests for `api/` and `dashboard/`
 * PyTest for `analytics/`
-* Maven test suite for `executor/`
+* Gradle test suite for `executor/`
 
 Tests must pass before pushing to the repository.
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# verify-env.sh - Ensure Jest, PyTest and Maven are available
+# verify-env.sh - Ensure Jest and PyTest are available
 
 set -euo pipefail
 
@@ -15,12 +15,5 @@ if ! pytest --version >/dev/null 2>&1; then
   exit 1
 fi
 
-# Check Maven if project uses pom.xml
-if find "$(dirname "$0")/.." -name pom.xml | grep -q pom.xml; then
-  if ! mvn -v >/dev/null 2>&1; then
-    echo "Error: Maven not installed" >&2
-    exit 1
-  fi
-fi
 
 echo "Environment verified"
