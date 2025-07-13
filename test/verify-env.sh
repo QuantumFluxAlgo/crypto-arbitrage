@@ -1,5 +1,6 @@
 #!/bin/bash
-# verify-env.sh - Ensure Jest and PyTest are available
+# verify-env.sh - Ensure local test tools (Jest, PyTest, Gradle) are installed
+# @dev-note: prepares the environment for run-local.sh
 
 set -euo pipefail
 
