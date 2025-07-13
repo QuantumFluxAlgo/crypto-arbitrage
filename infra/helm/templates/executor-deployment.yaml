@@ -4,8 +4,9 @@ metadata:
   name: executor
   labels:
     app: executor
+    {{- include "crypto-arbitrage.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: executor
@@ -16,12 +17,8 @@ spec:
     spec:
       containers:
         - name: executor
-          image: arb-executor
-          resources:
-            requests:
-              cpu: "250m"
-            limits:
-              cpu: "500m"
+          image: {{ .Values.executor.image }}
+          resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           envFrom:
             - secretRef:
                 name: executor-secrets

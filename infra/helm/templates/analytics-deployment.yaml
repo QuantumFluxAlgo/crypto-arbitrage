@@ -17,21 +17,25 @@ spec:
     spec:
       containers:
         - name: analytics
-          image: arb-analytics
+          image: {{ .Values.analytics.image }}
           ports:
-            - containerPort: 5000
-          resources:
-            requests:
-              cpu: "500m"
-              memory: "512Mi"
-              nvidia.com/gpu: "1"
-            limits:
-              cpu: "1000m"
-              memory: "1Gi"
-              nvidia.com/gpu: "1"
+            - containerPort: {{ .Values.analytics.port }}
+          resources: {{- toYaml .Values.analytics.resources | nindent 12 }}
           envFrom:
             - secretRef:
                 name: analytics-secrets
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.analytics.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.analytics.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -44,5 +48,5 @@ spec:
   selector:
     app: analytics
   ports:
-    - port: 5000
-      targetPort: 5000
+    - port: {{ .Values.analytics.port }}
+      targetPort: {{ .Values.analytics.port }}

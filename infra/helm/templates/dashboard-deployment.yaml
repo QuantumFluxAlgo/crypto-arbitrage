@@ -17,16 +17,25 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: arb-dashboard
+          image: {{ .Values.dashboard.image }}
           ports:
-            - containerPort: 3000
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "200m"
-              memory: "256Mi"
+            - containerPort: {{ .Values.dashboard.port }}
+          resources: {{- toYaml .Values.dashboard.resources | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: dashboard-secrets
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.dashboard.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.dashboard.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -39,5 +48,5 @@ spec:
   selector:
     app: dashboard
   ports:
-    - port: 3000
-      targetPort: 3000
+    - port: {{ .Values.dashboard.port }}
+      targetPort: {{ .Values.dashboard.port }}
