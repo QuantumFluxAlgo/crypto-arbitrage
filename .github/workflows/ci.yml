@@ -231,3 +231,18 @@ jobs:
       - name: Run behavior simulation tests
         run: bash scripts/test-behavior.sh
 
+  live-server-tests:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run live tests on Xeon server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.XEON_HOST }}
+          username: ${{ secrets.XEON_USER }}
+          key: ${{ secrets.XEON_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/prism-arbitrage
+            git pull |& sed 's/^/[test:live] /'
+            ./test/run-live.sh |& sed 's/^/[test:live] /'
