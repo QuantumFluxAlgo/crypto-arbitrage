@@ -169,3 +169,15 @@ This document defines all autonomous agents, modules, and services operating acr
 
 - **Stack**:
   - Grafana (metrics)
+  - Prometheus (scraper + time-series DB)
+  - Loki (logs)
+- **Grafana Dashboards**:
+  - Trading performance and P&L
+  - Exchange latency heatmaps
+  - Node CPU/memory panels
+- **Prometheus Endpoints**:
+  - `/metrics` from API, executor, analytics
+  - node_exporter for host metrics
+- **Alert Integration**:
+  - Alerts piped to Alert Manager Agent
+  - Slack & Telegram notifications
