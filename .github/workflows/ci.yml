@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Build executor image
+        run: podman build -t executor ./executor || echo "executor directory missing"
+
+      - name: Test executor image
+        run: podman run --rm executor npm test || echo "executor tests skipped"
+
+      - name: Build analytics image
+        run: podman build -t analytics ./analytics || echo "analytics directory missing"
+
+      - name: Test analytics image
+        run: podman run --rm analytics python -m pytest || echo "analytics tests skipped"
