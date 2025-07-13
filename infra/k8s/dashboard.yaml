@@ -24,13 +24,15 @@ spec:
               path: /
               port: 3000
             initialDelaySeconds: 10
-            periodSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
           envFrom:
             - secretRef:
                 name: dashboard-secrets
