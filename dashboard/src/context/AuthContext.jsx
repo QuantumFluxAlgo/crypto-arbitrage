@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.post('/api/login', { email, password });
       localStorage.setItem('token', res.data.token);
       setIsLoggedIn(true);
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login failed', error);
       throw error;

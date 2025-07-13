@@ -189,8 +189,10 @@ def predict():
         logger.info("Input shape: %s", features.shape)
         start_inf = time.time()
         preds = model.predict(features)
-        inference_latency.observe(time.time() - start_inf)
+        duration = time.time() - start_inf
+        inference_latency.observe(duration)
         logger.info("Output shape: %s", np.array(preds).shape)
+        logger.info("Inference took %.4f seconds", duration)
 
         shadow_preds = None
         if shadow_model is not None:
