@@ -18,6 +18,7 @@ def analytics_app(monkeypatch):
     models.load_model = lambda path: DummyModel()
     keras.models = models
     tf.keras = keras
+    tf.config = types.SimpleNamespace(list_physical_devices=lambda *_: [])
     monkeypatch.setitem(sys.modules, "tensorflow", tf)
     monkeypatch.setitem(sys.modules, "tensorflow.keras", keras)
     monkeypatch.setitem(sys.modules, "tensorflow.keras.models", models)
