@@ -190,13 +190,19 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         }
 
         if (!riskFilter.passes(opp)) {
-            logger.info("Opportunity rejected by risk filter");
+            String summary = String.format("%s %s->%s edge=%.4f",
+                    opp.getPair(), opp.getBuyExchange(),
+                    opp.getSellExchange(), opp.getNetEdge());
+            logger.warn("Opportunity rejected [{}]: risk filter", summary);
             nearMissLogger.log(opp, "rejected_by_risk_filter");
             return;
         }
 
         if (!scoringEngine.scoreSpread(opp)) {
-            logger.info("Opportunity rejected by scoring engine");
+            String summary = String.format("%s %s->%s edge=%.4f",
+                    opp.getPair(), opp.getBuyExchange(),
+                    opp.getSellExchange(), opp.getNetEdge());
+            logger.warn("Opportunity rejected [{}]: scoring engine", summary);
             nearMissLogger.log(opp, "rejected_by_scoring");
             return;
         }
@@ -246,7 +252,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             ProfitTracker.record(result.pnl);
             dailyLossPct = ProfitTracker.getDailyLossPct();
         } else {
-            logger.error("Failed to execute trade");
+            logger.warn("Trade execution failed for {}", opp.getPair());
         }
 
         if (featureLogger != null) {
