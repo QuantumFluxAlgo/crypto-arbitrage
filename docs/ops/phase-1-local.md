@@ -164,13 +164,13 @@ Test the following:
 Make test verifier script executable:
 
 ```bash
-chmod +x test/verify-env.sh
+chmod +x test/run-local.sh
 ```
 
 Run it:
 
 ```bash
-./test/verify-env.sh
+./test/run-local.sh
 ```
 
 This will run:
@@ -227,7 +227,7 @@ Configuration is optional and not required for dashboard/UI testing.
 
 * [ ] Services build and run locally via Podman
 * [ ] Dashboard loads at `localhost:3000`
-* [ ] All tests pass with `verify-env.sh`
+* [ ] All tests pass with `run-local.sh`
 * [ ] Panic brake triggers and disables trading
 * [ ] Resume button restores system state
 * [ ] Redis and Postgres function without error

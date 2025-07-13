@@ -665,8 +665,8 @@ Each service has its own test runner. Use the unified test verifier to check tha
 Run Test Verifier Script
 bash
 CopyEdit
-chmod +x test/verify-env.sh
-./test/verify-env.sh
+chmod +x test/run-local.sh
+./test/run-local.sh
 
 What This Checks:
 Jest (JavaScript/Node)
@@ -3172,7 +3172,7 @@ GitHub PR UI shows failing status
 Command Example:
 bash
 CopyEdit
-./test/verify-env.sh
+./test/run-local.sh
 
 
 16.2 SBOM Generation
