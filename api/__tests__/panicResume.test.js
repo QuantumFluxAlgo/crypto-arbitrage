@@ -1,6 +1,3 @@
-+32
--0
-
 import request from 'supertest';
 process.env.NODE_ENV = 'test';
 let buildApp;
