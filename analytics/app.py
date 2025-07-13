@@ -23,6 +23,8 @@ import joblib
 # Load .env variables
 load_dotenv()
 
+logger.info("Analytics app starting")
+
 # Configure Flask
 app = Flask(__name__)
 
@@ -120,7 +122,7 @@ def load_model(path: str):
             model = joblib.load(path)
         else:
             raise ValueError(f"Unsupported model format: {path}")
-        logger.info("Model loaded successfully")
+        logger.info("Model loaded successfully from %s", path)
         return model
     except Exception as e:
         logger.exception("Model loading failed: %s", e)
@@ -198,6 +200,7 @@ def predict():
         if shadow_preds is not None:
             response['shadow_prediction'] = shadow_preds.tolist()
 
+        logger.info("Prediction finished")
         return jsonify(response)
     except Exception as e:
         logger.exception("Prediction error: %s", e)
