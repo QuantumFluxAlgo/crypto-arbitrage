@@ -103,22 +103,11 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 
 ## Running Tests
 
-- **Jest** for the dashboard and API:
-  ```bash
-  npx jest
-  ```
-- **PyTest** for analytics:
-  ```bash
-  pytest
-  ```
-- **Gradle** for the executor:
-  ```bash
-  ./gradlew test
-  ```
-  - **Feed Aggregator** service:
-  ```bash
-  npm install --prefix feed-aggregator
-  npm test --prefix feed-aggregator
+Run the local mocked suite and the live dry-run integration:
+```bash
+./test/run-local.sh      # mocked tests [test:local]
+./test/run-live.sh       # dry-run integration [test:live]
+```
   
   
 ### Live Trade Simulation
