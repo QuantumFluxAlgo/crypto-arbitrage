@@ -74,6 +74,7 @@ public class ColdSweeper {
      */
     public void sweepToColdWallet() {
         String address = config.getTestColdWalletAddress();
+        logger.info("Cold wallet sweep triggered for: {}", address);
         logger.info("Sweeping to cold wallet: {}", address);
         walletClient.withdraw(address);
     }
@@ -84,6 +85,7 @@ public class ColdSweeper {
      * @param address destination cold wallet address
      */
     public void sweepToColdWallet(String address) {
+        logger.info("Cold wallet sweep triggered for: {}", address);
         logger.info("Sweeping to cold wallet: {}", address);
         walletClient.withdraw(address);
     }
