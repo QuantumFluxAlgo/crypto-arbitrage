@@ -41,7 +41,7 @@ jobs:
 
       - name: Install Syft
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.28.0/install.sh | sudo sh -s -- -b /usr/local/bin
 
       - name: Generate SBOMs
         run: |
