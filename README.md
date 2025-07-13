@@ -108,6 +108,7 @@ Run the local mocked suite and the live dry-run integration:
 ./test/run-local.sh      # mocked tests [test:local]
 ./test/run-live.sh       # dry-run integration [test:live]
 ```
+For an explanation of these tags and sample CI output see [docs/testing.md](docs/testing.md).
   
   
 ### Live Trade Simulation
