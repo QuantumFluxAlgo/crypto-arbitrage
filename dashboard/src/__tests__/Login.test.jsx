@@ -17,3 +17,15 @@ test('renders email, password inputs and submit button', () => {
   expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
 });
+
+test('submit button is visible', () => {
+  render(
+    <BrowserRouter>
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+  const submit = screen.getByRole('button', { name: /log in/i });
+  expect(submit).toBeVisible();
+});
