@@ -1,5 +1,8 @@
 import json
 from pathlib import Path
+import pytest
+
+pytestmark = pytest.mark.env("local")
 
 def test_agents_json_valid():
     data_path = Path(__file__).resolve().parents[1] / 'docs/agents.json'

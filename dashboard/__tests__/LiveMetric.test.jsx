@@ -1,5 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+
+const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;
 import '@testing-library/jest-dom';
 import LiveMetrics from '../components/LiveMetrics.jsx';
 
@@ -18,8 +20,10 @@ jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
 }));
 
-test('renders chart container and uses mocked data', () => {
-  render(<LiveMetrics />);
-  expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-  expect(received).toHaveLength(10);
+describeLocal('live metrics', () => {
+  test('renders chart container and uses mocked data', () => {
+    render(<LiveMetrics />);
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    expect(received).toHaveLength(10);
+  });
 });

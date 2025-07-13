@@ -2,8 +2,10 @@ package executor;
 
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("local")
 public class RiskFilterTest {
     @Test
     void rejectsWhenEdgeBelowThreshold() {

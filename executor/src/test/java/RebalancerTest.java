@@ -1,11 +1,13 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Tag("local")
 public class RebalancerTest {
     @Test
     void handlesImbalancedExchanges() {

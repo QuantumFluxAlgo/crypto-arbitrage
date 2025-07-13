@@ -27,6 +27,9 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+    def env = project.hasProperty('testEnv') ? project.property('testEnv') : 'local'
+    useJUnitPlatform {
+        includeTags env
+    }
 }
 

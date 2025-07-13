@@ -6,6 +6,8 @@ import os
 import shutil
 import pytest
 
+pytestmark = pytest.mark.env("local")
+
 if not shutil.which("node"):
     pytest.skip("node not installed", allow_module_level=True)
 

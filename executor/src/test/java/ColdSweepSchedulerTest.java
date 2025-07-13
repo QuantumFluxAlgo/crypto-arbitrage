@@ -1,11 +1,13 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Tag("local")
 public class ColdSweepSchedulerTest {
     static class TestWalletClient implements WalletClient {
         boolean called = false;

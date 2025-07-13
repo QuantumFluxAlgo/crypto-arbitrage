@@ -3,10 +3,12 @@ package executor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Unit tests for {@link SimulatedPublisher}. */
+@Tag("local")
 public class SimulatedPublisherTest {
     /** Simple Redis client capturing the last published message. */
     static class DummyRedisClient extends RedisClient {

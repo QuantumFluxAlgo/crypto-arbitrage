@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 import executor.PanicBrake;
 
+@Tag("local")
 public class PanicBrakeTest {
     @Test
     void triggersOnHighLoss() {

@@ -1,4 +1,6 @@
 import request from 'supertest';
+
+const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_TOKEN = 'testadmintoken';
 process.env.SANDBOX_MODE = 'true';
@@ -11,7 +13,7 @@ beforeAll(async () => {
   await app.listen({ port: 8080 });
 });
 
-describe('API authentication', () => {
+describeLocal('API authentication', () => {
   test('/login returns a cookie', async () => {
     const res = await request(app.server)
       .post('/api/login')

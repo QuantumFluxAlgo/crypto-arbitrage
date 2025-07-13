@@ -3,10 +3,12 @@ package executor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests for SandboxExchangeAdapter. */
+@Tag("local")
 public class SandboxExchangeAdapterTest {
     /** Dummy redis client capturing publishes. */
     static class DummyRedis extends RedisClient {

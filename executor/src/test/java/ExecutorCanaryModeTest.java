@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests that Executor bypasses trades when canary mode is enabled. */
+@Tag("local")
 public class ExecutorCanaryModeTest {
     static class DummyRedisClient extends RedisClient {
         DummyRedisClient() {

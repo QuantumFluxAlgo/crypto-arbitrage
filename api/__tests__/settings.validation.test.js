@@ -1,4 +1,6 @@
 import request from 'supertest';
+
+const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;
 process.env.NODE_ENV = 'test';
 process.env.SANDBOX_MODE = 'true';
 let buildApp;
@@ -19,7 +21,7 @@ afterAll(async () => {
   await app.close();
 });
 
-describe('settings validation', () => {
+describeLocal('settings validation', () => {
   test('rejects unknown properties', async () => {
     const res = await request(app.server)
       .patch('/api/settings')

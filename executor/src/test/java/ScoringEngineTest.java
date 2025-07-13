@@ -1,8 +1,10 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("local")
 public class ScoringEngineTest {
     static class FixedPredictor implements ModelPredictor {
         private final double value;

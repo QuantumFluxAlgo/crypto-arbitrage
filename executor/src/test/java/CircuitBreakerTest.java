@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Unit tests for {@link CircuitBreaker}. */
+@Tag("local")
 public class CircuitBreakerTest {
     static class DummyRedisClient extends RedisClient {
         String channel;

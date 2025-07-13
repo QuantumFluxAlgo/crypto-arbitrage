@@ -1,11 +1,13 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Tag("local")
 public class RebalanceSchedulerTest {
     static class TestRebalancer extends Rebalancer {
         boolean called = false;

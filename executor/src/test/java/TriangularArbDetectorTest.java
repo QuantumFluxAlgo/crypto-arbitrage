@@ -1,9 +1,11 @@
 package executor;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Unit tests for {@link TriangularArbDetector}. */
+@Tag("local")
 public class TriangularArbDetectorTest {
     static class DummyRedisClient extends RedisClient {
         DummyRedisClient() { super("localhost", 6379, "chan", (c,m) -> {}); }

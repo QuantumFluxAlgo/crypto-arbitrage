@@ -3,6 +3,8 @@ import subprocess
 from pathlib import Path
 import pytest
 
+pytestmark = pytest.mark.env("local")
+
 if not subprocess.run(['which', 'node'], capture_output=True).stdout.strip():
     pytest.skip('node not installed', allow_module_level=True)
 
