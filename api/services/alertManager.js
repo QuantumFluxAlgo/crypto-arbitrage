@@ -16,36 +16,46 @@ function hasWebhookConfig() {
 }
 
 async function sendAlert(type, message) {
-  try {
-    switch (type) {
-      case 'email':
-        if (!hasEmailConfig()) {
-          logger.warn('Email alert skipped: missing SMTP config');
-          return;
-        }
-        await sendEmail('Crypto Alert', message);
-        break;
-      case 'telegram':
-        if (!hasTelegramConfig()) {
-          logger.warn('Telegram alert skipped: missing Telegram config');
-          return;
-        }
-        await sendTelegram(message);
-        break;
-      case 'webhook':
-        if (!hasWebhookConfig()) {
-          logger.warn('Webhook alert skipped: missing WEBHOOK_URL');
-          return;
-        }
-        await sendWebhook(message);
-        break;
-      default:
-        logger.warn(`Unknown alert type: ${type}`);
+  switch (type) {
+    case 'email':
+      if (!hasEmailConfig()) {
+        logger.warn('Email alert skipped: missing SMTP config');
         return;
-    }
-    logger.info(`Alert dispatched via ${type}`);
-  } catch (err) {
-    logger.error(`Failed to send ${type} alert: ${err.message}`);
+      }
+      try {
+        await sendEmail('Crypto Alert', message);
+        logger.info('Email alert sent');
+      } catch (err) {
+        logger.error(`Email alert failed: ${err.message}`);
+      }
+      break;
+    case 'telegram':
+      if (!hasTelegramConfig()) {
+        logger.warn('Telegram alert skipped: missing Telegram config');
+        return;
+      }
+      try {
+        await sendTelegram(message);
+        logger.info('Telegram alert sent');
+      } catch (err) {
+        logger.error(`Telegram alert failed: ${err.message}`);
+      }
+      break;
+    case 'webhook':
+      if (!hasWebhookConfig()) {
+        logger.warn('Webhook alert skipped: missing WEBHOOK_URL');
+        return;
+      }
+      try {
+        await sendWebhook(message);
+        logger.info('Webhook alert sent');
+      } catch (err) {
+        logger.error(`Webhook alert failed: ${err.message}`);
+      }
+      break;
+    default:
+      logger.warn(`Unknown alert type: ${type}`);
+      return;
   }
 }
 
