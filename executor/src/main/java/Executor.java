@@ -91,6 +91,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Initialize connections and start background threads.
      */
     public void start() {
+        logger.info("Executor starting");
         // ✅ Config validation for runtime safety
         try {
             ConfigValidator validator = new ConfigValidator(
@@ -141,7 +142,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         }
 
         logger.info("🚀 Starting Redis client thread");
-        redisClient.start();
+        try {
+            redisClient.start();
+        } catch (Exception e) {
+            logger.warn("Failed to start Redis client", e);
+        }
         logger.info("🔁 Starting ResumeHandler thread");
         resumeHandler.start();
     }
