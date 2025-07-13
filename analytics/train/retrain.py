@@ -1,6 +1,6 @@
 import json
 import glob
-from analytics.logger import loggerimport os
+from analytics.logger import logger
 import os
 from datetime import datetime
 
