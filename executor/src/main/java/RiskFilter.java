@@ -31,10 +31,13 @@ public class RiskFilter {
 
     /**
      * Create a custom filter with explicit thresholds.
+     *
+     * @param netEdge    minimum net edge required
+     * @param latencyMs  maximum allowable latency in milliseconds
      */
-    public RiskFilter(double minEdge, long maxLatencyMs) {
-        this.minEdge = minEdge;
-        this.maxLatencyMs = maxLatencyMs;
+    public RiskFilter(double netEdge, long latencyMs) {
+        this.minEdge = netEdge;
+        this.maxLatencyMs = latencyMs;
         this.mode = "CUSTOM";
     }
 

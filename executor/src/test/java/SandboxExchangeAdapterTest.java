@@ -21,7 +21,7 @@ public class SandboxExchangeAdapterTest {
     void publishesAndReturnsResult() throws Exception {
         DummyRedis redis = new DummyRedis();
         SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(redis, opp -> 0.7);
-        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.1, 0.1);
+        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.1, 0.1, 0L);
         TradeResult result = adapter.execute(opp, 1.0, 1.0);
         assertNotNull(result);
         assertEquals("ghost_feed", redis.channel);

@@ -197,6 +197,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             nearMissLogger.log(opp, "rejected_by_risk_filter");
             return;
         }
+        logger.info("Opportunity accepted by risk filter: {}", opp);
 
         if (!scoringEngine.scoreSpread(opp)) {
             String summary = String.format("%s %s->%s edge=%.4f",

@@ -56,7 +56,7 @@ export default function Analytics() {
         const res = await fetch('/api/trades/history');
         if (res.ok) {
           const data = await res.json();
-          data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           setTrades(data);
           const pnls = data.map((t) => t.pnl);
           let cum = 0;
@@ -86,7 +86,7 @@ export default function Analytics() {
         const res = await fetch('/api/predictions');
         if (res.ok) {
           const data = await res.json();
-          data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           setPreds(data);
         }
       } catch (err) {

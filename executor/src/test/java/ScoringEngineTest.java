@@ -14,14 +14,14 @@ public class ScoringEngineTest {
     @Test
     void passesWhenBlendedScoreHigh() {
         ScoringEngine engine = new ScoringEngine(new FixedPredictor(0.8), true);
-        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.6, 0.6);
+        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.6, 0.6, 0L);
         assertTrue(engine.scoreSpread(opp));
     }
 
     @Test
     void rejectsWhenBlendedScoreLow() {
         ScoringEngine engine = new ScoringEngine(new FixedPredictor(0.1), true);
-        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.1, 0.1);
+        SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.1, 0.1, 0L);
         assertFalse(engine.scoreSpread(opp));
     }
 }

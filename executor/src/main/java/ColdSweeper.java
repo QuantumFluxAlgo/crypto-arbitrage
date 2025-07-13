@@ -65,7 +65,10 @@ public class ColdSweeper {
         if (totalCapitalUsd <= 0) {
             return false;
         }
-        return (profitUsd / totalCapitalUsd) >= minCapitalRatio;
+        if ((profitUsd / totalCapitalUsd) >= minCapitalRatio) {
+            return true;
+        }
+        return false;
     }
 
     /**
