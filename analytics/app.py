@@ -18,12 +18,19 @@ from prometheus_client import (
 )
 
 from tensorflow.keras.models import load_model as load_keras_model
+import tensorflow as tf
 import joblib
 
 # Load .env variables
 load_dotenv()
 
 logger.info("Analytics app starting")
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    gpu_names = ', '.join(gpu.name for gpu in gpus)
+    logger.info("GPU available: %s", gpu_names)
+else:
+    logger.info("No GPU detected; using CPU")
 
 # Configure Flask
 app = Flask(__name__)

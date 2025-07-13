@@ -1,5 +1,6 @@
 from .logger import logger
 import argparse
+import os
 import numpy as np
 import joblib
 
@@ -37,8 +38,9 @@ def train_sklearn(X: np.ndarray, y: np.ndarray, epochs: int = 5):
         preds = model.predict(X)
         loss = mean_squared_error(y, preds)
         logger.info("Epoch %s - MSE: %.4f", epoch, loss)
-    joblib.dump(model, "model.joblib")
-    logger.info("Model saved to model.joblib")
+    save_path = "model.joblib"
+    joblib.dump(model, save_path)
+    logger.info("Model saved to %s", os.path.abspath(save_path))
 
 
 def train_tensorflow(X: np.ndarray, y: np.ndarray, epochs: int = 5):
@@ -48,8 +50,9 @@ def train_tensorflow(X: np.ndarray, y: np.ndarray, epochs: int = 5):
     ])
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     model.fit(X, y, epochs=epochs, batch_size=32, verbose=1)
-    save_model(model, "model.h5")
-    logger.info("Model saved to model.h5")
+    save_path = "model.h5"
+    save_model(model, save_path)
+    logger.info("Model saved to %s", os.path.abspath(save_path))
 
 
 def main():

@@ -45,6 +45,8 @@ public class Rebalancer {
             return;
         }
 
+        Map<String, String> status = new HashMap<>();
+
         for (Map.Entry<String, Double> entry : balances.entrySet()) {
             String exchange = entry.getKey();
             double balance = entry.getValue();
@@ -52,6 +54,7 @@ public class Rebalancer {
             if (balance > target + threshold) {
                 logger.info("{} over target by {} ({} vs target {})",
                         exchange, balance - target, balance, target);
+                status.put(exchange, String.format("OVER by %.2f", balance - target));
                 ExchangeAdapter adapter = adapters.get(exchange);
                 if (adapter != null) {
                     adapter.transfer("USDT", balance - target, "treasury");
@@ -59,6 +62,7 @@ public class Rebalancer {
             } else if (balance < target - threshold) {
                 logger.info("{} under target by {} ({} vs target {})",
                         exchange, target - balance, balance, target);
+                status.put(exchange, String.format("UNDER by %.2f", target - balance));
                 ExchangeAdapter adapter = adapters.get(exchange);
                 if (adapter != null) {
                     adapter.transfer("USDT", target - balance, exchange);
@@ -66,8 +70,11 @@ public class Rebalancer {
             } else {
                 logger.info("{} within acceptable threshold ({} vs target {})",
                         exchange, balance, target);
+                status.put(exchange, "OK");
             }
         }
+
+        logger.info("Balance scan summary: {}", status);
     }
     
     /**
