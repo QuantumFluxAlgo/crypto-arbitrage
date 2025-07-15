@@ -6,7 +6,7 @@ set -e
 # Stops push if any test fails
 
 echo "Running local test suite..."
-./test/run-local.sh
+bash ./test/run-local.sh
 
 echo "All tests passed."
 exit 0
