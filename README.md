@@ -71,6 +71,11 @@ Ensure these tools are available in your `PATH` so `githooks/pre-push` can execu
    ```
 2. Install dependencies and charts:
    ```bash
+   npm install
+   npm install --prefix api
+   npm install --prefix dashboard
+   pip install -r requirements.txt
+   pip install -r analytics/requirements.txt
    helm dependency update infra/helm
    helm install arb infra/helm
    ```
@@ -87,6 +92,7 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 - `JWT_SECRET` – token signing key for the API
 - `ADMIN_TOKEN` – admin-only endpoints in the API
 - `SENTRY_DSN` – API error reporting endpoint
+- `PROM_URL` – Prometheus base URL for metrics
 - `SANDBOX_MODE` – enable demo login without a DB
 
 ### Executor specific
@@ -96,6 +102,8 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 - `CANARY_MODE`, `GHOST_MODE`, `USE_ENSEMBLE` – feature toggles
 - `sweep_cadence` – choose Daily, Monthly, or None for automatic cold sweeps
 - `TEST_COLD_WALLET_ADDRESS` – wallet address used in sweep tests
+- `GHOST_FEED_CHANNEL` – Redis channel for ghost trades overlay
+- `DB_RETRIES`, `DB_RETRY_DELAY_MS` – DB reconnection settings
 
 ### Analytics specific
 - `MODEL_PATH`, `MODEL_SHADOW_PATH` – model files
