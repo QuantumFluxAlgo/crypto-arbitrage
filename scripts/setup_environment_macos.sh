@@ -19,6 +19,10 @@ npm install --prefix api
 npm install --prefix dashboard
 npm install --prefix feed-aggregator
 
+if ! jar tf executor/gradle/wrapper/gradle-wrapper.jar >/dev/null 2>&1; then
+  echo "Gradle wrapper missing or corrupt; regenerating..."
+  (cd executor && gradle wrapper --no-daemon)
+fi
 ./executor/gradlew -p executor --quiet --no-daemon help
 
 echo
