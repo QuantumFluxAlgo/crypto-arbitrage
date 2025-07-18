@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
-const testState = { panic: false };
+const testState = { panic: false, reason: '' };
 
 let redis;
 let pool;
@@ -138,6 +138,11 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     await redis.publish('control-feed', 'resume');
     return { resumed: true };
   });
+
+  api.get('/system/status', async () => ({
+    panic: testState.panic,
+    reason: testState.reason,
+  }));
 
     if (isTest) {
       api.post('/test/panic', async () => {
