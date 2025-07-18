@@ -8,20 +8,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        # actions/checkout@v3 SHA f43a0e5ff2bd294095638e18286ca9a3d1956744
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        # actions/setup-node@v3 SHA 3235b876344d2a9aa001b8d1453c930bba69e610
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: 18
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        # actions/setup-python@v4 SHA 7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
         with:
           python-version: '3.10'
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        # actions/setup-java@v3 SHA 17f84c3641ba7b8f6deff6309fc4c864478f5d62
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -53,7 +57,8 @@ jobs:
           syft feed-aggregator:latest -o json > sbom-feed-aggregator.json
 
       - name: Upload SBOMs and CHANGELOG to GitHub Release
-        uses: softprops/action-gh-release@v1
+        # softprops/action-gh-release@v1 SHA 26994186c0ac3ef5cae75ac16aa32e8153525f77
+        uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77
         with:
           files: |
             sbom-*.json
