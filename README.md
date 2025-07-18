@@ -94,6 +94,8 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 - `PREDICT_URL` – ML scoring endpoint
 - `CB_WIN_RATE_THRESHOLD`, `CB_MAX_DRAWDOWN_PCT` – circuit breaker limits
 - `CANARY_MODE`, `GHOST_MODE`, `USE_ENSEMBLE` – feature toggles
+- `sweep_cadence` – choose Daily, Monthly, or None for automatic cold sweeps
+- `TEST_COLD_WALLET_ADDRESS` – wallet address used in sweep tests
 
 ### Analytics specific
 - `MODEL_PATH`, `MODEL_SHADOW_PATH` – model files

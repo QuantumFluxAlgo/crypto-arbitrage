@@ -3,12 +3,6 @@
 Use StatusCake to monitor the Dashboard, API, and Analytics services on your server.
 These checks ensure you are alerted when any endpoint goes offline.
 
-Visual Placeholder Note:
- Include screenshots of:
-  - StatusCake dashboard after login
-  - Add New Test form with URL field populated
-  - Contact group creation screen
-
 ---
 
 ## Step 1 – Log in to StatusCake
