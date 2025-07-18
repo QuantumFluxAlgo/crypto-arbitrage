@@ -210,7 +210,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         if (ghostMode) {
             logger.info("GHOST MODE — broadcasting opportunity");
-            redisClient.publish("ghost-feed", message);
+            redisClient.publish("ghost_feed", message);
             return;
         }
 

@@ -40,7 +40,7 @@ public class ExecutorGhostModeTest {
         exec.setGhostMode(true);
         String msg = "{\"pair\":\"BTC/USDT\",\"buyExchange\":\"A\",\"sellExchange\":\"B\",\"grossEdge\":2.0,\"netEdge\":2.0}";
         exec.handleMessage(msg);
-        assertEquals("ghost-feed", client.publishedChannel);
+        assertEquals("ghost_feed", client.publishedChannel);
         assertEquals(msg, client.publishedMessage);
     }
 }
