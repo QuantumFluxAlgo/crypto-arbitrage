@@ -9,7 +9,7 @@ brew install node python@3.10 openjdk@17 git gradle
 export PATH="$(brew --prefix)/opt/openjdk@17/bin:$PATH"
 
 echo "Creating Python virtual environment..."
-python3 -m venv .venv
+python3.10 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 
