@@ -3,13 +3,13 @@
 set -euo pipefail
 
 echo "Installing Homebrew packages..."
-brew install node python@3.10 openjdk@17 git gradle
+brew install node python@3.11 openjdk@17 git gradle
 
 # ensure JDK binaries are on PATH
 export PATH="$(brew --prefix)/opt/openjdk@17/bin:$PATH"
 
 echo "Creating Python virtual environment..."
-python3.10 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 
