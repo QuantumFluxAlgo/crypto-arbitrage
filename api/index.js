@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
-import winston from 'winston';
+import logger from './services/logger.js';
 import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
 import pg from 'pg';
@@ -73,11 +73,6 @@ function buildApp() {
 
 const app = buildApp();
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.simple(),
-  transports: [new winston.transports.Console()],
-});
 logger.info('API initialized');
 
 const alertSettings = {
@@ -164,7 +159,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       });
 
       api.post('/test/sweep', async () => {
-        app.log.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
+        logger.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
         await redis.publish('control-feed', 'sweep');
         return { swept: true };
       });
