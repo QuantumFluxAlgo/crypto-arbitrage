@@ -20,17 +20,51 @@ public class PanicBrake {
      * @return {@code true} if trading should halt
      */
 
+    private static double getLossCapPct() {
+        String val = System.getProperty("LOSS_CAP_PCT",
+                System.getenv().getOrDefault("LOSS_CAP_PCT", "3.0"));
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return 3.0;
+        }
+    }
+
+    private static double getLatencyMaxMs() {
+        String val = System.getProperty("LATENCY_MAX_MS",
+                System.getenv().getOrDefault("LATENCY_MAX_MS", "500.0"));
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return 500.0;
+        }
+    }
+
+    private static double getWinRateThreshold() {
+        String val = System.getProperty("WIN_RATE_THRESHOLD",
+                System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.4"));
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return 0.4;
+        }
+    }
+
     public static boolean shouldHalt(double dailyLossPct, double avgLatencyMs, double winRate) {
-        if (dailyLossPct > 3.0) {
-            logger.warn("PANIC BRAKE TRIGGERED: loss {}% > 3.0%", dailyLossPct);
+        double lossCap = getLossCapPct();
+        double latencyCap = getLatencyMaxMs();
+        double winRateThresh = getWinRateThreshold();
+
+        if (dailyLossPct > lossCap) {
+            logger.warn("PANIC BRAKE TRIGGERED: loss {}% > {}%", dailyLossPct, lossCap);
             return true;
         }
-        if (avgLatencyMs > 500.0) {
-            logger.warn("PANIC BRAKE TRIGGERED: latency {}ms > 500ms", avgLatencyMs);
+        if (avgLatencyMs > latencyCap) {
+            logger.warn("PANIC BRAKE TRIGGERED: latency {}ms > {}ms", avgLatencyMs, latencyCap);
             return true;
         }
-        if (winRate < 0.4) {
-            logger.warn("PANIC BRAKE TRIGGERED: winRate {} < 0.4", winRate);
+        if (winRate < winRateThresh) {
+            logger.warn("PANIC BRAKE TRIGGERED: winRate {} < {}", winRate, winRateThresh);
             return true;
         }
         return false;

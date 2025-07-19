@@ -25,7 +25,7 @@ describeLocal('panic resume cycle', () => {
     const metrics1 = await request(app.server).get('/api/metrics');
     expect(metrics1.body.panicActive).toBe(true);
 
-    const resumeRes = await request(app.server).post('/api/resume');
+    const resumeRes = await request(app.server).post('/api/test/resume');
     expect(resumeRes.statusCode).toBe(200);
     expect(testState.panic).toBe(false);
 

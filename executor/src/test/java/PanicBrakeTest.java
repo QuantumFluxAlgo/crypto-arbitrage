@@ -26,4 +26,18 @@ public class PanicBrakeTest {
     void passesIfAllWithinLimits() {
         assertFalse(PanicBrake.shouldHalt(1.0, 100.0, 0.8));
     }
+
+    @Test
+    void readsThresholdsFromProperties() {
+        System.setProperty("LOSS_CAP_PCT", "1.5");
+        System.setProperty("LATENCY_MAX_MS", "200.0");
+        System.setProperty("WIN_RATE_THRESHOLD", "0.9");
+        try {
+            assertTrue(PanicBrake.shouldHalt(2.0, 300.0, 0.5));
+        } finally {
+            System.clearProperty("LOSS_CAP_PCT");
+            System.clearProperty("LATENCY_MAX_MS");
+            System.clearProperty("WIN_RATE_THRESHOLD");
+        }
+    }
 }
