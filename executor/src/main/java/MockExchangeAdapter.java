@@ -25,6 +25,7 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     private final double cancelFeeRate;
     private double lastFillSize = 0.0;
     private double lastCancelFee = 0.0;
+    private double lastExecPrice = 0.0;
 
     /** Create an adapter with the default exchange name. */
     public MockExchangeAdapter() {
@@ -69,6 +70,7 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     public boolean placeOrder(String pair, String side, double size, double price) {
         lastFillSize = 0.0;
         lastCancelFee = 0.0;
+        lastExecPrice = price;
         double r = random.nextDouble();
         if (r < 0.8) {
             lastFillSize = size;
@@ -126,6 +128,13 @@ public class MockExchangeAdapter implements ExchangeAdapter {
      */
     public double getLastCancelFee() {
         return lastCancelFee;
+    }
+
+    /**
+     * @return execution price used for the last order
+     */
+    public double getLastExecPrice() {
+        return lastExecPrice;
     }
 
     /**

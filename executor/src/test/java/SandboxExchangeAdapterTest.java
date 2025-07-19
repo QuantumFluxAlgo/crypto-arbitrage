@@ -33,5 +33,7 @@ public class SandboxExchangeAdapterTest {
         assertEquals(0.1, node.get("net_edge").asDouble(), 1e-9);
         assertEquals(0.7, node.get("predicted_prob").asDouble(), 1e-9);
         assertEquals(result.latencyMs, node.get("latency_ms").asLong());
+        assertEquals(result.pnl, node.get("simulated_pnl").asDouble(), 1e-9);
+        assertTrue(result.pnl <= 0.1);
     }
 }
