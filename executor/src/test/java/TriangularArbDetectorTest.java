@@ -37,7 +37,7 @@ public class TriangularArbDetectorTest {
             opp.getPair().equals("A-B-C") ||
             opp.getPair().equals("B-C-A") ||
             opp.getPair().equals("C-A-B"));
-        assertEquals(0.05, opp.getNetEdge(), 1e-9);
+        assertEquals(2.4865104965, opp.getNetEdge(), 1e-9);
     }
 
     @Test

@@ -92,8 +92,9 @@ public class SpreadOpportunity {
         roundTripLatencyMicros = latencyMicros;
         latencyMs = latencyMicros / 1000;
         roundTripLatencyMs = latencyMs;
-        double fee = size * price * buy.getFeeRate(pair);
-        double pnl = netEdge - fee;
+        double buyFee = size * price * buy.getFeeRate(pair);
+        double sellFee = size * price * sell.getFeeRate(pair);
+        double pnl = netEdge - buyFee - sellFee;
         boolean success = buyOk && sellOk && latencyMicros <= 60;
 
         return new TradeResult(success, success ? pnl : 0.0, latencyMs);

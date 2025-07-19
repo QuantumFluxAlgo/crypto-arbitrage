@@ -27,4 +27,13 @@ public class RiskFilterTest {
         Spread spread = new Spread(3.0, 80);
         assertTrue(filter.accept(spread), "Valid spread should be accepted");
     }
+
+    @Test
+    void rejectsInvalidNetEdge() {
+        RiskFilter filter = new RiskFilter(0.0, 100);
+        SpreadOpportunity bad1 = new SpreadOpportunity("BTC/USDT", "A", "B", 1.0, Double.NaN, 0L);
+        SpreadOpportunity bad2 = new SpreadOpportunity("BTC/USDT", "A", "B", 1.0, -0.5, 0L);
+        assertFalse(filter.passes(bad1));
+        assertFalse(filter.passes(bad2));
+    }
 }
