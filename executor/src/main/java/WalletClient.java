@@ -9,5 +9,5 @@ public interface WalletClient {
      *
      * @param address destination address
      */
-    void withdraw(String address);
+    void withdraw(String address, double amountUsd);
 }

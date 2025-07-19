@@ -75,21 +75,22 @@ public class ColdSweeper {
      * Logs the sweep action. Stub for actual wallet transfer.
      * Uses the address from {@link ColdSweeperConfig}.
      */
-    public void sweepToColdWallet() {
+    public void sweepToColdWallet(double amountUsd) {
         String address = config.getTestColdWalletAddress();
-        logger.info("Cold wallet sweep triggered for: {}", address);
-        logger.info("Sweeping to cold wallet: {}", address);
-        walletClient.withdraw(address);
+        logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
+        walletClient.withdraw(address, amountUsd);
+        ProfitTracker.resetCumulativeProfit();
     }
 
     /**
      * Logs the sweep action to a custom address.
      *
      * @param address destination cold wallet address
+     * @param amountUsd amount to sweep
      */
-    public void sweepToColdWallet(String address) {
-        logger.info("Cold wallet sweep triggered for: {}", address);
-        logger.info("Sweeping to cold wallet: {}", address);
-        walletClient.withdraw(address);
+    public void sweepToColdWallet(String address, double amountUsd) {
+        logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
+        walletClient.withdraw(address, amountUsd);
+        ProfitTracker.resetCumulativeProfit();
     }
 }
