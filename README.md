@@ -95,8 +95,8 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 ### Common variables
 - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` – Postgres connection
 - `REDIS_HOST`, `REDIS_PORT` – Redis connection
-- `JWT_SECRET` – token signing key for the API
-- `ADMIN_TOKEN` – admin-only endpoints in the API
+- `JWT_SECRET` – token signing key for the API (required in production)
+- `ADMIN_TOKEN` – admin-only endpoints in the API (set a strong value for production)
 - `SENTRY_DSN` – API error reporting endpoint
 - `PROM_URL` – Prometheus base URL for metrics
 - `SANDBOX_MODE` – enable demo login without a DB

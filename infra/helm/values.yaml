@@ -17,7 +17,7 @@ api:
       cpu: "500m"
       memory: "512Mi"
   env:
-    # JWT_SECRET: "change-me"
+    # JWT_SECRET: "<your-secret>"
     # PGHOST: "postgres"
     # PGUSER: "arb_user"
     # PGPASSWORD: "secret"

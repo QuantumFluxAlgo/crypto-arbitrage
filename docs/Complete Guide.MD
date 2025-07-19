@@ -861,7 +861,7 @@ yaml
 CopyEdit
 api:
   env:
-    JWT_SECRET: "change-me"
+    JWT_SECRET: "<your-secret>"
 analytics:
   env:
     MODEL_PATH: "/models/model.h5"
