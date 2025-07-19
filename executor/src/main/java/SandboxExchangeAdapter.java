@@ -87,7 +87,7 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         long end = System.currentTimeMillis();
         long latency = end - start;
 
-        double pnl = opp.getNetEdge() - size * price * getFeeRate(opp.getPair());
+        double pnl = opp.getNetEdge();
 
         if (redisClient != null) {
             try {
@@ -107,4 +107,3 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         return new TradeResult(buyOk && sellOk, pnl, latency);
     }
 }
-

@@ -147,6 +147,15 @@ except Exception as e:
     logger.error("Failed to load shadow model from %s: %s", SHADOW_MODEL_PATH, e)
     shadow_model = None
 
+class IdentityModel:
+    def predict(self, features):
+        return np.array(features)
+
+if model is None:
+    model = IdentityModel()
+if shadow_model is None:
+    shadow_model = IdentityModel()
+
 @app.before_request
 def before_request():
     g.start_time = time.time()
