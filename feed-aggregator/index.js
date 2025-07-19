@@ -5,7 +5,7 @@ const winston = require("winston");
 const normalize = require("./lib/normalize");
 
 const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
-const CHANNEL = "orderbook";
+const CHANNEL = process.env.ORDERBOOK_CHANNEL || "orderbook";
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const HEALTH_PORT = process.env.HEALTH_PORT || 8090;
@@ -23,7 +23,7 @@ const logger = winston.createLogger({
 });
 
 const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
-const ALERT_CHANNEL = "alerts";
+const ALERT_CHANNEL = process.env.ALERT_CHANNEL || "alerts";
 
 function sendAlert(type, message) {
   const payload = JSON.stringify({

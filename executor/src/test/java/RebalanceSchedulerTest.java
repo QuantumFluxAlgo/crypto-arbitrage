@@ -2,6 +2,7 @@ package executor;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
+import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
@@ -25,11 +26,11 @@ public class RebalanceSchedulerTest {
     @Test
     void runOnceCollectsBalances() {
         Map<String, ExchangeAdapter> adapters = new HashMap<>();
-        adapters.put("Binance", new MockExchangeAdapter("Binance") {
+        adapters.put("Binance", new MockExchangeAdapter("Binance", 0.0002, new Random(42)) {
             @Override
             public double getBalance(String asset) { return 6000.0; }
         });
-        adapters.put("Kraken", new MockExchangeAdapter("Kraken") {
+        adapters.put("Kraken", new MockExchangeAdapter("Kraken", 0.0002, new Random(42)) {
             @Override
             public double getBalance(String asset) { return 4000.0; }
         });

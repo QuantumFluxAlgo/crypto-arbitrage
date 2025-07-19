@@ -20,7 +20,7 @@ public class MockExchangeAdapter implements ExchangeAdapter {
         FEE_RATES.put("Mock", 0.001);
     }
 
-    private final Random random = new Random();
+    private final Random random;
     private final String name;
     private final double cancelFeeRate;
     private double lastFillSize = 0.0;
@@ -44,8 +44,18 @@ public class MockExchangeAdapter implements ExchangeAdapter {
      * @param cancelFeeRate  fee charged when an order is cancelled or partially filled
      */
     public MockExchangeAdapter(String name, double cancelFeeRate) {
+        this(name, cancelFeeRate, new Random());
+    }
+
+    /**
+     * @param name          identifier used when logging activity
+     * @param cancelFeeRate fee charged when an order is cancelled or partially filled
+     * @param random        random number generator for deterministic tests
+     */
+    public MockExchangeAdapter(String name, double cancelFeeRate, Random random) {
         this.name = name;
         this.cancelFeeRate = cancelFeeRate;
+        this.random = random;
     }
 
     /**

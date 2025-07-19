@@ -2,6 +2,7 @@ package executor;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
+import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 // For using ExchangeAdapter interface in tests
@@ -11,7 +12,7 @@ import executor.ExchangeAdapter;
 public class MockExchangeAdapterTest {
     @Test
     void feeRateCanBeOverridden() {
-        MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        MockExchangeAdapter adapter = new MockExchangeAdapter("Test", 0.0002, new Random(42));
         assertEquals(0.001, adapter.getFeeRate("BTC/USDT"), 1e-9);
         MockExchangeAdapter.setFeeRate("Test", 0.002);
         assertEquals(0.002, adapter.getFeeRate("BTC/USDT"), 1e-9);
@@ -20,13 +21,13 @@ public class MockExchangeAdapterTest {
 
     @Test
     void balanceAlwaysTenThousand() {
-        MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        MockExchangeAdapter adapter = new MockExchangeAdapter("Test", 0.0002, new Random(42));
         assertEquals(10000.0, adapter.getBalance("BTC"), 1e-9);
     }
 
     @Test
     void placeOrderSucceedsRoughlyEightyPercent() {
-        MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        MockExchangeAdapter adapter = new MockExchangeAdapter("Test", 0.0002, new Random(42));
         int success = 0;
         int total = 1000;
         for (int i = 0; i < total; i++) {
@@ -40,7 +41,7 @@ public class MockExchangeAdapterTest {
 
     @Test
     void partialFillSetsFeeAndSize() {
-        MockExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        MockExchangeAdapter adapter = new MockExchangeAdapter("Test", 0.0002, new Random(42));
         boolean observed = false;
         for (int i = 0; i < 1000 && !observed; i++) {
             boolean filled = adapter.placeOrder("BTC/USDT", "BUY", 1.0, 50000.0);
@@ -55,7 +56,7 @@ public class MockExchangeAdapterTest {
 
     @Test
     void transferDoesNotThrow() {
-        ExchangeAdapter adapter = new MockExchangeAdapter("Test");
+        ExchangeAdapter adapter = new MockExchangeAdapter("Test", 0.0002, new Random(42));
         assertDoesNotThrow(() -> adapter.transfer("USDT", 1.5, "wallet"));
     }
 }

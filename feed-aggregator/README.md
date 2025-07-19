@@ -13,8 +13,9 @@ npm install
 node index.js
 ```
 
-The service publishes books to the `orderbook` Redis channel and exposes a
-health check on `http://localhost:8090/health`.
+The service publishes books to the Redis channel specified by `ORDERBOOK_CHANNEL` (default `orderbook`)
+and sends alerts to `ALERT_CHANNEL` (default `alerts`). A health check is available at
+`http://localhost:8090/health`.
 
 ## Tests
 
