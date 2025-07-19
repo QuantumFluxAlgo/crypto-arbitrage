@@ -78,6 +78,9 @@ public class TriangularArbDetector {
     }
 
     private void scan() {
+        double bestEdge = 0.0;
+        String bestMessage = null;
+
         for (Map.Entry<String, OrderBook> entry1 : books.entrySet()) {
             String pair1 = entry1.getKey();
             OrderBook first = entry1.getValue();
@@ -102,18 +105,24 @@ public class TriangularArbDetector {
                 double grossEdge = product - 1.0;
                 if (grossEdge > 0) {
                     double netEdge = grossEdge - (3 * feeRate);
-                    String path = t1[0] + "-" + t1[1] + "-" + t2[1];
-                    ObjectNode node = mapper.createObjectNode();
-                    node.put("pair", path);
-                    node.put("buyExchange", "triangular");
-                    node.put("sellExchange", "triangular");
-                    node.put("grossEdge", grossEdge);
-                    node.put("netEdge", netEdge);
-                    String msg = node.toString();
-                    logger.debug("Triangular arbitrage detected: {}", msg);
-                    executor.handleMessage(msg);
+                    if (netEdge > bestEdge) {
+                        bestEdge = netEdge;
+                        String path = t1[0] + "-" + t1[1] + "-" + t2[1];
+                        ObjectNode node = mapper.createObjectNode();
+                        node.put("pair", path);
+                        node.put("buyExchange", "triangular");
+                        node.put("sellExchange", "triangular");
+                        node.put("grossEdge", grossEdge);
+                        node.put("netEdge", netEdge);
+                        bestMessage = node.toString();
+                    }
                 }
             }
+        }
+
+        if (bestMessage != null) {
+            logger.debug("Triangular arbitrage detected: {}", bestMessage);
+            executor.handleMessage(bestMessage);
         }
     }
 

@@ -26,4 +26,12 @@ public class ScoringEngineTest {
         SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 0.1, 0.1, 0L);
         assertFalse(engine.scoreSpread(opp));
     }
+
+    @Test
+    void customWeightsViaConstructor() {
+        ScoringEngine engine = new ScoringEngine(new FixedPredictor(0.9), true,
+                0.2, 0.8, 0.5);
+        SpreadOpportunity opp = new SpreadOpportunity("ETH/USDT", "X", "Y", 0.3, 0.3, 0L);
+        assertTrue(engine.scoreSpread(opp));
+    }
 }
