@@ -202,6 +202,9 @@ Each container build produces a Software Bill of Materials using Syft. The JSON 
 Refer to [docs/ops/helm-rollback-guide.MD](docs/ops/helm-rollback-guide.MD) for step-by-step instructions on rolling back a failed deployment using Helm.
 
 ---
+## System Documentation
+
+Additional guides covering architecture, strategy modes, UI features, risk controls, and environment variables live under the [`docs/`](docs/) directory. Start with [docs/architecture.md](docs/architecture.md) for a high-level overview of the platform.
 
 ## AI & ML Model Registry Lifecycle
 
