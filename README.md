@@ -61,6 +61,12 @@ The pre-push hook runs tests across multiple languages. Make sure the following 
 
 Ensure these tools are available in your `PATH` so `githooks/pre-push` can execute them.
 
+To enable the Git hooks in this repository run:
+
+```bash
+git config core.hooksPath githooks
+```
+
 ---
 
 ## Dev Setup

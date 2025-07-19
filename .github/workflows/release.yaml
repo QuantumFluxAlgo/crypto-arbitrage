@@ -1,5 +1,8 @@
 name: Release
 on:
+  push:
+    tags:
+      - '*'
   release:
     types: [created]
 
@@ -45,6 +48,23 @@ jobs:
           podman build -t analytics ./analytics
           podman build -t feed-aggregator ./feed-aggregator
 
+      - name: Push images to GHCR
+        env:
+          REGISTRY: ghcr.io
+          IMAGE_PREFIX: ${{ github.repository_owner }}/crypto-arbitrage
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          podman tag dashboard "$REGISTRY/$IMAGE_PREFIX/dashboard:${{ github.ref_name }}"
+          podman push "$REGISTRY/$IMAGE_PREFIX/dashboard:${{ github.ref_name }}"
+          podman tag api "$REGISTRY/$IMAGE_PREFIX/api:${{ github.ref_name }}"
+          podman push "$REGISTRY/$IMAGE_PREFIX/api:${{ github.ref_name }}"
+          podman tag executor "$REGISTRY/$IMAGE_PREFIX/executor:${{ github.ref_name }}"
+          podman push "$REGISTRY/$IMAGE_PREFIX/executor:${{ github.ref_name }}"
+          podman tag analytics "$REGISTRY/$IMAGE_PREFIX/analytics:${{ github.ref_name }}"
+          podman push "$REGISTRY/$IMAGE_PREFIX/analytics:${{ github.ref_name }}"
+          podman tag feed-aggregator "$REGISTRY/$IMAGE_PREFIX/feed-aggregator:${{ github.ref_name }}"
+          podman push "$REGISTRY/$IMAGE_PREFIX/feed-aggregator:${{ github.ref_name }}"
+
       - name: Install Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.28.0/install.sh | sudo sh -s -- -b /usr/local/bin
@@ -58,7 +78,7 @@ jobs:
           syft analytics:latest -o json > sbom-analytics.json
           syft feed-aggregator:latest -o json > sbom-feed-aggregator.json
 
-      - name: Upload SBOMs and CHANGELOG to GitHub Release
+      - name: Upload release assets
         # softprops/action-gh-release@v1 SHA 26994186c0ac3ef5cae75ac16aa32e8153525f77
         uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77
         with:
