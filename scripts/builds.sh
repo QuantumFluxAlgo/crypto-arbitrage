@@ -1,7 +1,7 @@
 #!/bin/bash
-# build.sh - Build container images for project services using Podman
+# builds.sh - Build container images for project services using Podman
 #
-# Usage: ./build.sh
+# Usage: ./builds.sh
 #
 # For each service directory, this script runs `podman build` and tags the
 # resulting image as `arb-<service>`.

@@ -69,6 +69,14 @@ cp executor/.env.example executor/.env
 cp analytics/.env.example analytics/.env
 ```
 
+### Install dashboard dependencies
+
+```bash
+cd dashboard
+yarn install
+cd ..
+```
+
 Edit the `.env` files for test-safe operation. Example for `api/.env`:
 
 ```env
@@ -95,13 +103,13 @@ Exchange API keys can remain as dummy strings. Avoid real credentials.
 ### Make the build script executable
 
 ```bash
-chmod +x scripts/build.sh
+chmod +x scripts/builds.sh
 ```
 
 ### Build all containers
 
 ```bash
-./scripts/build.sh
+./scripts/builds.sh
 ```
 
 Services included:

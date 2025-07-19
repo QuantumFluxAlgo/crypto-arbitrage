@@ -598,8 +598,8 @@ Build All Services
 
  bash
 CopyEdit
-chmod +x scripts/build.sh
-./scripts/build.sh
+chmod +x scripts/builds.sh
+./scripts/builds.sh
  This will build:
 
 
