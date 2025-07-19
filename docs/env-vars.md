@@ -58,5 +58,4 @@ Lists environment variables used across services.
 | `FLASK_ENV` | Flask environment mode |
 | `MODEL_PATH` | Location of the production model |
 | `MODEL_SHADOW_PATH` | Path to the shadow model |
-| `GPU_ENABLED` | Enable GPU acceleration |
 | `LOG_LEVEL` | Logging level for analytics service |
