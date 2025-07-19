@@ -17,7 +17,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Fail-safes**: Cancels partial fills, handles reconnections.
 - **Data Inputs**: Redis pub/sub (normalized order books).
 - **Schedule**: Continuous.
-:contentReference[oaicite:0]{index=0}
 
 ---
 
@@ -31,7 +30,6 @@ This document defines all autonomous agents, modules, and services operating acr
   - Normalizes feeds & publishes to Redis.
 - **Recovery**: Auto-reconnect + REST fallback.
 - **Schedule**: Continuous.
-:contentReference[oaicite:1]{index=1}
 
 ---
 
@@ -44,7 +42,6 @@ This document defines all autonomous agents, modules, and services operating acr
   - Optional: LSTM spread probability model (Tesla P4).
   - Prometheus metrics exposed for Grafana.
 - **Schedule**: Rolling + on-demand inference.
-:contentReference[oaicite:2]{index=2}
 
 ---
 
@@ -59,7 +56,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Sweep Options**: Daily / Monthly / None.
 - **Destination**: Ledger cold wallet.
 - **Schedule**: 15-min interval.
-:contentReference[oaicite:3]{index=3}
 
 ---
 
@@ -77,7 +73,6 @@ This document defines all autonomous agents, modules, and services operating acr
   - Telegram Bot
   - JSON Webhooks (Slack/Pushover ready)
 - **Config**: `.env` or sealed-secrets.
-:contentReference[oaicite:4]{index=4}
 
 ---
 
@@ -92,7 +87,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Action**: Pauses trading cluster-wide until user resumes via dashboard.
 - **Dashboard Control**: “Resume Trading” UI toggle.
 - **Schedule**: Continuous sentinel.
-:contentReference[oaicite:5]{index=5}
 
 ---
 
@@ -107,7 +101,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Middleware**: JWT auth + input validation.
 - **Serves**: SPA frontend + REST API.
 - **Security**: HTTP-only cookies, sealed-secrets.
-:contentReference[oaicite:6]{index=6}
 
 ---
 
@@ -120,7 +113,6 @@ This document defines all autonomous agents, modules, and services operating acr
   - Settings: mode toggle, coin caps, panic resume.
   - JWT-authenticated access.
 - **Dev Tools**: Storybook support.
-:contentReference[oaicite:7]{index=7}:contentReference[oaicite:8]{index=8}
 
 ---
 
@@ -134,7 +126,6 @@ This document defines all autonomous agents, modules, and services operating acr
   - pub/sub for feed + alerts
 - **Prometheus + Grafana**:
   - Metrics exposure and live dashboarding.
-:contentReference[oaicite:9]{index=9}
 
 ---
 
@@ -146,7 +137,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **TLS Everywhere**
 - **AML/CGT UK Compliance Guide**
 - **Cold Wallet Integration**
-:contentReference[oaicite:10]{index=10}
 
 ---
 
@@ -161,7 +151,6 @@ This document defines all autonomous agents, modules, and services operating acr
 - **Deploy**:
   - Helm chart (replicas, ingress, secrets).
   - Push-button upgrades.
-:contentReference[oaicite:11]{index=11}
 
 ---
 

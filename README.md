@@ -107,7 +107,6 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 
 ### Analytics specific
 - `MODEL_PATH`, `MODEL_SHADOW_PATH` – model files
-- `GPU_ENABLED` – toggle GPU acceleration
 
 ---
 
