@@ -10,8 +10,8 @@ Lists environment variables used across services.
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Postgres connection settings |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL` | Redis host, port and pub/sub channel |
 | `ORDERBOOK_CHANNEL` / `ALERT_CHANNEL` | Feed and alert Redis channels |
-| `JWT_SECRET` | Token signing key for the API |
-| `ADMIN_TOKEN` | Required for admin-only API endpoints |
+| `JWT_SECRET` | Token signing key for the API (required in production) |
+| `ADMIN_TOKEN` | Required for admin-only API endpoints (set a strong value for production) |
 | `SENTRY_DSN` | Error reporting endpoint |
 | `PROM_URL` | Base URL for Prometheus |
 | `SANDBOX_MODE` | Enable demo login without a database |

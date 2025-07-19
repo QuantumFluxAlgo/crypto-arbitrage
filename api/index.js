@@ -25,6 +25,13 @@ if (process.env.NODE_ENV === 'production') {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
   });
+
+  const jwt = process.env.JWT_SECRET;
+  const admin = process.env.ADMIN_TOKEN;
+  if (!jwt || jwt === 'change-me' || !admin || admin === 'admin-secret') {
+    console.error('JWT_SECRET and ADMIN_TOKEN must be set in production');
+    process.exit(1);
+  }
 }
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
