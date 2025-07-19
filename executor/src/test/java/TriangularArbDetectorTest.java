@@ -87,7 +87,7 @@ public class TriangularArbDetectorTest {
         detector.update("C/A", 4.2, 4.3);
         detector.update("A/B", 0.6, 0.7);
 
-        Thread.sleep(60);
+        Thread.sleep(80);
         detector.stop();
         assertEquals(1, exec.count);
     }

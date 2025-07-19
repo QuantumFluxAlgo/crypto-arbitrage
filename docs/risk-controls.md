@@ -18,4 +18,8 @@ Operators can trigger Panic mode manually from the dashboard or via the API. Thi
 
 `COIN_CAP_PCT` limits the maximum allocation per asset, while `STARTING_BALANCE` defines total capital at risk. Adjust these settings in the executor `.env` file.
 
+### Max Open Trades
+
+`MAX_OPEN_TRADES` restricts how many positions may be active at once. When the limit is reached, new opportunities are ignored until other trades close.
+
 All risk events are logged to Postgres and surfaced through Prometheus metrics for alerting.

@@ -58,6 +58,10 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private boolean sandboxMode;
     private CircuitBreaker circuitBreaker;
 
+    // Track open trades
+    private final int maxOpenTrades;
+    private int currentOpenTrades = 0;
+
     /**
      * Create a new executor instance.
      *
@@ -85,6 +89,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
         this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
+        this.maxOpenTrades = Integer.parseInt(System.getenv().getOrDefault("MAX_OPEN_TRADES", "5"));
     }
 
     /**
@@ -174,6 +179,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
+        if (currentOpenTrades >= maxOpenTrades) {
+            logger.warn("Max open trades ({}) reached; skipping opportunity", maxOpenTrades);
+            return;
+        }
+
         logger.debug("Received message: {}", message);
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
@@ -228,13 +238,18 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         double tradeSize = riskSettings.computeTradeSize();
         TradeResult result;
-        if (sandboxMode) {
-            SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
-                    redisClient,
-                    o -> scoringEngine.predictProbability(o));
-            result = adapter.execute(opp, tradeSize, 1.0);
-        } else {
-            result = opp.execute(tradeSize, 1.0);
+        currentOpenTrades++;
+        try {
+            if (sandboxMode) {
+                SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
+                        redisClient,
+                        o -> scoringEngine.predictProbability(o));
+                result = adapter.execute(opp, tradeSize, 1.0);
+            } else {
+                result = opp.execute(tradeSize, 1.0);
+            }
+        } finally {
+            currentOpenTrades--;
         }
 
         updatePerformanceMetrics(result);
