@@ -4,5 +4,5 @@ set -euo pipefail
 export TEST_ENV=local
 npx --yes jest --runInBand --config dashboard/jest.config.js
 npx --yes jest --runInBand --config api/jest.config.js
-pytest -m "env('local')"
-./gradlew test -PtestEnv=local
+pytest -m env
+executor/gradlew test -p executor -PtestEnv=local
