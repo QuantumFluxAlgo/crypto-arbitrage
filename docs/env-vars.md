@@ -33,6 +33,10 @@ Lists environment variables used across services.
 | `CANARY_MODE` / `GHOST_MODE` | Feature toggles |
 | `USE_ENSEMBLE` | Enable ensemble model |
 | `sweep_cadence` | Daily, Monthly, or None for automatic sweeps |
+| `REBALANCE_INTERVAL_MINUTES` | Minutes between balance scans |
+| `SWEEP_INTERVAL_DAYS` | Days between cold sweep evaluations |
+| `ARB_SCAN_MS` | Minimum milliseconds between triangular scans |
+| `REDIS_BASE_DELAY_MS` / `REDIS_MAX_DELAY_MS` | Redis reconnect backoff settings |
 | `TEST_COLD_WALLET_ADDRESS` | Address used in sweep tests |
 | `GHOST_FEED_CHANNEL` | Redis channel for ghost trades |
 | `SANDBOX_SLIPPAGE` / `SANDBOX_FEE` / `SANDBOX_LATENCY_MS` | Sandbox exchange settings |

@@ -38,9 +38,24 @@ public class ColdSweepScheduler {
         this.capitalSupplier = capitalSupplier;
     }
 
-    /** Start the daily evaluation job. */
+    /** Start the evaluation job with a configurable interval. */
     public void start() {
-        scheduler.scheduleAtFixedRate(this::runOnce, 0, 1, TimeUnit.DAYS);
+        scheduler.scheduleAtFixedRate(this::runOnce, 0,
+                getIntervalDays(), TimeUnit.DAYS);
+    }
+
+    /**
+     * Determine sweep evaluation interval in days using
+     * {@code SWEEP_INTERVAL_DAYS} environment variable or system property.
+     */
+    static long getIntervalDays() {
+        String val = System.getProperty("SWEEP_INTERVAL_DAYS",
+                System.getenv().getOrDefault("SWEEP_INTERVAL_DAYS", "1"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 1L;
+        }
     }
 
     /** Evaluate thresholds and sweep if eligible. */

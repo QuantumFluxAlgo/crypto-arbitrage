@@ -23,5 +23,13 @@ async function checkAndUpdate() {
   }
 }
 
-checkAndUpdate();
-setInterval(checkAndUpdate, INTERVAL_MS);
+let running = false;
+async function loop() {
+  if (running) return;
+  running = true;
+  await checkAndUpdate();
+  running = false;
+  setTimeout(loop, INTERVAL_MS);
+}
+
+loop();

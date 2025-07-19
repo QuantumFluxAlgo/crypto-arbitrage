@@ -12,7 +12,7 @@ public class ExecutorRedisRecoveryTest {
     static class FlakyRedisClient extends RedisClient {
         MessageHandler handler;
         FlakyRedisClient() {
-            super("localhost", 6379, "chan", (c, m) -> {});
+            super("localhost", 6379, "chan", (c, m) -> {}, 1L, 2L);
         }
         void setHandler(MessageHandler h) { this.handler = h; }
         @Override public void start() { run(); }

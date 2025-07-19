@@ -46,5 +46,13 @@ console.log(
   `Publishing mock trades to redis://${args.host}:${args.port}/${args.channel} every ${args.interval}ms`,
 );
 
-publish();
-setInterval(publish, Number(args.interval));
+let running = false;
+async function loop() {
+  if (running) return;
+  running = true;
+  publish();
+  running = false;
+  setTimeout(loop, Number(args.interval));
+}
+
+loop();

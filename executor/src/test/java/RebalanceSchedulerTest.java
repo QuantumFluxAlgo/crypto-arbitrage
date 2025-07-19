@@ -42,4 +42,11 @@ public class RebalanceSchedulerTest {
         assertEquals(2, rebalancer.lastBalances.size());
         assertEquals(5000.0, rebalancer.lastTarget, 0.001);
     }
+
+    @Test
+    void parsesIntervalFromProperty() {
+        System.setProperty("REBALANCE_INTERVAL_MINUTES", "3");
+        assertEquals(3, RebalanceScheduler.getIntervalMinutes());
+        System.clearProperty("REBALANCE_INTERVAL_MINUTES");
+    }
 }
