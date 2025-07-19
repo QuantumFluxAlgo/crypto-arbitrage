@@ -152,11 +152,14 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     if (isTest) {
       api.post('/test/panic', async () => {
         testState.panic = true;
+        await redis.publish('control-feed', 'halt');
+        await sendAlert('email', 'Panic brake triggered (test mode)');
         return { triggered: true };
       });
 
       api.post('/test/resume', async () => {
         testState.panic = false;
+        await redis.publish('control-feed', 'resume');
         return { resumed: true };
       });
 
