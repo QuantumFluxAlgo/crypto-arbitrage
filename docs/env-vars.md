@@ -31,6 +31,7 @@ Lists environment variables used across services.
 | `ANALYTICS_URL` | Trade logging service endpoint |
 | `CB_WIN_RATE_THRESHOLD` | Circuit breaker win-rate limit |
 | `CB_MAX_DRAWDOWN_PCT` | Maximum drawdown before panic |
+| `MAX_OPEN_TRADES` | Maximum number of simultaneous trades |
 | `CANARY_MODE` / `GHOST_MODE` | Feature toggles |
 | `USE_ENSEMBLE` | Enable ensemble model |
 | `sweep_cadence` | Daily, Monthly, or None for automatic sweeps |
