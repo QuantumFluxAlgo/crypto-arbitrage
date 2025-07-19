@@ -84,17 +84,39 @@ public class SpreadOpportunity {
         MockExchangeAdapter sell = new MockExchangeAdapter(sellExchange);
 
         long start = System.nanoTime();
-        boolean buyOk = buy.placeIocOrder(pair, "BUY", size, price);
-        boolean sellOk = sell.placeIocOrder(pair, "SELL", size, price);
+
+        double buyCancel = 0.0;
+        double sellCancel = 0.0;
+        boolean buyOk = false;
+        boolean sellOk = false;
+        int attempts = 0;
+        final int maxRetries = 3;
+
+        while (attempts < maxRetries && !buyOk) {
+            buyOk = buy.placeIocOrder(pair, "BUY", size, price);
+            buyCancel += buy.getLastCancelFee();
+            attempts++;
+        }
+
+        if (buyOk) {
+            attempts = 0;
+            while (attempts < maxRetries && !sellOk) {
+                sellOk = sell.placeIocOrder(pair, "SELL", size, price);
+                sellCancel += sell.getLastCancelFee();
+                attempts++;
+            }
+        }
+
         long end = System.nanoTime();
 
         latencyMicros = (end - start) / 1000;
         roundTripLatencyMicros = latencyMicros;
         latencyMs = latencyMicros / 1000;
         roundTripLatencyMs = latencyMs;
+
         double buyFee = size * price * buy.getFeeRate(pair);
         double sellFee = size * price * sell.getFeeRate(pair);
-        double pnl = netEdge - buyFee - sellFee;
+        double pnl = netEdge - buyFee - sellFee - buyCancel - sellCancel;
         boolean success = buyOk && sellOk && latencyMicros <= 60;
 
         return new TradeResult(success, success ? pnl : 0.0, latencyMs);

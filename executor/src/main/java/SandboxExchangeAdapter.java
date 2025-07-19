@@ -82,12 +82,46 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
     public TradeResult execute(SpreadOpportunity opp, double size, double price) {
         double predicted = predictor.predict(opp);
         long start = System.currentTimeMillis();
-        boolean buyOk = placeOrder(opp.getPair(), "BUY", size, price);
-        boolean sellOk = placeOrder(opp.getPair(), "SELL", size, price);
+
+        double buyCancel = 0.0;
+        double sellCancel = 0.0;
+        boolean buyOk = false;
+        boolean sellOk = false;
+        double buyPrice = price;
+        double sellPrice = price;
+        int attempts = 0;
+        final int maxRetries = 3;
+
+        while (attempts < maxRetries && !buyOk) {
+            buyOk = placeOrder(opp.getPair(), "BUY", size, price);
+            buyCancel += getLastCancelFee();
+            buyPrice = getLastExecPrice();
+            attempts++;
+        }
+
+        if (buyOk) {
+            attempts = 0;
+            while (attempts < maxRetries && !sellOk) {
+                sellOk = placeOrder(opp.getPair(), "SELL", size, price);
+                sellCancel += getLastCancelFee();
+                sellPrice = getLastExecPrice();
+                attempts++;
+            }
+        }
+
         long end = System.currentTimeMillis();
         long latency = end - start;
 
-        double pnl = opp.getNetEdge();
+        double buyFee = size * buyPrice * getFeeRate(opp.getPair());
+        double sellFee = size * sellPrice * getFeeRate(opp.getPair());
+
+        double slippageLoss = (buyPrice - price) * size + (price - sellPrice) * size;
+        double pnl = opp.getNetEdge() - buyFee - sellFee - buyCancel - sellCancel - slippageLoss;
+
+        boolean success = buyOk && sellOk;
+        if (!success) {
+            pnl = 0.0;
+        }
 
         if (redisClient != null) {
             try {
@@ -104,6 +138,6 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
             }
         }
 
-        return new TradeResult(buyOk && sellOk, pnl, latency);
+        return new TradeResult(success, pnl, latency);
     }
 }
