@@ -15,5 +15,5 @@ for svc in "${SERVICES[@]}"; do
     IMAGE="arb-$svc"
     CONTEXT="$ROOT_DIR/$svc"
     echo "Building $IMAGE from $CONTEXT"
-    podman build -t "$IMAGE" "$CONTEXT"
+    podman build --security-opt systempaths=unconfined -t "$IMAGE" "$CONTEXT"
 done
