@@ -8,7 +8,15 @@ permissions:
   contents: read
 
 jobs:
+  verify-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run environment verifier
+        run: bash test/verify-env.sh
+
   validate:
+    needs: verify-env
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,6 +33,8 @@ jobs:
         run: kubeconform -strict -ignore-missing-schemas -summary infra/k8s/
       - name: Dry-run apply manifests
         run: kubectl apply --dry-run=client -f infra/k8s/
+      - name: Validate release workflow
+        run: bash test/verify-release-workflow.sh
 
   api:
     needs: validate
