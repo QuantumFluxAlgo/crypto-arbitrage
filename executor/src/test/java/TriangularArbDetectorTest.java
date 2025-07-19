@@ -21,11 +21,17 @@ public class TriangularArbDetectorTest {
         @Override public void handleMessage(String msg) { lastMessage = msg; }
     }
 
+    static class CountingExecutor extends DummyExecutor {
+        int count = 0;
+        CountingExecutor(DummyRedisClient c) { super(c); }
+        @Override public void handleMessage(String msg) { count++; super.handleMessage(msg); }
+    }
+
     @Test
     void detectsArbitrageLoop() {
         DummyRedisClient client = new DummyRedisClient();
         DummyExecutor exec = new DummyExecutor(client);
-        TriangularArbDetector detector = new TriangularArbDetector(exec);
+        TriangularArbDetector detector = new TriangularArbDetector(exec, 0);
 
         detector.update("A/B", 0.5, 0.6);
         detector.update("B/C", 0.5, 0.6);
@@ -44,7 +50,7 @@ public class TriangularArbDetectorTest {
     void ignoresNonProfitableLoop() {
         DummyRedisClient client = new DummyRedisClient();
         DummyExecutor exec = new DummyExecutor(client);
-        TriangularArbDetector detector = new TriangularArbDetector(exec);
+        TriangularArbDetector detector = new TriangularArbDetector(exec, 0);
 
         detector.update("A/B", 1.0, 1.01);
         detector.update("B/C", 1.0, 1.01);
@@ -57,7 +63,7 @@ public class TriangularArbDetectorTest {
     void selectsHighestNetEdge() {
         DummyRedisClient client = new DummyRedisClient();
         DummyExecutor exec = new DummyExecutor(client);
-        TriangularArbDetector detector = new TriangularArbDetector(exec);
+        TriangularArbDetector detector = new TriangularArbDetector(exec, 0);
 
         detector.update("A/B", 0.5, 0.6);
         detector.update("B/C", 0.5, 0.6);
@@ -68,6 +74,22 @@ public class TriangularArbDetectorTest {
         assertNotNull(exec.lastMessage);
         SpreadOpportunity opp = SpreadOpportunity.fromJson(exec.lastMessage);
         assertEquals("A-B-C", opp.getPair());
+    }
+
+    @Test
+    void throttlesScanFrequency() throws Exception {
+        DummyRedisClient client = new DummyRedisClient();
+        CountingExecutor exec = new CountingExecutor(client);
+        TriangularArbDetector detector = new TriangularArbDetector(exec, 50);
+
+        detector.update("A/B", 0.5, 0.6);
+        detector.update("B/C", 0.5, 0.6);
+        detector.update("C/A", 4.2, 4.3);
+        detector.update("A/B", 0.6, 0.7);
+
+        Thread.sleep(60);
+        detector.stop();
+        assertEquals(1, exec.count);
     }
 }
 

@@ -14,16 +14,25 @@ public class ResumeHandler {
      private static final Logger logger = LoggerFactory.getLogger(ResumeHandler.class);
 
     private final Object redis;
-     private final Executor executor;
-     private Thread thread;
+    private final Executor executor;
+    private final long baseDelayMs;
+    private final long maxDelayMs;
+    private Thread thread;
 
     /**
      * @param redis     redis connection or client
      * @param executor  executor to be resumed
      */
      public ResumeHandler(Object redis, Executor executor) {
+         this(redis, executor, getBaseDelayMs(), getMaxDelayMs());
+     }
+
+     public ResumeHandler(Object redis, Executor executor,
+                          long baseDelayMs, long maxDelayMs) {
          this.redis = redis;
          this.executor = executor;
+         this.baseDelayMs = baseDelayMs;
+         this.maxDelayMs = maxDelayMs;
      }
 
     /**
@@ -57,7 +66,7 @@ public class ResumeHandler {
                     }
                     attempt = 0;
                 } catch (Exception e) {
-                    long delay = Math.min(30000L, (1L << attempt) * 1000L);
+                    long delay = Math.min(maxDelayMs, (1L << attempt) * baseDelayMs);
                     logger.error("Redis subscription failed: {}", e.getMessage());
                     try {
                         Thread.sleep(delay);
@@ -78,5 +87,25 @@ public class ResumeHandler {
     public interface ResumeCapable {
         /** Trigger resumption of normal trading. */
         void resumeFromPanic();
+    }
+
+    static long getBaseDelayMs() {
+        String val = System.getProperty("REDIS_BASE_DELAY_MS",
+                System.getenv().getOrDefault("REDIS_BASE_DELAY_MS", "1000"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 1000L;
+        }
+    }
+
+    static long getMaxDelayMs() {
+        String val = System.getProperty("REDIS_MAX_DELAY_MS",
+                System.getenv().getOrDefault("REDIS_MAX_DELAY_MS", "30000"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 30000L;
+        }
     }
 }

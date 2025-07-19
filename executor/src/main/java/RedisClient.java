@@ -22,6 +22,8 @@ public class RedisClient extends Thread {
     private final int port;
     private final String channel;
     private final MessageHandler handler;
+    private final long baseDelayMs;
+    private final long maxDelayMs;
     private volatile boolean running = true;
 
     /**
@@ -33,11 +35,38 @@ public class RedisClient extends Thread {
      * @param handler callback for incoming messages
      */
     public RedisClient(String host, int port, String channel, MessageHandler handler) {
+        this(host, port, channel, handler, getBaseDelayMs(), getMaxDelayMs());
+    }
+
+    public RedisClient(String host, int port, String channel, MessageHandler handler,
+                       long baseDelayMs, long maxDelayMs) {
         this.host = host;
         this.port = port;
         this.channel = channel;
         this.handler = handler;
+        this.baseDelayMs = baseDelayMs;
+        this.maxDelayMs = maxDelayMs;
         setName("RedisClientSubscriber");
+    }
+
+    static long getBaseDelayMs() {
+        String val = System.getProperty("REDIS_BASE_DELAY_MS",
+                System.getenv().getOrDefault("REDIS_BASE_DELAY_MS", "1000"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 1000L;
+        }
+    }
+
+    static long getMaxDelayMs() {
+        String val = System.getProperty("REDIS_MAX_DELAY_MS",
+                System.getenv().getOrDefault("REDIS_MAX_DELAY_MS", "30000"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 30000L;
+        }
     }
 
     /**
@@ -118,7 +147,7 @@ public class RedisClient extends Thread {
                 }, channel);
                 attempt = 0;
             } catch (Exception e) {
-                long delay = Math.min(30000, (1 << attempt) * 1000L);
+                long delay = Math.min(maxDelayMs, (1L << attempt) * baseDelayMs);
                 logger.error("Redis connection failed: {}", e.getMessage());
                 AlertManager.sendAlert("Redis connection lost: " + e.getMessage());
                 try {

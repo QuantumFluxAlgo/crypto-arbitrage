@@ -31,9 +31,25 @@ public class RebalanceScheduler {
     }
 
     
-    /** Start the 15 minute rebalance job. */
+    /** Start the rebalance job with a configurable interval. */
     public void start() {
-        scheduler.scheduleAtFixedRate(this::runOnce, 0, 15, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(this::runOnce, 0,
+                getIntervalMinutes(), TimeUnit.MINUTES);
+    }
+
+    /**
+     * Determine the rebalance interval in minutes.
+     * Uses system property or environment variable
+     * {@code REBALANCE_INTERVAL_MINUTES}.
+     */
+    static long getIntervalMinutes() {
+        String val = System.getProperty("REBALANCE_INTERVAL_MINUTES",
+                System.getenv().getOrDefault("REBALANCE_INTERVAL_MINUTES", "15"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 15L;
+        }
     }
 
     /** Collect balances and invoke {@link Rebalancer#rebalance(Map, double)}. */

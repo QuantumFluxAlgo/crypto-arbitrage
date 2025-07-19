@@ -57,4 +57,11 @@ public class ColdSweepSchedulerTest {
         scheduler.runOnce(LocalDate.of(2025,1,1));
         assertTrue(wallet.called);
     }
+
+    @Test
+    void parsesIntervalProperty() {
+        System.setProperty("SWEEP_INTERVAL_DAYS", "2");
+        assertEquals(2, ColdSweepScheduler.getIntervalDays());
+        System.clearProperty("SWEEP_INTERVAL_DAYS");
+    }
 }

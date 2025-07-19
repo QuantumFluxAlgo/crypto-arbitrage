@@ -9,6 +9,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Detects triangular arbitrage opportunities from order books and
@@ -34,12 +38,41 @@ public class TriangularArbDetector {
     private final Executor executor;
     private final ObjectMapper mapper = new ObjectMapper();
     private final double feeRate = 0.001;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final long intervalMs;
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
 
     /**
      * @param executor executor to notify when opportunities arise
      */
     public TriangularArbDetector(Executor executor) {
+        this(executor, getIntervalMs());
+    }
+
+    /**
+     * @param executor    executor to notify
+     * @param intervalMs  minimum milliseconds between scans (0 for immediate)
+     */
+    public TriangularArbDetector(Executor executor, long intervalMs) {
         this.executor = executor;
+        this.intervalMs = intervalMs > 0 ? intervalMs : 0;
+        if (this.intervalMs > 0) {
+            scheduler.scheduleAtFixedRate(() -> {
+                if (dirty.getAndSet(false)) {
+                    scan();
+                }
+            }, this.intervalMs, this.intervalMs, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    static long getIntervalMs() {
+        String val = System.getProperty("ARB_SCAN_MS",
+                System.getenv().getOrDefault("ARB_SCAN_MS", "100"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 100L;
+        }
     }
 
     /**
@@ -74,7 +107,11 @@ public class TriangularArbDetector {
         if (parts != null) {
             adjacency.computeIfAbsent(parts[0], k -> new HashSet<>()).add(pair);
         }
-        scan();
+        dirty.set(true);
+        if (intervalMs == 0) {
+            scan();
+            dirty.set(false);
+        }
     }
 
     private void scan() {
@@ -130,5 +167,10 @@ public class TriangularArbDetector {
         if (pair == null) return null;
         String[] parts = pair.split("/");
         return parts.length == 2 ? parts : null;
+    }
+
+    /** Stop the scheduled scans. */
+    public void stop() {
+        scheduler.shutdownNow();
     }
 }

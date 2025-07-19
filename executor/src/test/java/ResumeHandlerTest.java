@@ -16,7 +16,7 @@ public class ResumeHandlerTest {
     /** Simple stub of the Redis client that immediately sends a resume message. */
     static class StubRedisClient extends RedisClient {
         StubRedisClient() {
-            super("localhost", 6379, "chan", (c, m) -> {});
+            super("localhost", 6379, "chan", (c, m) -> {}, 1L, 2L);
         }
 
         @Override
@@ -31,7 +31,7 @@ public class ResumeHandlerTest {
         final AtomicBoolean resumed = new AtomicBoolean(false);
 
         DummyExecutor() {
-            super(new executor.RedisClient("localhost", 6379, "chan", (c, m) -> {}),
+            super(new executor.RedisClient("localhost", 6379, "chan", (c, m) -> {}, 1L, 2L),
                     "localhost", 6379, new executor.RiskFilter(), new executor.NearMissLogger(null));
         }
 
@@ -44,7 +44,7 @@ public class ResumeHandlerTest {
     @Test
     void invokesResumeOnMessage() throws Exception {
         DummyExecutor exec = new DummyExecutor();
-        ResumeHandler handler = new ResumeHandler(new StubRedisClient(), exec);
+        ResumeHandler handler = new ResumeHandler(new StubRedisClient(), exec, 1L, 2L);
         handler.start();
         // Wait briefly to allow the handler thread to process the message
         Thread.sleep(50);
