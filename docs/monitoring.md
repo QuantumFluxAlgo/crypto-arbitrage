@@ -67,6 +67,23 @@ STATUSCAKE_CONTACT_GROUP=
 The API token authenticates Terraform or scripts. `STATUSCAKE_CONTACT_GROUP` is the name or ID
 of the contact group to receive alerts.
 
+## Prometheus metrics
+
+Each service exposes a `/metrics` endpoint that Prometheus scrapes. To view these metrics locally, forward the service ports and curl the endpoints:
+
+```bash
+kubectl port-forward svc/api 9100:8080 &
+kubectl port-forward svc/executor 9200:9100 &
+kubectl port-forward svc/analytics 9300:5000 &
+
+curl http://localhost:9100/api/metrics
+curl http://localhost:9200/metrics
+curl http://localhost:9300/metrics
+```
+
+These metrics populate Grafana dashboards and alert rules.
+
+
 ---
 
 Follow these steps to keep your services monitored and receive alerts if any endpoint becomes unavailable.

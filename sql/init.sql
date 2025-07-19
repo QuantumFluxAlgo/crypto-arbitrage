@@ -53,3 +53,21 @@ CREATE TABLE near_misses (
     round_trip_latency_ms INTEGER NOT NULL,
     timestamp TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Logs user actions for compliance auditing
+CREATE TABLE audit_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    user_id TEXT,
+    action TEXT NOT NULL,
+    payload JSONB
+);
+
+-- Records cold wallet sweeps performed by the executor
+CREATE TABLE sweep_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    amount NUMERIC NOT NULL,
+    destination TEXT NOT NULL,
+    trigger TEXT
+);

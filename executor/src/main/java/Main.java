@@ -3,6 +3,15 @@ package executor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import executor.ColdSweeper;
+import executor.ColdSweepScheduler;
+import executor.RebalanceScheduler;
+import executor.Rebalancer;
+import executor.ExchangeAdapter;
+import executor.ProfitTracker;
 
 /**
  * Entry point for launching the executor from the command line.
@@ -48,5 +57,20 @@ public class Main {
 
         holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger);
         holder[0].start();
+
+        // Initialize background schedulers
+        ColdSweeper sweeper = new ColdSweeper();
+        ColdSweepScheduler sweepScheduler = new ColdSweepScheduler(
+                sweeper,
+                () -> System.getenv().getOrDefault("SWEEP_CADENCE", "None"),
+                ProfitTracker::getCumulativeProfit,
+                () -> ProfitTracker.getStartingBalance() + ProfitTracker.getCumulativeProfit()
+        );
+        sweepScheduler.start();
+
+        Rebalancer rebalancer = new Rebalancer(250.0);
+        Map<String, ExchangeAdapter> adapters = new HashMap<>();
+        RebalanceScheduler rebalanceScheduler = new RebalanceScheduler(rebalancer, adapters);
+        rebalanceScheduler.start();
     }
 }
