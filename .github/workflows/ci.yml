@@ -2,243 +2,269 @@ name: CI
 
 on:
   push:
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
+  validate:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -eo pipefail {0}
     steps:
       - name: Checkout repository
-        # actions/checkout@v3 SHA f43a0e5ff2bd294095638e18286ca9a3d1956744
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
-
-      - name: Prepare test results directory
-        run: mkdir -p test-results
-
-      - name: Setup Node.js
-        # actions/setup-node@v3 SHA 3235b876344d2a9aa001b8d1453c930bba69e610
-        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
-        with:
-          node-version: 18
-
-      - name: Setup Python
-        # actions/setup-python@v4 SHA 7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
-        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
-        with:
-          python-version: '3.10'
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Setup Java
-        # actions/setup-java@v3 SHA 17f84c3641ba7b8f6deff6309fc4c864478f5d62
-        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-
-      - name: Install Podman
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install podman
+        uses: actions/checkout@v3
       - name: Install kubectl and jq
         run: |
           sudo apt-get update
           sudo apt-get -y install kubectl jq
-
-
       - name: Install kubeconform
         run: |
-          curl -L https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz \
-            | tar xz
+          curl -L https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz
           sudo mv kubeconform /usr/local/bin/
-
       - name: Validate Kubernetes YAML
         run: kubeconform -strict -ignore-missing-schemas -summary infra/k8s/
-
       - name: Dry-run apply manifests
         run: kubectl apply --dry-run=client -f infra/k8s/
 
+  api:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('api/package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+        working-directory: api
       - name: Run API tests
         run: |
           mkdir -p ../test-results
           npm test -- --json --outputFile=../test-results/api-jest.json
         working-directory: api
-
       - name: Upload API test report
-        if: failure()
-        # actions/upload-artifact@v3 SHA ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        uses: actions/upload-artifact@v3
         with:
           name: api-jest-report
           path: test-results/api-jest.json
-
       - name: Run API ESLint
         run: npx eslint .
         working-directory: api
-
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
       - name: Build api image
         run: podman build -t api ./api
-
       - name: Run Trivy scan on api
-        # aquasecurity/trivy-action@0.32.0 SHA dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: api
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
-        continue-on-error: false
 
+  dashboard:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('dashboard/package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+        working-directory: dashboard
       - name: Run Dashboard tests
         run: |
           mkdir -p ../test-results
           npx jest --json --outputFile=../test-results/dashboard-jest.json
         working-directory: dashboard
-
       - name: Upload Dashboard test report
-        if: failure()
-        # actions/upload-artifact@v3 SHA ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        uses: actions/upload-artifact@v3
         with:
           name: dashboard-jest-report
           path: test-results/dashboard-jest.json
-
       - name: Run Dashboard ESLint
         run: npx eslint .
         working-directory: dashboard
-
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
       - name: Build dashboard image
         run: podman build -t dashboard ./dashboard
-
       - name: Run Trivy scan on dashboard
-        # aquasecurity/trivy-action@0.32.0 SHA dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: dashboard
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
-        continue-on-error: false
 
-      - name: Install feed-aggregator dependencies
-        run: npm install
+  feed-aggregator:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/pip
+          key: ${{ runner.os }}-fa-${{ hashFiles('feed-aggregator/package-lock.json') }}-${{ hashFiles('requirements.txt') }}
+      - name: Install dependencies
+        run: npm ci
         working-directory: feed-aggregator
-
-      - name: Run feed-aggregator ESLint
-        run: npx eslint .
-        working-directory: feed-aggregator
-
       - name: Run feed-aggregator tests
         run: |
           mkdir -p ../test-results
           pytest --junitxml=../test-results/feed-aggregator-pytest.xml
         working-directory: feed-aggregator
-
       - name: Upload feed-aggregator test report
-        if: failure()
-        # actions/upload-artifact@v3 SHA ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        uses: actions/upload-artifact@v3
         with:
           name: feed-aggregator-pytest-report
           path: test-results/feed-aggregator-pytest.xml
-
+      - name: Run feed-aggregator ESLint
+        run: npx eslint .
+        working-directory: feed-aggregator
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
       - name: Build feed-aggregator image
         run: podman build -t feed-aggregator ./feed-aggregator
-
       - name: Run Trivy scan on feed-aggregator
-        # aquasecurity/trivy-action@0.32.0 SHA dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: feed-aggregator
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
-        continue-on-error: false
 
-      - name: Install Python dependencies for analytics
+  analytics:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
-
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
       - name: Run Analytics tests
         run: |
           mkdir -p ../test-results
           pytest --junitxml=../test-results/analytics-pytest.xml
         working-directory: analytics
-        
       - name: Upload analytics test report
-        if: failure()
-        # actions/upload-artifact@v3 SHA ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        uses: actions/upload-artifact@v3
         with:
           name: analytics-pytest-report
           path: test-results/analytics-pytest.xml
-          
       - name: Run flake8
         run: flake8 analytics/
-        
       - name: Build analytics image
         run: podman build -t analytics ./analytics
-
       - name: Test analytics container
         run: podman run --rm analytics python --version
-
       - name: Run Trivy scan on analytics
-        # aquasecurity/trivy-action@0.32.0 SHA dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: analytics
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
-        continue-on-error: false
 
+  executor:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('executor/*.gradle*') }}
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
       - name: Run Executor tests
         run: |
           mkdir -p ../test-results/executor
           ./gradlew test
           cp -r build/test-results/test ../test-results/executor || true
         working-directory: executor
-
       - name: Upload Executor test report
-        if: failure()
-        # actions/upload-artifact@v3 SHA ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        uses: actions/upload-artifact@v3
         with:
           name: executor-gradle-report
           path: test-results/executor
-        
       - name: Run Gradle Checkstyle
         run: ./gradlew checkstyleMain
         working-directory: executor
-        
       - name: Build executor image
         run: podman build -t executor ./executor
-
       - name: Test executor container
         run: podman run --rm executor java -version
-
       - name: Run Trivy scan on executor
-        # aquasecurity/trivy-action@0.32.0 SHA dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: executor
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
-        continue-on-error: false
 
   behavior-tests:
-    needs: build-and-test
+    needs:
+      - api
+      - dashboard
+      - feed-aggregator
+      - analytics
+      - executor
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -eo pipefail {0}
     steps:
       - name: Checkout repository
-        # actions/checkout@v3 SHA f43a0e5ff2bd294095638e18286ca9a3d1956744
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+        uses: actions/checkout@v3
       - name: Install kubectl and jq
         run: |
           sudo apt-get update
@@ -247,12 +273,12 @@ jobs:
         run: bash scripts/test-behavior.sh
 
   live-server-tests:
-    needs: build-and-test
+    needs: behavior-tests
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && secrets.XEON_HOST != ''
     steps:
       - name: Run live tests on Xeon server
-        # appleboy/ssh-action@v0.1.7 SHA d91a1af6f57cd4478ceee14d7705601dafabaa19
-        uses: appleboy/ssh-action@d91a1af6f57cd4478ceee14d7705601dafabaa19
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.XEON_HOST }}
           username: ${{ secrets.XEON_USER }}
