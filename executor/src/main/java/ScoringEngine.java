@@ -6,9 +6,12 @@ package executor;
  */
 public class ScoringEngine {
     private static final double EDGE_THRESHOLD = 0.002; // 0.2%
-    
+
     private final ModelPredictor predictor;
     private final boolean useEnsemble;
+    private final double ruleWeight;
+    private final double modelWeight;
+    private final double threshold;
  
     /**
      * Construct using default model and configuration flags.
@@ -23,8 +26,22 @@ public class ScoringEngine {
      * @param useEnsemble whether to blend rule and model scores
      */
     public ScoringEngine(ModelPredictor predictor, boolean useEnsemble) {
+        this(
+            predictor,
+            useEnsemble,
+            Double.parseDouble(System.getenv().getOrDefault("RULE_WEIGHT", "0.6")),
+            Double.parseDouble(System.getenv().getOrDefault("MODEL_WEIGHT", "0.4")),
+            Double.parseDouble(System.getenv().getOrDefault("SCORE_THRESHOLD", "0.5"))
+        );
+    }
+
+    public ScoringEngine(ModelPredictor predictor, boolean useEnsemble,
+                         double ruleWeight, double modelWeight, double threshold) {
         this.predictor = predictor;
         this.useEnsemble = useEnsemble;
+        this.ruleWeight = ruleWeight;
+        this.modelWeight = modelWeight;
+        this.threshold = threshold;
     }
 
     /**
@@ -43,9 +60,9 @@ public class ScoringEngine {
         }
         double ruleEdge = opp.getNetEdge();
         double modelPrediction = predictor.predict(opp);
-        double blendedScore = useEnsemble ? 0.6 * ruleEdge + 0.4 * modelPrediction
-        : ruleEdge;
-        return blendedScore > 0.5 && ruleEdge > EDGE_THRESHOLD;
+        double blendedScore = useEnsemble ?
+                ruleWeight * ruleEdge + modelWeight * modelPrediction : ruleEdge;
+        return blendedScore > threshold && ruleEdge > EDGE_THRESHOLD;
     }
     
     /**

@@ -52,5 +52,22 @@ public class TriangularArbDetectorTest {
 
         assertNull(exec.lastMessage);
     }
+
+    @Test
+    void selectsHighestNetEdge() {
+        DummyRedisClient client = new DummyRedisClient();
+        DummyExecutor exec = new DummyExecutor(client);
+        TriangularArbDetector detector = new TriangularArbDetector(exec);
+
+        detector.update("A/B", 0.5, 0.6);
+        detector.update("B/C", 0.5, 0.6);
+        detector.update("C/A", 4.2, 4.3);
+        detector.update("B/D", 0.5, 0.6);
+        detector.update("D/A", 2.0, 2.1);
+
+        assertNotNull(exec.lastMessage);
+        SpreadOpportunity opp = SpreadOpportunity.fromJson(exec.lastMessage);
+        assertEquals("A-B-C", opp.getPair());
+    }
 }
 
