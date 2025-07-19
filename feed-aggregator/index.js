@@ -2,6 +2,7 @@ const WebSocket = require("ws");
 const Redis = require("ioredis");
 const Fastify = require("fastify");
 const winston = require("winston");
+const fs = require("fs");
 const normalize = require("./lib/normalize");
 
 const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
@@ -17,13 +18,34 @@ const MAX_RECONNECT_DELAY = 30000;
 
 let reconnectAttempts = 0;
 
+const service = "feed-aggregator";
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(({ level, message, timestamp }) =>
+      `${timestamp} ${level} [${service}] ${message}`
+    )
+  ),
   transports: [new winston.transports.Console()],
 });
 
 const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 const ALERT_CHANNEL = process.env.ALERT_CHANNEL || "alerts";
+const THROTTLE_MS = 60000;
+const lastAlertTimes = {};
+
+function fallbackAlert(payload) {
+  fs.appendFile(
+    "alerts-fallback.log",
+    `${new Date().toISOString()} ${payload}\n`,
+    (err) => {
+      if (err) logger.error("Failed to write fallback alert", err);
+    }
+  );
+  logger.warn("Alert fallback engaged - redis unavailable");
+}
 
 function sendAlert(type, message) {
   const payload = JSON.stringify({
@@ -32,8 +54,19 @@ function sendAlert(type, message) {
     source: "feed-aggregator",
     ts: Date.now(),
   });
+
+  if (
+    lastAlertTimes[message] &&
+    Date.now() - lastAlertTimes[message] < THROTTLE_MS
+  ) {
+    logger.debug(`Alert suppressed for '${message}'`);
+    return Promise.resolve();
+  }
+  lastAlertTimes[message] = Date.now();
+
   return redis.publish(ALERT_CHANNEL, payload).catch((err) => {
     logger.error("Failed to publish alert", err);
+    fallbackAlert(payload);
   });
 }
 

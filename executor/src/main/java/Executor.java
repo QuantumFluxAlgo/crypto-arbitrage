@@ -268,7 +268,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             ProfitTracker.record(result.pnl);
             dailyLossPct = ProfitTracker.getDailyLossPct();
         } else {
-            logger.warn("Trade execution failed for {}", opp.getPair());
+            logger.warn(
+                "Trade execution failed for {}: pnl={}, latencyMs={}",
+                opp.getPair(),
+                result.pnl,
+                result.latencyMs
+            );
         }
 
         if (featureLogger != null) {

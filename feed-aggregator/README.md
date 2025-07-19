@@ -17,6 +17,10 @@ The service publishes books to the Redis channel specified by `ORDERBOOK_CHANNEL
 and sends alerts to `ALERT_CHANNEL` (default `alerts`). A health check is available at
 `http://localhost:8090/health`.
 
+Alerts are throttled so repeated errors with the same message within 60 seconds
+are suppressed. If Redis is unavailable, alert payloads are written to
+`alerts-fallback.log`.
+
 ## Tests
 
 Run the Python-based test suite after installing dependencies:

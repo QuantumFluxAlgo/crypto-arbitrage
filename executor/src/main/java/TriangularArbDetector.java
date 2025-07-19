@@ -158,7 +158,7 @@ public class TriangularArbDetector {
         }
 
         if (bestMessage != null) {
-            logger.debug("Triangular arbitrage detected: {}", bestMessage);
+            logger.info("Triangular arbitrage detected: {}", bestMessage);
             executor.handleMessage(bestMessage);
         }
     }
