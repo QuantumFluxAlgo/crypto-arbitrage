@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Detects triangular arbitrage opportunities from order books and
@@ -28,8 +30,10 @@ public class TriangularArbDetector {
     }
 
     private final Map<String, OrderBook> books = new HashMap<>();
+    private final Map<String, Set<String>> adjacency = new HashMap<>();
     private final Executor executor;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final double feeRate = 0.001;
 
     /**
      * @param executor executor to notify when opportunities arise
@@ -66,32 +70,45 @@ public class TriangularArbDetector {
             return;
         }
         books.put(pair, new OrderBook(bestBid, bestAsk));
+        String[] parts = split(pair);
+        if (parts != null) {
+            adjacency.computeIfAbsent(parts[0], k -> new HashSet<>()).add(pair);
+        }
         scan();
     }
 
     private void scan() {
-        for (Map.Entry<String, OrderBook> e1 : books.entrySet()) {
-            String[] t1 = split(e1.getKey());
+        for (Map.Entry<String, OrderBook> entry1 : books.entrySet()) {
+            String pair1 = entry1.getKey();
+            OrderBook first = entry1.getValue();
+            String[] t1 = split(pair1);
             if (t1 == null) continue;
-            for (Map.Entry<String, OrderBook> e2 : books.entrySet()) {
-                if (e1.getKey().equals(e2.getKey())) continue;
-                String[] t2 = split(e2.getKey());
-                if (t2 == null || !t1[1].equals(t2[0])) continue;
+
+            Set<String> secondPairs = adjacency.getOrDefault(t1[1], Set.of());
+            for (String pair2 : secondPairs) {
+                if (pair2.equals(pair1)) continue;
+                OrderBook ob2 = books.get(pair2);
+                if (ob2 == null) continue;
+                String[] t2 = split(pair2);
+                if (t2 == null) continue;
 
                 String pair3 = t2[1] + "/" + t1[0];
                 OrderBook b3 = books.get(pair3);
                 if (b3 == null) continue;
 
-                double product = e1.getValue().getBid() * e2.getValue().getBid() * b3.getBid();
-                if (product > 1.0) {
-                    double edge = product - 1.0;
+                double product = (1.0 / first.getAsk()) * (1 - feeRate)
+                        * ob2.getBid() * (1 - feeRate)
+                        * b3.getBid() * (1 - feeRate);
+                double grossEdge = product - 1.0;
+                if (grossEdge > 0) {
+                    double netEdge = grossEdge - (3 * feeRate);
                     String path = t1[0] + "-" + t1[1] + "-" + t2[1];
                     ObjectNode node = mapper.createObjectNode();
                     node.put("pair", path);
                     node.put("buyExchange", "triangular");
                     node.put("sellExchange", "triangular");
-                    node.put("grossEdge", edge);
-                    node.put("netEdge", edge);
+                    node.put("grossEdge", grossEdge);
+                    node.put("netEdge", netEdge);
                     String msg = node.toString();
                     logger.debug("Triangular arbitrage detected: {}", msg);
                     executor.handleMessage(msg);

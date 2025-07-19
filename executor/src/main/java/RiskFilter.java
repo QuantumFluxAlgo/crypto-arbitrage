@@ -92,6 +92,10 @@ public class RiskFilter {
             logger.warn("SpreadOpportunity is null — rejecting.");
             return false;
         }
+        if (Double.isNaN(opportunity.getNetEdge()) || opportunity.getNetEdge() <= 0) {
+            logger.warn("SpreadOpportunity has invalid netEdge {}", opportunity.getNetEdge());
+            return false;
+        }
         if (opportunity.getNetEdge() < minEdge) {
             logger.info("SpreadOpportunity rejected: netEdge {} < {}", opportunity.getNetEdge(), minEdge);
             return false;
