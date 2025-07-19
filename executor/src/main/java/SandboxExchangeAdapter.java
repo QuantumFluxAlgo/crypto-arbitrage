@@ -19,21 +19,51 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
     private static final String CHANNEL =
             System.getenv().getOrDefault("GHOST_FEED_CHANNEL", "ghost_feed");
 
-    private final Random random = new Random();
+    private final Random random;
     private final double slippagePct;
     private final long latencyMs;
     private final RedisClient redisClient;
     private final ModelPredictor predictor;
+
+    private static double parseDoubleEnv(String key, double def) {
+        String val = System.getProperty(key,
+                System.getenv().getOrDefault(key, Double.toString(def)));
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
+    private static long parseLongEnv(String key, long def) {
+        String val = System.getProperty(key,
+                System.getenv().getOrDefault(key, Long.toString(def)));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
 
     /**
      * Construct using environment configured parameters.
      */
     public SandboxExchangeAdapter(RedisClient redisClient,
                                   ModelPredictor predictor) {
+        this(redisClient, predictor, new Random());
+    }
+
+    /**
+     * Construct using environment configured parameters and explicit RNG.
+     */
+    public SandboxExchangeAdapter(RedisClient redisClient,
+                                  ModelPredictor predictor,
+                                  Random random) {
         this("Sandbox", redisClient, predictor,
-             Double.parseDouble(System.getenv().getOrDefault("SANDBOX_SLIPPAGE", "0.0005")),
-             Double.parseDouble(System.getenv().getOrDefault("SANDBOX_FEE", "0.001")),
-             Long.parseLong(System.getenv().getOrDefault("SANDBOX_LATENCY_MS", "50")));
+             parseDoubleEnv("SANDBOX_SLIPPAGE", 0.0005),
+             parseDoubleEnv("SANDBOX_FEE", 0.001),
+             parseLongEnv("SANDBOX_LATENCY_MS", 50),
+             random);
     }
 
     /**
@@ -45,7 +75,21 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
                                   double slippagePct,
                                   double feeRate,
                                   long latencyMs) {
-        super(name);
+        this(name, redisClient, predictor, slippagePct, feeRate, latencyMs, new Random());
+    }
+
+    /**
+     * Create a sandbox adapter with explicit settings and random source.
+     */
+    public SandboxExchangeAdapter(String name,
+                                  RedisClient redisClient,
+                                  ModelPredictor predictor,
+                                  double slippagePct,
+                                  double feeRate,
+                                  long latencyMs,
+                                  Random random) {
+        super(name, 0.0002, random);
+        this.random = random;
         this.redisClient = redisClient;
         this.predictor = predictor;
         this.slippagePct = slippagePct;
