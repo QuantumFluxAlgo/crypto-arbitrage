@@ -11,7 +11,7 @@ public class MockWalletClient implements WalletClient {
 
     /** {@inheritDoc} */
     @Override
-    public void withdraw(String address) {
-        logger.info("Withdrawing funds to cold wallet: {}", address);
+    public void withdraw(String address, double amountUsd) {
+        logger.info("Withdrawing {} USD to cold wallet: {}", amountUsd, address);
     }
 }

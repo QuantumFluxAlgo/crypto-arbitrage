@@ -12,6 +12,8 @@ import executor.RebalanceScheduler;
 import executor.Rebalancer;
 import executor.ExchangeAdapter;
 import executor.ProfitTracker;
+import executor.SweepHandler;
+import redis.clients.jedis.Jedis;
 
 /**
  * Entry point for launching the executor from the command line.
@@ -62,11 +64,16 @@ public class Main {
         ColdSweeper sweeper = new ColdSweeper();
         ColdSweepScheduler sweepScheduler = new ColdSweepScheduler(
                 sweeper,
-                () -> System.getenv().getOrDefault("SWEEP_CADENCE", "None"),
+                () -> System.getProperty("sweep_cadence",
+                        System.getenv().getOrDefault("sweep_cadence", "None")),
                 ProfitTracker::getCumulativeProfit,
                 () -> ProfitTracker.getStartingBalance() + ProfitTracker.getCumulativeProfit()
         );
         sweepScheduler.start();
+
+        // start handler for manual sweeps
+        SweepHandler sweepHandler = new SweepHandler(new Jedis(redisHost, redisPort), sweeper);
+        sweepHandler.start();
 
         Rebalancer rebalancer = new Rebalancer(250.0);
         Map<String, ExchangeAdapter> adapters = new HashMap<>();

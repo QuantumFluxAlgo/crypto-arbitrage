@@ -79,7 +79,7 @@ public class ColdSweepScheduler {
         double capital = capitalSupplier.get();
         if (sweeper.shouldSweep(profit, capital)) {
             logger.info("Cold sweep triggered");
-            sweeper.sweepToColdWallet();
+            sweeper.sweepToColdWallet(profit);
         }
     }
 

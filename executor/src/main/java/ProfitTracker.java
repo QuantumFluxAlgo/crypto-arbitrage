@@ -111,6 +111,11 @@ public class ProfitTracker {
     public static double getCumulativeProfit() {
         return cumulativeProfit;
     }
+
+    /** Reset the cumulative profit after a cold sweep. */
+    public static void resetCumulativeProfit() {
+        cumulativeProfit = 0.0;
+    }
     
     /**
      * Get the initial starting balance used for drawdown calculations.
