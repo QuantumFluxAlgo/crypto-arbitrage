@@ -36,7 +36,10 @@ let pool;
 function buildApp() {
   const app = Fastify();
   app.register(fastifyCookie);
-  app.register(fastifyJwt, { secret: process.env.JWT_SECRET || 'change-me' });
+  app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'change-me',
+    cookie: { cookieName: 'token' }
+  });
 
     pool = new Pool({
       host: process.env.PGHOST || 'localhost',
@@ -95,11 +98,13 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       '/login',
       '/api/reset-password',
       '/reset-password',
+      '/api/metrics',
+      ...(process.env.SANDBOX_MODE !== 'true' ? ['/api/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
-      await req.jwtVerify({ token: req.cookies.token });
+      await req.jwtVerify();
     } catch {
       reply.code(401).send({ error: 'unauthorized' });
     }
