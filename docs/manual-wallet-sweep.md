@@ -1,19 +1,22 @@
 # manual-wallet-sweep.md
 
-## Purpose
+## What It Does
+Explains how to manually initiate a cold wallet sweep when automated transfers are disabled.
 
-Use this procedure to manually transfer funds from the hot wallet to the designated cold wallet.
+## How to Use It
 
-## Steps
-
-1. Stop new trading activity by toggling **Panic** in the dashboard.
-2. Log in to the server hosting the rebalancer service.
-3. Run the sweep command specifying the target address:
+1. Toggle **Panic** in the dashboard to halt trading.
+2. Send a sweep command to the API:
    ```bash
-   python scripts/manual_sweep.py --dest <cold_wallet_address>
+   curl -X POST http://localhost:8080/api/test/sweep
    ```
-4. Confirm the transaction details printed in the console and approve when prompted.
-5. Monitor the blockchain explorer to verify the transfer has settled.
-6. Resume trading from the dashboard once the sweep is complete.
+   This endpoint performs a dry-run sweep and logs the action.
+3. Check the executor logs for `Cold wallet sweep` messages.
+4. Verify on a blockchain explorer once funds settle.
+5. Resume trading from the dashboard when complete.
 
-All sweep actions are logged in Postgres under `wallet_sweeps` for audit purposes.
+## Troubleshooting
+
+- If no log entry appears, ensure the API service is reachable and `TEST_COLD_WALLET_ADDRESS` is set.
+- Use `kubectl logs deploy/executor` to inspect the scheduler output.
+
