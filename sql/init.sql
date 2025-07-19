@@ -28,3 +28,28 @@ CREATE TABLE cgt_audit (
     cost_basis NUMERIC,
     gain NUMERIC
 );
+
+-- Table storing executed trades for auditing
+CREATE TABLE trades (
+    id SERIAL PRIMARY KEY,
+    buy_exchange TEXT NOT NULL,
+    sell_exchange TEXT NOT NULL,
+    pair TEXT NOT NULL,
+    net_edge NUMERIC NOT NULL,
+    pnl NUMERIC NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Table storing filtered opportunities for later analysis
+CREATE TABLE near_misses (
+    id SERIAL PRIMARY KEY,
+    buy_exchange TEXT NOT NULL,
+    sell_exchange TEXT NOT NULL,
+    pair TEXT NOT NULL,
+    gross_edge NUMERIC NOT NULL,
+    net_edge NUMERIC NOT NULL,
+    reason TEXT NOT NULL,
+    latency_ms INTEGER NOT NULL,
+    round_trip_latency_ms INTEGER NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW()
+);

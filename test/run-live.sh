@@ -3,4 +3,4 @@
 export TEST_ENV=live
 npx jest --runInBand
 pytest -m "env('live')"
-./gradlew test -PtestEnv=live
+executor/gradlew test -PtestEnv=live

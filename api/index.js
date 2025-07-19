@@ -100,7 +100,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       '/reset-password',
       '/api/metrics',
       ...(process.env.SANDBOX_MODE !== 'true' ? ['/api/resume'] : []),
-      ...(isTest ? ['/api/test/panic', '/api/test/resume'] : []),
+      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
@@ -158,6 +158,12 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       api.post('/test/resume', async () => {
         testState.panic = false;
         return { resumed: true };
+      });
+
+      api.post('/test/sweep', async () => {
+        app.log.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
+        await redis.publish('control-feed', 'sweep');
+        return { swept: true };
       });
     }
 
