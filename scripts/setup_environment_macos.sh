@@ -2,6 +2,17 @@
 # Install dependencies on macOS for local testing
 set -euo pipefail
 
+# ensure any previously activated venv doesn't interfere
+if [ -n "${VIRTUAL_ENV:-}" ]; then
+  deactivate || true
+fi
+
+# remove stale virtual environment if it exists
+if [ -d ".venv" ]; then
+  echo "Removing existing virtual environment..."
+  rm -rf .venv
+fi
+
 echo "Installing Homebrew packages..."
 brew install node python@3.11 openjdk@17 git gradle
 
@@ -11,9 +22,9 @@ export PATH="$(brew --prefix)/opt/openjdk@17/bin:$PATH"
 echo "Creating Python virtual environment..."
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 npm install
 npm install --prefix api
 npm install --prefix dashboard
