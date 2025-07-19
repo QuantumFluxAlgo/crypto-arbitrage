@@ -6,6 +6,8 @@ on:
 jobs:
   release-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         # actions/checkout@v3 SHA f43a0e5ff2bd294095638e18286ca9a3d1956744
