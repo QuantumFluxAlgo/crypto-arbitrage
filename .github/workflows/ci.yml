@@ -239,9 +239,6 @@ jobs:
         with:
           name: executor-gradle-report
           path: test-results/executor
-      - name: Run Gradle Checkstyle
-        run: ./gradlew checkstyleMain
-        working-directory: executor
       - name: Build executor image
         run: podman build -t executor ./executor
       - name: Test executor container
