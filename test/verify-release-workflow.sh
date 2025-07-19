@@ -1,7 +1,7 @@
 #!/bin/bash
 # verify-release-workflow.sh - Validate release.yml workflow steps
 set -e
-workflow=".github/workflows/release.yml"
+workflow=".github/workflows/release.yaml"
 
 declare -a steps=(
   "Checkout repository"
