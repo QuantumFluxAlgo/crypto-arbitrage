@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 import executor.PanicBrake;
+import executor.ProfitTracker;
 
 @Tag("local")
 public class PanicBrakeTest {
@@ -38,6 +39,18 @@ public class PanicBrakeTest {
             System.clearProperty("LOSS_CAP_PCT");
             System.clearProperty("LATENCY_MAX_MS");
             System.clearProperty("WIN_RATE_THRESHOLD");
+        }
+    }
+
+    @Test
+    void triggersOnProfitTargetReached() {
+        System.setProperty("PROFIT_TARGET_USD", "100.0");
+        ProfitTracker.record(150.0);
+        try {
+            assertTrue(PanicBrake.shouldHalt(0.0, 100.0, 0.9));
+        } finally {
+            ProfitTracker.resetCumulativeProfit();
+            System.clearProperty("PROFIT_TARGET_USD");
         }
     }
 }

@@ -25,6 +25,8 @@ Lists environment variables used across services.
 | `COIN_CAP_PCT` | Max percentage of balance per coin |
 | `MAX_BOOK_DEPTH_USD` | Order book depth to consider |
 | `LOSS_CAP_PCT` | Daily loss cutoff percentage |
+| `PROFIT_TARGET_USD` | Daily profit target before pause |
+| `MAX_SLIPPAGE_PCT` | Maximum allowed slippage percentage |
 | `LATENCY_MAX_MS` | Max allowed execution latency |
 | `WIN_RATE_THRESHOLD` | Minimum win rate before halt |
 | `PREDICT_URL` | Analytics scoring endpoint |

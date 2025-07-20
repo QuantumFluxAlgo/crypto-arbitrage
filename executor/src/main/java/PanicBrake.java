@@ -7,6 +7,7 @@ package executor;
  */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import executor.ProfitTracker;
 
 public class PanicBrake {
     private static final Logger logger = LoggerFactory.getLogger(PanicBrake.class);
@@ -50,10 +51,22 @@ public class PanicBrake {
         }
     }
 
+    private static double getProfitTargetUsd() {
+        String val = System.getProperty("PROFIT_TARGET_USD",
+                System.getenv().getOrDefault("PROFIT_TARGET_USD", "0.0"));
+        try {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
     public static boolean shouldHalt(double dailyLossPct, double avgLatencyMs, double winRate) {
         double lossCap = getLossCapPct();
         double latencyCap = getLatencyMaxMs();
         double winRateThresh = getWinRateThreshold();
+        double profitTarget = getProfitTargetUsd();
+        double profitSoFar = ProfitTracker.getCumulativeProfit();
 
         if (dailyLossPct > lossCap) {
             logger.warn("PANIC BRAKE TRIGGERED: loss {}% > {}%", dailyLossPct, lossCap);
@@ -65,6 +78,10 @@ public class PanicBrake {
         }
         if (winRate < winRateThresh) {
             logger.warn("PANIC BRAKE TRIGGERED: winRate {} < {}", winRate, winRateThresh);
+            return true;
+        }
+        if (profitTarget > 0 && profitSoFar >= profitTarget) {
+            logger.warn("PANIC BRAKE TRIGGERED: profit {} >= target {}", profitSoFar, profitTarget);
             return true;
         }
         return false;
