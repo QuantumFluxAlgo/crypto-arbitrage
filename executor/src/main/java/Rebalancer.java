@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
 
+import executor.Config;
+import executor.ExecutionMode;
+
 import java.util.Map;
 
 /**
@@ -16,12 +19,14 @@ public class Rebalancer {
     private static final Logger logger = LoggerFactory.getLogger(Rebalancer.class);
     private final double threshold;
     private final Map<String, ExchangeAdapter> adapters;
+    private final Config config;
+    private final boolean isDryRun;
 
     /**
      * @param threshold allowed deviation from target before logging (e.g. 0.3 * target for ±30%)
      */
     public Rebalancer(double threshold) {
-        this(threshold, Collections.emptyMap());
+        this(threshold, Collections.emptyMap(), new Config(ExecutionMode.LIVE));
     }
 
     /**
@@ -29,8 +34,14 @@ public class Rebalancer {
      * @param adapters  exchange adapters used for optional transfers
      */
     public Rebalancer(double threshold, Map<String, ExchangeAdapter> adapters) {
+        this(threshold, adapters, new Config(ExecutionMode.LIVE));
+    }
+
+    public Rebalancer(double threshold, Map<String, ExchangeAdapter> adapters, Config config) {
         this.threshold = threshold;
         this.adapters = Objects.requireNonNullElse(adapters, Collections.emptyMap());
+        this.config = config;
+        this.isDryRun = config != null && config.isDryRun();
     }
 
     /**
@@ -57,7 +68,12 @@ public class Rebalancer {
                 status.put(exchange, String.format("OVER by %.2f", balance - target));
                 ExchangeAdapter adapter = adapters.get(exchange);
                 if (adapter != null) {
-                    adapter.transfer("USDT", balance - target, "treasury");
+                    double amount = balance - target;
+                    if (isDryRun) {
+                        logger.info("[DRY-RUN] Skipping exchange transfer");
+                    } else {
+                        adapter.transfer("USDT", amount, "treasury");
+                    }
                 }
             } else if (balance < target - threshold) {
                 logger.info("{} under target by {} ({} vs target {})",
@@ -65,7 +81,12 @@ public class Rebalancer {
                 status.put(exchange, String.format("UNDER by %.2f", target - balance));
                 ExchangeAdapter adapter = adapters.get(exchange);
                 if (adapter != null) {
-                    adapter.transfer("USDT", target - balance, exchange);
+                    double amount = target - balance;
+                    if (isDryRun) {
+                        logger.info("[DRY-RUN] Skipping exchange transfer");
+                    } else {
+                        adapter.transfer("USDT", amount, exchange);
+                    }
                 }
             } else {
                 logger.info("{} within acceptable threshold ({} vs target {})",
