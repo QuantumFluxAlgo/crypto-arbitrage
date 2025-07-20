@@ -3,11 +3,13 @@ package executor;
 /**
  * Utility class that determines when trading should halt based on a few
  * safety thresholds.  All thresholds are fixed and checked in the static
- * {@link #shouldHalt(double, double, double)} method.
+ * {@link #shouldHalt(RedisClient, Config, double, double, double)} method.
  */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import executor.ProfitTracker;
+import executor.RedisClient;
+import executor.Config;
 
 public class PanicBrake {
     private static final Logger logger = LoggerFactory.getLogger(PanicBrake.class);
@@ -61,30 +63,35 @@ public class PanicBrake {
         }
     }
 
-    public static boolean shouldHalt(double dailyLossPct, double avgLatencyMs, double winRate) {
+    public static boolean shouldHalt(RedisClient redis, Config config,
+                                     double dailyLossPct, double avgLatencyMs, double winRate) {
         double lossCap = getLossCapPct();
         double latencyCap = getLatencyMaxMs();
         double winRateThresh = getWinRateThreshold();
         double profitTarget = getProfitTargetUsd();
         double profitSoFar = ProfitTracker.getCumulativeProfit();
 
+        boolean triggered = false;
+
         if (dailyLossPct > lossCap) {
             logger.warn("PANIC BRAKE TRIGGERED: loss {}% > {}%", dailyLossPct, lossCap);
-            return true;
-        }
-        if (avgLatencyMs > latencyCap) {
+            triggered = true;
+        } else if (avgLatencyMs > latencyCap) {
             logger.warn("PANIC BRAKE TRIGGERED: latency {}ms > {}ms", avgLatencyMs, latencyCap);
-            return true;
-        }
-        if (winRate < winRateThresh) {
+            triggered = true;
+        } else if (winRate < winRateThresh) {
             logger.warn("PANIC BRAKE TRIGGERED: winRate {} < {}", winRate, winRateThresh);
-            return true;
-        }
-        if (profitTarget > 0 && profitSoFar >= profitTarget) {
+            triggered = true;
+        } else if (profitTarget > 0 && profitSoFar >= profitTarget) {
             logger.warn("PANIC BRAKE TRIGGERED: profit {} >= target {}", profitSoFar, profitTarget);
-            return true;
+            triggered = true;
         }
-        return false;
+
+        if (triggered && redis != null) {
+            redis.publishControl(config, "pause");
+        }
+
+        return triggered;
     }
 }
 

@@ -84,6 +84,19 @@ public class RedisClient extends Thread {
     }
 
     /**
+     * Publish a message to the control channel derived from execution mode.
+     */
+    public void publishControl(Config config, String message) {
+        if (config == null) {
+            publish("control-feed-live", message);
+            return;
+        }
+        String channel = config.getExecutionMode() == ExecutionMode.LIVE
+                ? "control-feed-live" : "control-feed-sandbox";
+        publish(channel, message);
+    }
+
+    /**
      * Subscribe with a provided {@link JedisPubSub} listener.
      * A new thread will be created for the subscription.
      *
@@ -122,6 +135,19 @@ public class RedisClient extends Thread {
      */
     public void subscribe(String channel, Consumer<String> handler) {
         subscribe(channel, (ch, msg) -> handler.accept(msg));
+    }
+
+    /**
+     * Subscribe to the control channel derived from execution mode.
+     */
+    public void subscribeControl(Config config, Consumer<String> handler) {
+        if (config == null) {
+            subscribe("control-feed-live", handler);
+            return;
+        }
+        String channel = config.getExecutionMode() == ExecutionMode.LIVE
+                ? "control-feed-live" : "control-feed-sandbox";
+        subscribe(channel, handler);
     }
 
     /**

@@ -8,6 +8,8 @@ import executor.PanicBrake;
 import executor.FeatureLogger;
 import executor.ConfigValidator;
 import executor.CircuitBreaker;
+import executor.Config;
+import executor.ExecutionMode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -35,7 +37,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final ProfitEstimator profitEstimator;
     private final SimulatedPublisher simulatedPublisher;
     private final RiskSettings riskSettings;
-    private final ResumeHandler resumeHandler;
+    private final Config config;
+    private final String controlChannel;
     private final String redisHost;
     private final int redisPort;
     private Connection dbConnection;
@@ -73,10 +76,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * @param nearMissLogger logger used for near miss events
      */
     public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger) {
+        this(redisClient, redisHost, redisPort, riskFilter, nearMissLogger, new Config(ExecutionMode.LIVE));
+    }
+
+    public Executor(RedisClient redisClient, String redisHost, int redisPort, RiskFilter riskFilter, NearMissLogger nearMissLogger, Config config) {
         this.redisClient = redisClient;
         this.redisHost = redisHost;
         this.redisPort = redisPort;
-        this.resumeHandler = new ResumeHandler(new redis.clients.jedis.Jedis(redisHost, redisPort), this);
+        this.config = config == null ? new Config(ExecutionMode.LIVE) : config;
+        this.controlChannel = this.config.getExecutionMode() == ExecutionMode.LIVE ? "control-feed-live" : "control-feed-sandbox";
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
         this.scoringEngine = new ScoringEngine();
@@ -89,7 +97,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
-        this.sandboxMode = Boolean.parseBoolean(System.getenv().getOrDefault("SANDBOX_MODE", "false"));
+        this.sandboxMode = this.config.isDryRun();
         this.maxOpenTrades = Integer.parseInt(System.getenv().getOrDefault("MAX_OPEN_TRADES", "5"));
     }
 
@@ -155,8 +163,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         } catch (Exception e) {
             logger.warn("Failed to start Redis client", e);
         }
-        logger.info("🔁 Starting ResumeHandler thread");
-        resumeHandler.start();
+        setupControlSubscription();
+    }
+
+    /** Subscribe to control channel for resume signals. */
+    protected void setupControlSubscription() {
+        redisClient.subscribeControl(config, msg -> {
+            if ("resume".equalsIgnoreCase(msg)) {
+                logger.info("Resume signal received on {}", controlChannel);
+                resumeFromPanic();
+            }
+        });
     }
 
     /** {@inheritDoc} */
@@ -295,11 +312,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         }
         circuitBreaker.check(winRate, drawdown);
 
-        if (PanicBrake.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
-            isPanic.set(true);
-            logger.error("PANIC BRAKE TRIGGERED");
-            AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
-            redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
+        if (PanicBrake.shouldHalt(redisClient, config, dailyLossPct, avgLatencyMs, winRate)) {
+            if (isPanic.compareAndSet(false, true)) {
+                logger.error("PANIC BRAKE TRIGGERED - trading paused");
+                AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
+                redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
+            }
         }
     }
 
