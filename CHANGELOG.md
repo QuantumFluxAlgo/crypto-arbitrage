@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Added profit targets and slippage caps
 - Added feed-aggregator deployment
 - Integrated sealed secrets
+- Fix panic resume and Redis signal behavior in Executor and PanicBrake
 - CVE scanning with Trivy
 
 ## [Batch 1] - 2025-07-02
