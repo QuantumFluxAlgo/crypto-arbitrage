@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SystemStatusProvider } from './context/SystemStatusContext.jsx';
 import Header from './layout/Header.jsx';
+import SystemStatusBanner from './components/SystemStatusBanner.jsx';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Analytics from './pages/Analytics';
@@ -21,6 +22,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <SystemStatusProvider>
+          <SystemStatusBanner />
           <Header />
           <Routes>
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
