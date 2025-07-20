@@ -81,7 +81,6 @@ git config core.hooksPath githooks
    npm install --prefix api
    npm install --prefix dashboard
    pip install -r requirements.txt
-   pip install -r analytics/requirements.txt
    helm dependency update infra/helm
    helm install arb infra/helm
    ```

@@ -8,7 +8,6 @@ npm install --prefix feed-aggregator
 
 # Python dependencies
 pip install -r requirements.txt
-pip install -r analytics/requirements.txt
 
 # Java executor tests (correct directory!)
 cd executor
