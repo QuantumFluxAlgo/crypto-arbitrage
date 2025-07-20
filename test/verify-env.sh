@@ -56,3 +56,10 @@ echo "Environment verified"
 
 curl -sf http://localhost:8080/api/metrics/live >/dev/null
 curl -sf http://localhost:8080/api/metrics/sandbox >/dev/null
+if [ "${PANIC:-}" = "true" ] && [ "${HEARTBEAT:-}" = "dead" ]; then
+  code=$(curl -o /dev/null -w '%{http_code}' -s http://localhost:8080/api/resume)
+  if [ "$code" -ne 503 ]; then
+    echo "Error: resume endpoint should return 503 when system unsafe" >&2
+    exit 1
+  fi
+fi
