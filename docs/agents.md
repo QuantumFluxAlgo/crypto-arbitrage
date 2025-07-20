@@ -27,7 +27,7 @@ This document outlines the roles, responsibilities, and interfaces of each auton
 ---
 
 ## 3. Dashboard Agent (`/dashboard`)
-- **Language**: React (Node 18)
+- **Language**: React (Node 20 build)
 - **Purpose**: Mobile-friendly UI for control and monitoring.
 - **Features**: Mode toggle, loss caps, latency caps, resume trading, charts.
 - **Auth**: JWT via API Gateway.

@@ -45,6 +45,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String predictUrl;
+    private final java.util.Deque<Double> midPrices = new java.util.ArrayDeque<>();
 
     private double dailyLossPct;
     private double avgLatencyMs;
@@ -280,7 +281,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         if (featureLogger != null) {
             double slippage = opp.getGrossEdge() - opp.getNetEdge();
-            double volatility = 0.0; // TODO derive from market data
+            double volatility = getVolatility();
             double latencySec = result.latencyMs / 1000.0;
             int label = result.pnl > 0 ? 1 : 0;
             featureLogger.logFeatureVector(opp.getPair(), opp.getNetEdge(), slippage, volatility, latencySec, label);
@@ -438,5 +439,27 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return pair;
         }
         return pair.substring(0, idx);
+    }
+
+    /** Record a mid price for volatility calculations. */
+    public void recordMidPrice(double price) {
+        synchronized (midPrices) {
+            if (midPrices.size() >= 20) {
+                midPrices.removeFirst();
+            }
+            midPrices.addLast(price);
+        }
+    }
+
+    /** Return the standard deviation of recorded mid prices. */
+    public double getVolatility() {
+        synchronized (midPrices) {
+            if (midPrices.isEmpty()) return 0.0;
+            double mean = midPrices.stream().mapToDouble(d -> d).average().orElse(0.0);
+            double var = midPrices.stream()
+                    .mapToDouble(d -> (d - mean) * (d - mean))
+                    .sum() / midPrices.size();
+            return Math.sqrt(var);
+        }
     }
 }

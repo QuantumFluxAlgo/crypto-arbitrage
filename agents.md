@@ -106,7 +106,7 @@ This document defines all autonomous agents, modules, and services operating acr
 
 ## 📊 UI Dashboard Agent (`dashboard`)
 
-- **Language**: React (Node 18 build)
+- **Language**: React (Node 20 build)
 - **Features**:
   - Real-time charts (Prometheus feeds).
   - Mobile-friendly SPA (Safari/Chrome).
