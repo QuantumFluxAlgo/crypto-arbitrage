@@ -68,3 +68,20 @@ executor:
     # ANALYTICS_URL: "http://analytics:5000/trade"
     # PERSONALITY_MODE: "REALISTIC"
     # STARTING_BALANCE: "10000"
+
+feedAggregator:
+  image: arb-feed-aggregator
+  port: 8090
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+  env:
+    # FEED_URL: "wss://example.com/feed"
+    # REDIS_HOST: "redis"
+    # REDIS_PORT: "6379"
+    # ORDERBOOK_CHANNEL: "orderbook"
+    # ALERT_CHANNEL: "alerts"
