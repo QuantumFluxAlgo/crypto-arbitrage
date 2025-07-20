@@ -102,7 +102,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             ConfigValidator validator = new ConfigValidator(
                 Double.parseDouble(System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0")),
                 Double.parseDouble(System.getenv().getOrDefault("LATENCY_MAX_MS", "250.0")),
-                Double.parseDouble(System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.5"))
+                Double.parseDouble(System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.5")),
+                Double.parseDouble(System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "1.0")),
+                Double.parseDouble(System.getenv().getOrDefault("PROFIT_TARGET_USD", "0.0"))
             );
             validator.validate();
         } catch (RuntimeException ex) {

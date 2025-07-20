@@ -22,4 +22,10 @@ Operators can trigger Panic mode manually from the dashboard or via the API. Thi
 
 `MAX_OPEN_TRADES` restricts how many positions may be active at once. When the limit is reached, new opportunities are ignored until other trades close.
 
+### Profit Target & Slippage Cap
+
+`PROFIT_TARGET_USD` defines how much profit triggers an automatic pause. The `MAX_SLIPPAGE_PCT` variable rejects opportunities where the expected versus actual price differs by more than the configured percentage.
+
+Both limits are enforced by the executor and can be adjusted in the environment file.
+
 All risk events are logged to Postgres and surfaced through Prometheus metrics for alerting.

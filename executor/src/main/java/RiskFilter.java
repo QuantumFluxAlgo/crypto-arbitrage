@@ -14,6 +14,8 @@ public class RiskFilter {
 
     private double minEdge;
     private long maxLatencyMs;
+    private double maxSlippagePct = Double.parseDouble(
+        System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "1.0"));
     private String mode;
 
     /** Construct using the default personality mode. */
@@ -35,9 +37,10 @@ public class RiskFilter {
      * @param netEdge    minimum net edge required
      * @param latencyMs  maximum allowable latency in milliseconds
      */
-    public RiskFilter(double netEdge, long latencyMs) {
+    public RiskFilter(double netEdge, long latencyMs, double maxSlippagePct) {
         this.minEdge = netEdge;
         this.maxLatencyMs = latencyMs;
+        this.maxSlippagePct = maxSlippagePct;
         this.mode = "CUSTOM";
     }
 
@@ -103,6 +106,14 @@ public class RiskFilter {
         if (opportunity.getRoundTripLatencyMs() > maxLatencyMs) {
             logger.info("SpreadOpportunity rejected: latency {} > {}", opportunity.getRoundTripLatencyMs(), maxLatencyMs);
             return false;
+        }
+        double slippage = Math.abs(opportunity.getGrossEdge() - opportunity.getNetEdge());
+        if (Math.abs(opportunity.getGrossEdge()) > 0) {
+            double slipPct = slippage / Math.abs(opportunity.getGrossEdge()) * 100.0;
+            if (slipPct > maxSlippagePct) {
+                logger.info("SpreadOpportunity rejected: slippage {}% > {}%", slipPct, maxSlippagePct);
+                return false;
+            }
         }
         return true;
     }

@@ -10,6 +10,8 @@ public class ConfigValidator {
     private final double lossCapPct;
     private final double latencyMaxMs;
     private final double winRateThreshold;
+    private final double maxSlippagePct;
+    private final double profitTargetUsd;
 
     /**
      * Construct a validator with the provided thresholds.
@@ -18,10 +20,13 @@ public class ConfigValidator {
      * @param latencyMaxMs     maximum acceptable latency in milliseconds
      * @param winRateThreshold minimum win rate before triggering alerts
      */
-    public ConfigValidator(double lossCapPct, double latencyMaxMs, double winRateThreshold) {
+    public ConfigValidator(double lossCapPct, double latencyMaxMs, double winRateThreshold,
+                           double maxSlippagePct, double profitTargetUsd) {
         this.lossCapPct = lossCapPct;
         this.latencyMaxMs = latencyMaxMs;
         this.winRateThreshold = winRateThreshold;
+        this.maxSlippagePct = maxSlippagePct;
+        this.profitTargetUsd = profitTargetUsd;
     }
 
     /**
@@ -37,6 +42,12 @@ public class ConfigValidator {
         }
         if (winRateThreshold < 0.4) {
             throw new RuntimeException("WIN_RATE_THRESHOLD is too low: " + winRateThreshold + " < 0.4");
+        }
+        if (maxSlippagePct > 5.0) {
+            throw new RuntimeException("MAX_SLIPPAGE_PCT exceeds safe limit: " + maxSlippagePct + " > 5%");
+        }
+        if (profitTargetUsd > 20000.0) {
+            throw new RuntimeException("PROFIT_TARGET_USD exceeds safe limit: " + profitTargetUsd + " > 20000");
         }
 
         System.out.println("[VALIDATOR] Configs validated: OK");
