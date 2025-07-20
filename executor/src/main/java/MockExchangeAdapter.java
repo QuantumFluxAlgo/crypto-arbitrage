@@ -26,6 +26,7 @@ public class MockExchangeAdapter implements ExchangeAdapter {
     private double lastFillSize = 0.0;
     private double lastCancelFee = 0.0;
     private double lastExecPrice = 0.0;
+    private final java.util.List<String> canceledOrders = new java.util.ArrayList<>();
 
     /** Create an adapter with the default exchange name. */
     public MockExchangeAdapter() {
@@ -152,5 +153,17 @@ public class MockExchangeAdapter implements ExchangeAdapter {
      */
     public double getCancelFeeRate() {
         return cancelFeeRate;
+    }
+
+    @Override
+    public void cancel(String orderId) {
+        canceledOrders.add(orderId);
+    }
+
+    /**
+     * @return list of order ids that were canceled
+     */
+    public java.util.List<String> getCanceledOrders() {
+        return canceledOrders;
     }
 }
