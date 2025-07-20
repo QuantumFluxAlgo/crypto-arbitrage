@@ -104,6 +104,8 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       '/login',
       '/api/reset-password',
       '/reset-password',
+      '/api/metrics/live',
+      '/api/metrics/sandbox',
       '/api/metrics',
       ...(process.env.SANDBOX_MODE !== 'true' ? ['/api/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),

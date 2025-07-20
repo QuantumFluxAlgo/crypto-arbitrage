@@ -69,14 +69,15 @@ of the contact group to receive alerts.
 
 ## Prometheus metrics
 
-Each service exposes a `/metrics` endpoint that Prometheus scrapes. To view these metrics locally, forward the service ports and curl the endpoints:
+The API now separates live and sandbox telemetry. Prometheus should scrape `/metrics/live` or `/metrics/sandbox` based on the running mode. To view these metrics locally, forward the service ports and curl the endpoints:
 
 ```bash
 kubectl port-forward svc/api 9100:8080 &
 kubectl port-forward svc/executor 9200:9100 &
 kubectl port-forward svc/analytics 9300:5000 &
 
-curl http://localhost:9100/api/metrics
+curl http://localhost:9100/api/metrics/live
+curl http://localhost:9100/api/metrics/sandbox
 curl http://localhost:9200/metrics
 curl http://localhost:9300/metrics
 ```
