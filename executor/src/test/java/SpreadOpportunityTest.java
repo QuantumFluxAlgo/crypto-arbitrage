@@ -13,10 +13,7 @@ public class SpreadOpportunityTest {
         SpreadOpportunity opp = new SpreadOpportunity("BTC/USDT", "A", "B", 2.0, 2.0, 0L);
         TradeResult result = opp.execute(1.0, 100.0);
         double expected = 2.0 - (1.0 * 100.0 * 0.001) - (1.0 * 100.0 * 0.001);
-        if (result.success) {
-            assertEquals(expected, result.pnl, 1e-9);
-        } else {
-            assertEquals(0.0, result.pnl, 1e-9);
-        }
+        assertTrue(result.success);
+        assertEquals(expected, result.pnl, 1e-9);
     }
 }
