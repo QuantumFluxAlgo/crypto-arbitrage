@@ -44,7 +44,7 @@ public class MockExchangeAdapter implements ExchangeAdapter {
      * @param cancelFeeRate  fee charged when an order is cancelled or partially filled
      */
     public MockExchangeAdapter(String name, double cancelFeeRate) {
-        this(name, cancelFeeRate, new Random());
+        this(name, cancelFeeRate, new Random(42));
     }
 
     /**

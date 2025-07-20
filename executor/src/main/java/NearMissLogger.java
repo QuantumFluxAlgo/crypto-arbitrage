@@ -31,6 +31,10 @@ public class NearMissLogger {
      * @param reason textual reason for rejection
      */
     public void log(SpreadOpportunity opp, String reason) {
+        if (connection == null) {
+            logger.warn("No DB connection; skipping near miss record for {}", opp.getPair());
+            return;
+        }
         String sql = "INSERT INTO near_misses (buy_exchange, sell_exchange, pair, gross_edge, net_edge, reason, latency_ms, round_trip_latency_ms) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         String safeReason = reason != null ? reason : "";
