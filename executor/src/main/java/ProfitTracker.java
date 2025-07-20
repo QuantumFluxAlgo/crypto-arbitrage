@@ -82,6 +82,11 @@ public class ProfitTracker {
         scheduler.schedule(() -> sendWithRetry(pnl, attempt), delay, TimeUnit.SECONDS);
     }
 
+    /** Reset the running daily total back to zero. */
+    public static void resetDailyTotals() {
+        dailyTotal = 0.0;
+    }
+
     /**
      * Get today's loss as a percentage of the configured starting capital.
      *

@@ -117,7 +117,7 @@ public class SpreadOpportunity {
         double buyFee = size * price * buy.getFeeRate(pair);
         double sellFee = size * price * sell.getFeeRate(pair);
         double pnl = netEdge - buyFee - sellFee - buyCancel - sellCancel;
-        boolean success = buyOk && sellOk && latencyMicros <= 60;
+        boolean success = buyOk && sellOk;
 
         return new TradeResult(success, success ? pnl : 0.0, latencyMs);
     }

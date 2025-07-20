@@ -13,12 +13,13 @@ public class ColdSweeper {
     private final double minCapitalRatio;
     private final WalletClient walletClient;
     private final ColdSweeperConfig config;
+    private final SweepLogger sweepLogger;
 
     /**
      * Default: sweep when profit ≥ $5,000 or ≥ 30% of capital.
      */
     public ColdSweeper() {
-        this(5000.0, 0.30, new MockWalletClient(), new ColdSweeperConfig());
+        this(5000.0, 0.30, new MockWalletClient(), new ColdSweeperConfig(), null);
     }
 
     /**
@@ -26,7 +27,7 @@ public class ColdSweeper {
      * @param minCapitalRatio relative profit threshold (e.g. 0.30 = 30%)
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio) {
-        this(minAmountUsd, minCapitalRatio, new MockWalletClient(), new ColdSweeperConfig());
+        this(minAmountUsd, minCapitalRatio, new MockWalletClient(), new ColdSweeperConfig(), null);
     }
 
     /**
@@ -35,7 +36,7 @@ public class ColdSweeper {
      * @param walletClient    wallet client implementation
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient) {
-        this(minAmountUsd, minCapitalRatio, walletClient, new ColdSweeperConfig());
+        this(minAmountUsd, minCapitalRatio, walletClient, new ColdSweeperConfig(), null);
     }
 
     /**
@@ -45,10 +46,15 @@ public class ColdSweeper {
      * @param config          configuration loader
      */
     public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient, ColdSweeperConfig config) {
+        this(minAmountUsd, minCapitalRatio, walletClient, config, null);
+    }
+
+    public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient, ColdSweeperConfig config, SweepLogger logger) {
         this.minAmountUsd = minAmountUsd;
         this.minCapitalRatio = minCapitalRatio;
         this.walletClient = walletClient;
         this.config = config;
+        this.sweepLogger = logger;
     }
 
     /**
@@ -80,6 +86,9 @@ public class ColdSweeper {
         logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
         walletClient.withdraw(address, amountUsd);
         ProfitTracker.resetCumulativeProfit();
+        if (sweepLogger != null) {
+            sweepLogger.logSweep(amountUsd, address, "auto");
+        }
     }
 
     /**
@@ -92,5 +101,8 @@ public class ColdSweeper {
         logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
         walletClient.withdraw(address, amountUsd);
         ProfitTracker.resetCumulativeProfit();
+        if (sweepLogger != null) {
+            sweepLogger.logSweep(amountUsd, address, "manual");
+        }
     }
 }
