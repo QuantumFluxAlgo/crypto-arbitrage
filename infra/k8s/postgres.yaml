@@ -22,13 +22,9 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-          env:
-            - name: POSTGRES_USER
-              value: sandbox
-            - name: POSTGRES_PASSWORD
-              value: sandbox
-            - name: POSTGRES_DB
-              value: arbitrage_demo
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
           livenessProbe:
             tcpSocket:
               port: 5432

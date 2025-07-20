@@ -36,6 +36,7 @@ spec:
           envFrom:
             - secretRef:
                 name: dashboard-secrets
+          resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
