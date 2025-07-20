@@ -23,6 +23,7 @@ public class ProfitTracker {
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
     private static double cumulativeProfit = 0.0;
+    private static final Object lock = new Object();
 
     private static double startingBalance = 10_000.0;
     private static String analyticsUrl = "http://localhost:5000/trade";
@@ -46,9 +47,11 @@ public class ProfitTracker {
      * @param pnl profit (positive) or loss (negative)
      */
     public static void record(double pnl) {
-        dailyTotal += pnl;
-        globalTotal += pnl;
-        cumulativeProfit += pnl;
+        synchronized (lock) {
+            dailyTotal += pnl;
+            globalTotal += pnl;
+            cumulativeProfit += pnl;
+        }
         sendWithRetry(pnl, 0);
     }
 
@@ -84,7 +87,9 @@ public class ProfitTracker {
 
     /** Reset the running daily total back to zero. */
     public static void resetDailyTotals() {
-        dailyTotal = 0.0;
+        synchronized (lock) {
+            dailyTotal = 0.0;
+        }
     }
 
     /**
@@ -93,10 +98,12 @@ public class ProfitTracker {
      * @param pnl profit (positive) or loss (negative)
      */
     public static double getDailyLossPct() {
-        if (dailyTotal >= 0) {
-            return 0.0;
+        synchronized (lock) {
+            if (dailyTotal >= 0) {
+                return 0.0;
+            }
+            return (-dailyTotal / startingBalance) * 100.0;
         }
-        return (-dailyTotal / startingBalance) * 100.0;
     }
 
     /**
@@ -105,7 +112,9 @@ public class ProfitTracker {
      * @return global profit
      */
     public static double getGlobalTotal() {
-        return globalTotal;
+        synchronized (lock) {
+            return globalTotal;
+        }
     }
 
     /**
@@ -114,12 +123,16 @@ public class ProfitTracker {
      * @return cumulative profit
      */
     public static double getCumulativeProfit() {
-        return cumulativeProfit;
+        synchronized (lock) {
+            return cumulativeProfit;
+        }
     }
 
     /** Reset the cumulative profit after a cold sweep. */
     public static void resetCumulativeProfit() {
-        cumulativeProfit = 0.0;
+        synchronized (lock) {
+            cumulativeProfit = 0.0;
+        }
     }
     
     /**

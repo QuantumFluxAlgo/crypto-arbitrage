@@ -33,8 +33,9 @@ public class TriangularArbDetector {
         double getAsk() { return ask; }
     }
 
-    private final Map<String, OrderBook> books = new HashMap<>();
-    private final Map<String, Set<String>> adjacency = new HashMap<>();
+    // Concurrent maps to allow update() and scan() to run without explicit locks
+    private final Map<String, OrderBook> books = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Set<String>> adjacency = new java.util.concurrent.ConcurrentHashMap<>();
     private final Executor executor;
     private final ObjectMapper mapper = new ObjectMapper();
     private final double feeRate = 0.001;
@@ -98,14 +99,15 @@ public class TriangularArbDetector {
      * @param bestBid highest bid price
      * @param bestAsk lowest ask price
      */
-    public synchronized void update(String pair, double bestBid, double bestAsk) {
+    public void update(String pair, double bestBid, double bestAsk) {
         if (!validBook(bestBid, bestAsk)) {
             return;
         }
         books.put(pair, new OrderBook(bestBid, bestAsk));
         String[] parts = split(pair);
         if (parts != null) {
-            adjacency.computeIfAbsent(parts[0], k -> new HashSet<>()).add(pair);
+            adjacency.computeIfAbsent(parts[0], k -> java.util.concurrent.ConcurrentHashMap.newKeySet())
+                    .add(pair);
         }
         dirty.set(true);
         if (intervalMs == 0) {
