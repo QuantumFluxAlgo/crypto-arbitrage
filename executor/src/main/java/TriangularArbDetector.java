@@ -36,18 +36,20 @@ public class TriangularArbDetector {
     // Concurrent maps to allow update() and scan() to run without explicit locks
     private final Map<String, OrderBook> books = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Set<String>> adjacency = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Long> lastSeen = new java.util.concurrent.ConcurrentHashMap<>();
     private final Executor executor;
     private final ObjectMapper mapper = new ObjectMapper();
     private final double feeRate = 0.001;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final long intervalMs;
+    private final long ttlMs;
     private final AtomicBoolean dirty = new AtomicBoolean(false);
 
     /**
      * @param executor executor to notify when opportunities arise
      */
     public TriangularArbDetector(Executor executor) {
-        this(executor, getIntervalMs());
+        this(executor, getIntervalMs(), getTtlMs());
     }
 
     /**
@@ -55,8 +57,13 @@ public class TriangularArbDetector {
      * @param intervalMs  minimum milliseconds between scans (0 for immediate)
      */
     public TriangularArbDetector(Executor executor, long intervalMs) {
+        this(executor, intervalMs, getTtlMs());
+    }
+
+    public TriangularArbDetector(Executor executor, long intervalMs, long ttlMs) {
         this.executor = executor;
         this.intervalMs = intervalMs > 0 ? intervalMs : 0;
+        this.ttlMs = ttlMs > 0 ? ttlMs : 300_000L;
         if (this.intervalMs > 0) {
             scheduler.scheduleAtFixedRate(() -> {
                 if (dirty.getAndSet(false)) {
@@ -76,6 +83,21 @@ public class TriangularArbDetector {
         }
     }
 
+    static long getTtlMs() {
+        String val = System.getProperty("ARB_TTL_MS",
+                System.getenv().getOrDefault("ARB_TTL_MS", "300000"));
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 300_000L;
+        }
+    }
+
+    /** Current time in milliseconds. Overridable for tests. */
+    protected long now() {
+        return System.currentTimeMillis();
+    }
+
     /**
      * Validate that bid/ask values appear sane. This helps catch
      * obviously incorrect feed data which could indicate fraudulent
@@ -90,6 +112,27 @@ public class TriangularArbDetector {
         return true;
     }
 
+    /** Remove stale pairs from internal maps based on TTL. */
+    private void cleanup() {
+        long now = now();
+        for (Map.Entry<String, Long> e : new HashMap<>(lastSeen).entrySet()) {
+            if (now - e.getValue() > ttlMs) {
+                String pair = e.getKey();
+                lastSeen.remove(pair);
+                books.remove(pair);
+                String[] parts = split(pair);
+                if (parts != null) {
+                    Set<String> set = adjacency.get(parts[0]);
+                    if (set != null) {
+                        set.remove(pair);
+                        if (set.isEmpty()) adjacency.remove(parts[0]);
+                    }
+                }
+                logger.info("[TTL-CLEANUP] Removing inactive pair: {}", pair);
+            }
+        }
+    }
+
     /**
      * Update the order book for a trading pair.
      * When all three legs of a loop are present, potential arbitrage
@@ -100,11 +143,13 @@ public class TriangularArbDetector {
      * @param bestAsk lowest ask price
      */
     public void update(String pair, double bestBid, double bestAsk) {
+        cleanup();
         if (!validBook(bestBid, bestAsk)) {
             return;
         }
         executor.recordMidPrice((bestBid + bestAsk) / 2.0);
         books.put(pair, new OrderBook(bestBid, bestAsk));
+        lastSeen.put(pair, now());
         String[] parts = split(pair);
         if (parts != null) {
             adjacency.computeIfAbsent(parts[0], k -> java.util.concurrent.ConcurrentHashMap.newKeySet())

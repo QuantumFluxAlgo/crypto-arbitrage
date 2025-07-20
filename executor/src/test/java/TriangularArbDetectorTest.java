@@ -2,6 +2,10 @@ package executor;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Unit tests for {@link TriangularArbDetector}. */
@@ -90,6 +94,52 @@ public class TriangularArbDetectorTest {
         Thread.sleep(80);
         detector.stop();
         assertEquals(1, exec.count);
+    }
+
+    @Test
+    void removesPairsAfterTtlExpiration() throws Exception {
+        DummyRedisClient client = new DummyRedisClient();
+        DummyExecutor exec = new DummyExecutor(client);
+
+        class MockDetector extends TriangularArbDetector {
+            long time = 0;
+            MockDetector(Executor e) { super(e, 0, 100); }
+            @Override protected long now() { return time; }
+        }
+
+        MockDetector detector = new MockDetector(exec);
+        Field booksField = TriangularArbDetector.class.getDeclaredField("books");
+        booksField.setAccessible(true);
+        Field lastSeenField = TriangularArbDetector.class.getDeclaredField("lastSeen");
+        lastSeenField.setAccessible(true);
+
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream orig = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            detector.time = 0;
+            detector.update("A/B", 1.0, 1.1);
+            detector.update("B/C", 1.0, 1.1);
+            detector.update("C/D", 1.0, 1.1);
+
+            Map<?,?> books = (Map<?,?>) booksField.get(detector);
+            assertEquals(3, books.size());
+
+            detector.time = 150;
+            detector.update("D/E", 1.0, 1.1);
+
+            books = (Map<?,?>) booksField.get(detector);
+            Map<?,?> lastSeen = (Map<?,?>) lastSeenField.get(detector);
+            assertEquals(1, books.size());
+            assertEquals(1, lastSeen.size());
+        } finally {
+            System.setErr(orig);
+        }
+
+        String logs = err.toString();
+        assertTrue(logs.contains("[TTL-CLEANUP] Removing inactive pair: A/B"));
+        assertTrue(logs.contains("[TTL-CLEANUP] Removing inactive pair: B/C"));
+        assertTrue(logs.contains("[TTL-CLEANUP] Removing inactive pair: C/D"));
     }
 }
 
