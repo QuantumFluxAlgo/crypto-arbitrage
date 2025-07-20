@@ -2,11 +2,14 @@ package executor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents an executable arbitrage opportunity between two exchanges.
  */
 public class SpreadOpportunity {
+    private static final Logger logger = LoggerFactory.getLogger(SpreadOpportunity.class);
     private final String pair;
     private final String buyExchange;
     private final String sellExchange;
@@ -16,6 +19,14 @@ public class SpreadOpportunity {
     private long roundTripLatencyMs;
     private long latencyMicros;
     private long roundTripLatencyMicros;
+
+    /**
+     * Factory method for creating exchange adapters. Allows tests to override
+     * with custom behaviour.
+     */
+    protected MockExchangeAdapter createAdapter(String name) {
+        return new MockExchangeAdapter(name);
+    }
 
     /**
      * Create an opportunity with the given parameters.
@@ -80,8 +91,11 @@ public class SpreadOpportunity {
      * Execute the opportunity using mock exchanges.
      */
     public TradeResult execute(double size, double price) {
-        MockExchangeAdapter buy = new MockExchangeAdapter(buyExchange);
-        MockExchangeAdapter sell = new MockExchangeAdapter(sellExchange);
+        MockExchangeAdapter buy = createAdapter(buyExchange);
+        MockExchangeAdapter sell = createAdapter(sellExchange);
+
+        String buyOrderId = "BUY-" + System.nanoTime();
+        String sellOrderId = "SELL-" + System.nanoTime();
 
         long start = System.nanoTime();
 
@@ -95,6 +109,11 @@ public class SpreadOpportunity {
         while (attempts < maxRetries && !buyOk) {
             buyOk = buy.placeIocOrder(pair, "BUY", size, price);
             buyCancel += buy.getLastCancelFee();
+            if (!buyOk && buy.getLastFillSize() > 0) {
+                sell.cancel(sellOrderId);
+                logger.info("[CANCEL] Orphan order canceled: {}", sellOrderId);
+                break;
+            }
             attempts++;
         }
 
@@ -103,6 +122,11 @@ public class SpreadOpportunity {
             while (attempts < maxRetries && !sellOk) {
                 sellOk = sell.placeIocOrder(pair, "SELL", size, price);
                 sellCancel += sell.getLastCancelFee();
+                if (!sellOk && sell.getLastFillSize() > 0) {
+                    buy.cancel(buyOrderId);
+                    logger.info("[CANCEL] Orphan order canceled: {}", buyOrderId);
+                    break;
+                }
                 attempts++;
             }
         }

@@ -53,5 +53,15 @@ public interface ExchangeAdapter {
      * @param destination target destination identifier
      */
     void transfer(String asset, double amount, String destination);
+
+    /**
+     * Cancel an existing order. Default implementation is a no-op so tests can
+     * override as needed.
+     *
+     * @param orderId unique order identifier
+     */
+    default void cancel(String orderId) {
+        // no-op
+    }
 }
 
