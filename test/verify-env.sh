@@ -53,3 +53,6 @@ else
 fi
 
 echo "Environment verified"
+
+curl -sf http://localhost:8080/api/metrics/live >/dev/null
+curl -sf http://localhost:8080/api/metrics/sandbox >/dev/null

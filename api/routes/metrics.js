@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { settings } from './settings.js';
+import { getExecutionMode } from '../config/settings.js';
 
-const PROM_URL = process.env.PROM_URL || 'http://prometheus:9090';
+const PROM_LIVE_URL = process.env.PROM_LIVE_URL || process.env.PROM_URL || 'http://prometheus:9090';
+const PROM_SANDBOX_URL = process.env.PROM_SANDBOX_URL || 'http://prometheus-sandbox:9090';
 
 export default async function metricsRoutes(app, { testState } = {}) {
   const seeded = {
@@ -13,16 +14,18 @@ export default async function metricsRoutes(app, { testState } = {}) {
     winRate: [],
   };
 
-  app.get('/metrics', async (req) => {
-    if (settings.sandbox_mode || process.env.NODE_ENV === 'test') {
-     return { ...seeded, panicActive: testState?.panic ?? false };
+  const fetchMetrics = async (req, mode) => {
+    const execMode = mode || getExecutionMode(req);
+    if (execMode === 'sandbox' || process.env.NODE_ENV === 'test') {
+      return { ...seeded, panicActive: testState?.panic ?? false };
     }
 
+    const promUrl = execMode === 'live' ? PROM_LIVE_URL : PROM_SANDBOX_URL;
     try {
-      const eq = await axios.get(`${PROM_URL}/api/v1/query`, {
+      const eq = await axios.get(`${promUrl}/api/v1/query`, {
         params: { query: 'equity' },
       });
-      const lat = await axios.get(`${PROM_URL}/api/v1/query`, {
+      const lat = await axios.get(`${promUrl}/api/v1/query`, {
         params: { query: 'request_latency_seconds' },
       });
 
@@ -41,5 +44,12 @@ export default async function metricsRoutes(app, { testState } = {}) {
       req.log.error(err, 'prometheus fetch failed');
       return { equityCurve: [], latency: [] };
     }
+  };
+
+  app.get('/metrics/live', async (req) => fetchMetrics(req, 'live'));
+  app.get('/metrics/sandbox', async (req) => fetchMetrics(req, 'sandbox'));
+
+  app.get('/metrics', async (_req, reply) => {
+    reply.code(404).send({ error: 'deprecated endpoint' });
   });
 }
