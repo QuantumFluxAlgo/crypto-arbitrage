@@ -4,7 +4,7 @@ This guide explains how to forward container logs to Loki for centralized monito
 
 ## Enabling Fluent Bit
 
-1. Edit `helm/values.yaml` and set:
+1. Edit `infra/helm/values.yaml` and set:
    ```yaml
    logForwarder:
      enabled: true
@@ -12,6 +12,6 @@ This guide explains how to forward container logs to Loki for centralized monito
    ```
 2. Deploy the log forwarder:
    ```bash
-   helm upgrade --install arb helm -f helm/values.yaml
+   helm upgrade --install arb infra/helm -f infra/helm/values.yaml
    ```
 3. Access Loki through Grafana to search logs across all services.

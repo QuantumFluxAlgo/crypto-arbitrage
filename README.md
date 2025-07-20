@@ -53,7 +53,7 @@ graph TD
 
 The pre-push hook runs tests across multiple languages. Make sure the following tools are installed locally:
 
-- **Node.js 18** with `npm`
+ - **Node.js 20** with `npm`
 - **Python 3.10** with `pytest`
 - **Java 17** with `gradle`
 - **Podman** for building container images

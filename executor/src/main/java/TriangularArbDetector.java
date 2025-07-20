@@ -103,6 +103,7 @@ public class TriangularArbDetector {
         if (!validBook(bestBid, bestAsk)) {
             return;
         }
+        executor.recordMidPrice((bestBid + bestAsk) / 2.0);
         books.put(pair, new OrderBook(bestBid, bestAsk));
         String[] parts = split(pair);
         if (parts != null) {

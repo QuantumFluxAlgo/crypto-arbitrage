@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { settings } from './settings.js';
 
-const PROM_URL = process.env.PROM_URL || 'http://localhost:9090';
+const PROM_URL = process.env.PROM_URL || 'http://prometheus:9090';
 
 export default async function metricsRoutes(app, { testState } = {}) {
   const seeded = {
