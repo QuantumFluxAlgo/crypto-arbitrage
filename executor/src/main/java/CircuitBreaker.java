@@ -13,7 +13,7 @@ public class CircuitBreaker {
     private final double minWinRate;
     private final double maxDrawdownPct;
     private final RedisClient redisClient;
-    private boolean tripped = false;
+    private final java.util.concurrent.atomic.AtomicBoolean tripped = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     public CircuitBreaker(RedisClient redisClient, double minWinRate, double maxDrawdownPct) {
         this.redisClient = redisClient;
@@ -27,8 +27,8 @@ public class CircuitBreaker {
      * @param drawdownPct current drawdown percentage
      */
     public void check(double winRate, double drawdownPct) {
-        if (!tripped && (winRate < minWinRate || drawdownPct > maxDrawdownPct)) {
-            tripped = true;
+        if (!tripped.get() && (winRate < minWinRate || drawdownPct > maxDrawdownPct)) {
+            tripped.set(true);
             logger.error("CIRCUIT BREAKER TRIPPED winRate={} drawdownPct={}", winRate, drawdownPct);
             AlertManager.sendAlert("CIRCUIT BREAKER TRIPPED");
             redisClient.publish("alerts", "CIRCUIT BREAKER TRIPPED");
@@ -40,7 +40,7 @@ public class CircuitBreaker {
      * Reset the breaker allowing trading to resume.
      */
     public void reset() {
-        tripped = false;
+        tripped.set(false);
         logger.info("Circuit breaker reset");
     }
 
@@ -48,6 +48,6 @@ public class CircuitBreaker {
      * @return true if breaker is currently tripped
      */
     public boolean isTripped() {
-        return tripped;
+        return tripped.get();
     }
 }
