@@ -3,6 +3,7 @@ import sys
 import time
 from .logger import logger
 from collections import deque
+import threading
 
 import numpy as np
 from flask import Flask, g, request, jsonify, Response
@@ -57,21 +58,24 @@ inference_latency = Histogram(
 # In-memory trade store
 MAX_TRADES = 1000
 trades = deque(maxlen=MAX_TRADES)
+trades_lock = threading.Lock()
 
 
 def record_trade(pnl: float, timestamp: float | None = None) -> None:
     """Record a trade's PnL in memory using a fixed-size deque."""
     if timestamp is None:
         timestamp = time.time()
-    trades.append({"pnl": pnl, "time": timestamp})
+    with trades_lock:
+        trades.append({"pnl": pnl, "time": timestamp})
 
 
 def compute_stats():
     """Compute aggregate PnL and Sharpe ratio for all stored trades."""
-    if not trades:
-        return {"pnl": 0, "sharpe": 0}
+    with trades_lock:
+        if not trades:
+            return {"pnl": 0, "sharpe": 0}
 
-    pnl_array = np.array([t["pnl"] for t in trades], dtype=np.float32)
+        pnl_array = np.array([t["pnl"] for t in trades], dtype=np.float32)
     pnl = pnl_array.sum()
     if len(pnl_array) < 2:
         sharpe = 0.0
@@ -87,13 +91,15 @@ def compute_stats():
 
 def rolling_pnl(window: int = 50) -> float:
     """Return the rolling P&L for the last `window` trades."""
-    recent = list(trades)[-window:]
+    with trades_lock:
+        recent = list(trades)[-window:]
     return float(sum(t["pnl"] for t in recent))
 
 
 def sharpe_ratio(window: int = 50) -> float:
     """Compute the Sharpe ratio for the last `window` trades."""
-    recent = list(trades)[-window:]
+    with trades_lock:
+        recent = list(trades)[-window:]
     if len(recent) < 2:
         return 0.0
     returns = np.array([t['pnl'] for t in recent], dtype=np.float32)
@@ -107,7 +113,8 @@ def sharpe_ratio(window: int = 50) -> float:
 def recent_performance(days: int = 7) -> dict:
     """Return volatility and win rate for trades within the last `days`."""
     cutoff = time.time() - days * 86400
-    recent = [t for t in trades if t["time"] >= cutoff]
+    with trades_lock:
+        recent = [t for t in trades if t["time"] >= cutoff]
     if not recent:
         return {"volatility": 0.0, "win_rate": 0.0}
 

@@ -52,7 +52,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private int totalTrades;
     private int winTrades;
     private long cumulativeLatencyMs;
-    private boolean isPanic;
+    private final java.util.concurrent.atomic.AtomicBoolean isPanic = new java.util.concurrent.atomic.AtomicBoolean(false);
     private boolean canaryMode;
     private boolean ghostMode;
     private boolean sandboxMode;
@@ -60,7 +60,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
     // Track open trades
     private final int maxOpenTrades;
-    private int currentOpenTrades = 0;
+    private final java.util.concurrent.atomic.AtomicInteger currentOpenTrades = new java.util.concurrent.atomic.AtomicInteger(0);
 
     /**
      * Create a new executor instance.
@@ -170,7 +170,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * @param message JSON encoded opportunity
      */
     public void handleMessage(String message) {
-        if (isPanic) {
+        if (isPanic.get()) {
             logger.warn("Trading halted due to panic brake.");
             return;
         }
@@ -179,7 +179,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
-        if (currentOpenTrades >= maxOpenTrades) {
+        if (currentOpenTrades.get() >= maxOpenTrades) {
             logger.warn("Max open trades ({}) reached; skipping opportunity", maxOpenTrades);
             return;
         }
@@ -229,7 +229,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
-        if (isPanic) {
+        if (isPanic.get()) {
             logger.warn("Panic brake active; skipping execution.");
             return;
         }
@@ -238,7 +238,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         double tradeSize = riskSettings.computeTradeSize();
         TradeResult result;
-        currentOpenTrades++;
+        currentOpenTrades.incrementAndGet();
         try {
             if (sandboxMode) {
                 SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
@@ -249,7 +249,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                 result = opp.execute(tradeSize, 1.0);
             }
         } finally {
-            currentOpenTrades--;
+            currentOpenTrades.decrementAndGet();
         }
 
         updatePerformanceMetrics(result);
@@ -293,7 +293,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         circuitBreaker.check(winRate, drawdown);
 
         if (PanicBrake.shouldHalt(dailyLossPct, avgLatencyMs, winRate)) {
-            isPanic = true;
+            isPanic.set(true);
             logger.error("PANIC BRAKE TRIGGERED");
             AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
             redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
@@ -350,7 +350,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Manually resume trading after a user initiated halt.
      */
     public void resumeTrading() {
-        isPanic = false;
+        isPanic.set(false);
         circuitBreaker.reset();
         logger.info("Trading manually resumed.");
     }
@@ -359,7 +359,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Resume trading after a panic brake was triggered.
      */
     public void resumeFromPanic() {
-        isPanic = false;
+        isPanic.set(false);
         circuitBreaker.reset();
         logger.info("PANIC RESUME SIGNAL RECEIVED");
     }
