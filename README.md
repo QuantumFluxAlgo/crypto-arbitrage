@@ -99,7 +99,7 @@ Example environment files live under `api/.env.example`, `analytics/.env.example
 - `ADMIN_TOKEN` – admin-only endpoints in the API (set a strong value for production)
 - `SENTRY_DSN` – API error reporting endpoint
 - `PROM_URL` – Prometheus base URL for metrics
-- `SANDBOX_MODE` – enable demo login without a DB
+- `SANDBOX_MODE` – enable demo login without a DB (must be disabled in production)
 
 ### Executor specific
 - `STARTING_BALANCE`, `COIN_CAP_PCT`, `MAX_BOOK_DEPTH_USD` – risk parameters

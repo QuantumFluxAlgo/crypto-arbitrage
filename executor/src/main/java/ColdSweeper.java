@@ -57,6 +57,15 @@ public class ColdSweeper {
         this.sweepLogger = logger;
     }
 
+    private String maskAddress(String address) {
+        if (address == null || address.length() <= 10) {
+            return "********";
+        }
+        String start = address.substring(0, 6);
+        String end = address.substring(address.length() - 4);
+        return start + "****" + end;
+    }
+
     /**
      * Evaluate sweep condition.
      *
@@ -83,7 +92,7 @@ public class ColdSweeper {
      */
     public void sweepToColdWallet(double amountUsd) {
         String address = config.getTestColdWalletAddress();
-        logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
+        logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         walletClient.withdraw(address, amountUsd);
         ProfitTracker.resetCumulativeProfit();
         if (sweepLogger != null) {
@@ -98,7 +107,7 @@ public class ColdSweeper {
      * @param amountUsd amount to sweep
      */
     public void sweepToColdWallet(String address, double amountUsd) {
-        logger.info("Cold wallet sweep triggered for: {} amount {}", address, amountUsd);
+        logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         walletClient.withdraw(address, amountUsd);
         ProfitTracker.resetCumulativeProfit();
         if (sweepLogger != null) {

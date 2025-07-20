@@ -14,7 +14,7 @@ Lists environment variables used across services.
 | `ADMIN_TOKEN` | Required for admin-only API endpoints (set a strong value for production) |
 | `SENTRY_DSN` | Error reporting endpoint |
 | `PROM_URL` | Base URL for Prometheus |
-| `SANDBOX_MODE` | Enable demo login without a database |
+| `SANDBOX_MODE` | Enable demo login without a database (must be `false` in production) |
 
 ## Executor Variables
 

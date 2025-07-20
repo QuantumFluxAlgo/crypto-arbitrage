@@ -11,7 +11,7 @@ Explains how to manually initiate a cold wallet sweep when automated transfers a
    curl -X POST http://localhost:8080/api/test/sweep
    ```
    This endpoint performs a dry-run sweep and logs the action.
-3. Check the executor logs for `Cold wallet sweep` messages.
+3. Check the executor logs for `Cold wallet sweep` messages. The wallet address is partially masked for security.
 4. Verify on a blockchain explorer once funds settle.
 5. Resume trading from the dashboard when complete.
 
