@@ -1,4 +1,5 @@
-import { z } from 'zod';
+import { z } from "zod";
+import logger from "../services/logger.js";
 
 export let settings = {
   schema_version: 1,
@@ -6,14 +7,16 @@ export let settings = {
   useEnsemble: true,
   shadowOnly: false,
   ghost_mode: false,
-  sandbox_mode: process.env.SANDBOX_MODE === 'true',
-  personality_mode: 'Realistic',
-  sweep_cadence: 'None',
-  maxLoss: 0
+  sandbox_mode: process.env.SANDBOX_MODE === "true",
+  personality_mode: "Realistic",
+  sweep_cadence: "None",
+  maxLoss: 0,
+  maxLossPct: 0,
+  latencyMaxMs: 250,
 };
 
 export default async function settingsRoutes(app) {
-  app.get('/settings', async () => settings);
+  app.get("/settings", async () => settings);
 
   const schema = z
     .object({
@@ -26,6 +29,8 @@ export default async function settingsRoutes(app) {
       personality_mode: z.string().optional(),
       sweep_cadence: z.string().optional(),
       maxLoss: z.number().optional(),
+      maxLossPct: z.number().optional(),
+      latencyMaxMs: z.number().optional(),
     })
     .strict();
 
@@ -33,30 +38,70 @@ export default async function settingsRoutes(app) {
     const result = schema.safeParse(req.body);
     if (!result.success) {
       reply.code(400);
-      return { error: 'invalid settings' };
+      return { error: "invalid settings" };
     }
-    req.body = result.data;
+    const data = result.data;
+
+    if (typeof data.maxLossPct === "number" && data.maxLossPct > 20) {
+      logger.warn(
+        `[SETTINGS-REJECTED] maxLossPct=${data.maxLossPct} exceeds limit`,
+      );
+      reply.code(400);
+      return { error: "maxLossPct exceeds limit" };
+    }
+
+    if (typeof data.latencyMaxMs === "number" && data.latencyMaxMs > 1000) {
+      logger.warn(
+        `[SETTINGS-REJECTED] latencyMaxMs=${data.latencyMaxMs} exceeds limit`,
+      );
+      reply.code(400);
+      return { error: "latencyMaxMs exceeds limit" };
+    }
+
+    if (typeof data.personality_mode === "string") {
+      const modes = ["Realistic", "Aggressive", "Auto"];
+      if (!modes.includes(data.personality_mode)) {
+        logger.warn(
+          `[SETTINGS-REJECTED] personality_mode=${data.personality_mode} invalid`,
+        );
+        reply.code(400);
+        return { error: "invalid personality_mode" };
+      }
+    }
+
+    if (typeof data.sweep_cadence === "string") {
+      const allowed = ["Daily", "Monthly", "None"];
+      if (!allowed.includes(data.sweep_cadence)) {
+        logger.warn(
+          `[SETTINGS-REJECTED] sweep_cadence=${data.sweep_cadence} invalid`,
+        );
+        reply.code(400);
+        return { error: "invalid sweep_cadence" };
+      }
+    }
+
+    req.body = data;
   };
 
-  const saveSettings = async req => {
-    if (typeof req.body.schema_version === 'number') {
+  const saveSettings = async (req) => {
+    if (typeof req.body.schema_version === "number") {
       settings.schema_version = req.body.schema_version;
     }
-    if (typeof req.body.canary_mode === 'boolean') {
+    if (typeof req.body.canary_mode === "boolean") {
       settings.canary_mode = req.body.canary_mode;
     }
-    if (typeof req.body.useEnsemble === 'boolean') {
+    if (typeof req.body.useEnsemble === "boolean") {
       settings.useEnsemble = req.body.useEnsemble;
     }
-    if (typeof req.body.shadowOnly === 'boolean') {
+    if (typeof req.body.shadowOnly === "boolean") {
       settings.shadowOnly = req.body.shadowOnly;
     }
-    if (typeof req.body.ghost_mode === 'boolean') {
+    if (typeof req.body.ghost_mode === "boolean") {
       settings.ghost_mode = req.body.ghost_mode;
     }
-    if (typeof req.body.sandbox_mode === 'boolean') {
+    if (typeof req.body.sandbox_mode === "boolean") {
       if (
-        process.env.SANDBOX_MODE === 'true' &&
+        process.env.SANDBOX_MODE === "true" &&
         req.body.sandbox_mode === false
       ) {
         // Ignore attempts to disable sandbox mode when forced by env
@@ -64,25 +109,31 @@ export default async function settingsRoutes(app) {
         settings.sandbox_mode = req.body.sandbox_mode;
       }
     }
-    if (typeof req.body.personality_mode === 'string') {
+    if (typeof req.body.personality_mode === "string") {
       settings.personality_mode = req.body.personality_mode;
     }
-    if (typeof req.body.sweep_cadence === 'string') {
-      const allowed = ['Daily', 'Monthly', 'None'];
+    if (typeof req.body.sweep_cadence === "string") {
+      const allowed = ["Daily", "Monthly", "None"];
       if (allowed.includes(req.body.sweep_cadence)) {
         settings.sweep_cadence = req.body.sweep_cadence;
       }
     }
-    if (typeof req.body.maxLoss === 'number') {
+    if (typeof req.body.maxLoss === "number") {
       settings.maxLoss = req.body.maxLoss;
+    }
+    if (typeof req.body.maxLossPct === "number") {
+      settings.maxLossPct = req.body.maxLossPct;
+    }
+    if (typeof req.body.latencyMaxMs === "number") {
+      settings.latencyMaxMs = req.body.latencyMaxMs;
     }
     return { saved: true };
   };
 
   app.route({
-    method: ['POST', 'PATCH'],
-    url: '/settings',
+    method: ["POST", "PATCH"],
+    url: "/settings",
     preHandler: validateSettings,
-    handler: saveSettings
+    handler: saveSettings,
   });
 }
