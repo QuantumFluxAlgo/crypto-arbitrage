@@ -67,3 +67,24 @@ Lists environment variables used across services.
 | `MODEL_PATH` | Location of the production model |
 | `MODEL_SHADOW_PATH` | Path to the shadow model |
 | `LOG_LEVEL` | Logging level for analytics service |
+
+## Feed Aggregator Variables
+
+| Name | Purpose |
+|------|---------|
+| `FEED_URL` | WebSocket endpoint for exchange data |
+| `ORDERBOOK_CHANNEL` | Redis channel for normalized books |
+| `REDIS_HOST` / `REDIS_PORT` | Redis connection details |
+| `HEALTH_PORT` | Port for the `/health` endpoint |
+| `MAX_RECONNECT_ATTEMPTS` | Reconnect attempts before exit |
+| `ALERT_CHANNEL` | Redis channel for alerts |
+| `THROTTLE_MS` | Minimum milliseconds between alerts |
+| `LOG_LEVEL` | Logging level for the service |
+| `MOCK_REDIS` | Disable Redis writes during tests |
+
+## Dashboard Variables
+
+| Name | Purpose |
+|------|---------|
+| `VITE_ENABLE_SENTRY` | Enable Sentry monitoring when `true` |
+| `VITE_SENTRY_DSN` | Sentry DSN for React error reports |
