@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Store Postgres credentials in sealed secrets
 - Added feed-aggregator deployment manifest
 - Introduced HorizontalPodAutoscaler resources
+- Require SealedSecrets and enforce secret hygiene in CI and deployment templates
 - Added profit targets and slippage caps
 - Added feed-aggregator deployment
 - Integrated sealed secrets
