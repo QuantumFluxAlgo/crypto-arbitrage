@@ -27,6 +27,7 @@ async function sendAlert(type, message) {
         logger.info('Email alert sent');
       } catch (err) {
         logger.error(`Email alert failed: ${err.message}`);
+        throw err;
       }
       break;
     case 'telegram':
@@ -39,6 +40,7 @@ async function sendAlert(type, message) {
         logger.info('Telegram alert sent');
       } catch (err) {
         logger.error(`Telegram alert failed: ${err.message}`);
+        throw err;
       }
       break;
     case 'webhook':
@@ -51,6 +53,7 @@ async function sendAlert(type, message) {
         logger.info('Webhook alert sent');
       } catch (err) {
         logger.error(`Webhook alert failed: ${err.message}`);
+        throw err;
       }
       break;
     default:
