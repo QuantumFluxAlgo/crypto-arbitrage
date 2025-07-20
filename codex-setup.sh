@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 set -eux
 
-# Install Node.js dependencies
+# Node.js dependencies
 npm install --prefix dashboard
 npm install --prefix api
+npm install --prefix feed-aggregator
 
-# Install Python dependencies
+# Python dependencies
+pip install -r requirements.txt
 pip install -r analytics/requirements.txt
 
-# Build the Java executor (automatically downloads dependencies)
-chmod +x executor/mvnw
-executor/mvnw clean install
+# Java tests (executor)
+chmod +x executor/gradlew
+executor/gradlew clean test --console=plain
 
-# Copy example .env files to actual .env files
-cp api/.env.example api/.env || true
-cp dashboard/.env.example dashboard/.env || true
-cp executor/.env.example executor/.env || true
-cp analytics/.env.example analytics/.env || true
+# Helm chart dependencies
+helm dependency update infra/helm
 
-# Export basic environment variables (Codex reads them)
+# Copy .env config
+for d in api dashboard executor analytics; do
+  cp "$d"/.env.example "$d"/.env || true
+done
+
+# Export dummy secrets
 export JWT_SECRET="codex_dummy"
 export SMTP_USER="codex@example.com"
 export SMTP_PASS="codexpass"
