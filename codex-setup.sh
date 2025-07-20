@@ -10,19 +10,21 @@ npm install --prefix feed-aggregator
 pip install -r requirements.txt
 pip install -r analytics/requirements.txt
 
-# Java tests (executor)
+# Java executor tests (Gradle)
 chmod +x executor/gradlew
 executor/gradlew clean test --console=plain
 
-# Helm chart dependencies
-helm dependency update infra/helm
+# Just download Helm chart dependencies (no deployment!)
+if command -v helm &> /dev/null; then
+  helm dependency update infra/helm
+fi
 
-# Copy .env config
+# Prepare environment configs
 for d in api dashboard executor analytics; do
   cp "$d"/.env.example "$d"/.env || true
 done
 
-# Export dummy secrets
+# Dummy secrets (for test-mode logic)
 export JWT_SECRET="codex_dummy"
 export SMTP_USER="codex@example.com"
 export SMTP_PASS="codexpass"
