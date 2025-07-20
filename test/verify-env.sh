@@ -4,6 +4,20 @@
 
 set -euo pipefail
 
+# fail fast if any development secrets are committed
+for file in api/.env executor/.env dashboard/.env; do
+  if [ -f "$file" ]; then
+    echo "Error: unsealed secret file $file detected" >&2
+    exit 1
+  fi
+done
+
+# ensure no plain Kubernetes Secret manifests exist in Helm templates
+if grep -q "kind: Secret" infra/helm/templates/*.yaml 2>/dev/null; then
+  echo "Error: unsealed Kubernetes Secret found in Helm templates" >&2
+  exit 1
+fi
+
 install_node_deps() {
   npm install
   npm install --prefix api

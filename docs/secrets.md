@@ -35,6 +35,18 @@ Use `kubeseal` to generate an encrypted version that is safe to commit:
 kubeseal < secret.yaml > sealed-secret.yaml
 ```
 
+You can also combine creation and sealing in one step:
+
+```bash
+kubectl create secret generic api-keys \
+  --from-env-file=.env \
+  --dry-run=client -o json | \
+  kubeseal --format yaml > sealed-secret.yaml
+```
+
+This is safe to run inside GitHub Actions when credentials come from repository
+secrets.
+
 ---
 
 ## Step 4 – Commit the sealed secret
@@ -54,6 +66,10 @@ Apply the sealed secret to your cluster at deploy time:
 ```bash
 kubectl apply -f sealed-secret.yaml
 ```
+
+Our GitHub Actions workflow executes `test/verify-env.sh` to enforce this
+policy. The script fails the build if any plaintext `.env` files or unsealed
+`Secret` objects are present in the repository.
 
 ---
 

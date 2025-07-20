@@ -1,4 +1,5 @@
 replicaCount: 1
+# SealedSecrets required — do not replace with unsealed Secret
 secrets:
   useSealed: true  # use Bitnami SealedSecrets by default
 
