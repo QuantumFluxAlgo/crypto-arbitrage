@@ -13,6 +13,11 @@ import executor.Rebalancer;
 import executor.ExchangeAdapter;
 import executor.ProfitTracker;
 import executor.SweepHandler;
+import executor.SweepLogger;
+import executor.TriangularArbDetector;
+import executor.DailyResetScheduler;
+import executor.MockWalletClient;
+import executor.ColdSweeperConfig;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -52,6 +57,7 @@ public class Main {
         RiskFilter riskFilter = new RiskFilter(mode);
         NearMissLogger nearMissLogger = new NearMissLogger(conn);
         TradeLogger tradeLogger = new TradeLogger(conn);
+        SweepLogger sweepLogger = new SweepLogger(conn);
 
         final Executor[] holder = new Executor[1];
         RedisClient redisClient = new RedisClient(redisHost, redisPort, redisChannel,
@@ -60,8 +66,27 @@ public class Main {
         holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger);
         holder[0].start();
 
+        TriangularArbDetector arbDetector = new TriangularArbDetector(holder[0]);
+        String bookChannel = System.getenv().getOrDefault("ORDERBOOK_CHANNEL", "orderbook");
+        RedisClient bookClient = new RedisClient(redisHost, redisPort, bookChannel, (ch, msg) -> {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(msg);
+                if (node.has("pair") && node.has("bid") && node.has("ask")) {
+                    arbDetector.update(node.get("pair").asText(), node.get("bid").asDouble(), node.get("ask").asDouble());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        bookClient.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            arbDetector.stop();
+            bookClient.shutdown();
+        }));
+
         // Initialize background schedulers
-        ColdSweeper sweeper = new ColdSweeper();
+        ColdSweeper sweeper = new ColdSweeper(5000.0, 0.30, new MockWalletClient(), new ColdSweeperConfig(), sweepLogger);
         ColdSweepScheduler sweepScheduler = new ColdSweepScheduler(
                 sweeper,
                 () -> System.getProperty("sweep_cadence",
@@ -70,6 +95,9 @@ public class Main {
                 () -> ProfitTracker.getStartingBalance() + ProfitTracker.getCumulativeProfit()
         );
         sweepScheduler.start();
+
+        DailyResetScheduler resetScheduler = new DailyResetScheduler();
+        resetScheduler.start();
 
         // start handler for manual sweeps
         SweepHandler sweepHandler = new SweepHandler(new Jedis(redisHost, redisPort), sweeper);
