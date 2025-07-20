@@ -31,9 +31,11 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+const redis = process.env.MOCK_REDIS
+  ? { publish: () => Promise.resolve() }
+  : new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 const ALERT_CHANNEL = process.env.ALERT_CHANNEL || "alerts";
-const THROTTLE_MS = 60000;
+const THROTTLE_MS = parseInt(process.env.THROTTLE_MS || "60000", 10);
 const lastAlertTimes = {};
 
 function fallbackAlert(payload) {
@@ -69,6 +71,17 @@ function sendAlert(type, message) {
     fallbackAlert(payload);
   });
 }
+
+function cleanupAlertCache() {
+  const now = Date.now();
+  for (const [msg, ts] of Object.entries(lastAlertTimes)) {
+    if (now - ts > THROTTLE_MS) {
+      delete lastAlertTimes[msg];
+    }
+  }
+}
+
+setInterval(cleanupAlertCache, THROTTLE_MS).unref();
 
 
 function connect() {
@@ -135,10 +148,15 @@ function connect() {
 // small health endpoint
 const app = Fastify();
 app.get("/health", async () => ({ ok: true }));
-app.listen({ port: HEALTH_PORT, host: "0.0.0.0" });
 
-connect();
+if (require.main === module) {
+  app.listen({ port: HEALTH_PORT, host: "0.0.0.0" });
+  connect();
+}
 
 module.exports = {
   normalize,
+  sendAlert,
+  cleanupAlertCache,
+  _lastAlertTimes: lastAlertTimes,
 };
