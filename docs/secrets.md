@@ -57,5 +57,14 @@ kubectl apply -f sealed-secret.yaml
 
 ---
 
+## Rotation
+
+Rotate credentials at least every 90 days:
+
+1. Create a new Kubernetes secret with updated values.
+2. Reseal using `kubeseal` and commit the new file.
+3. Deploy the sealed secret and remove the old one after rollout.
+
+
 Follow these steps whenever you need to store or update sensitive credentials.
 

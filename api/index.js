@@ -32,6 +32,10 @@ if (process.env.NODE_ENV === 'production') {
     console.error('JWT_SECRET and ADMIN_TOKEN must be set in production');
     process.exit(1);
   }
+  if (process.env.SANDBOX_MODE === 'true') {
+    console.error('SANDBOX_MODE must be disabled in production');
+    process.exit(1);
+  }
 }
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
