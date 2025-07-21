@@ -1,7 +1,7 @@
 replicaCount: 1
-# SealedSecrets required — do not replace with unsealed Secret
+# SealedSecrets required — CI fails if plain Secrets are used
 secrets:
-  useSealed: true  # use Bitnami SealedSecrets by default
+  useSealed: true  # must remain true; unsealed secrets are rejected in CI
 
 # ---------------------------------------------------------------------
 # Service-level configuration

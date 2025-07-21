@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Fix panic resume and Redis signal behavior in Executor and PanicBrake
 - CVE scanning with Trivy
 - Split metrics endpoints by execution mode to support safe observability
+- Update documentation and config comments to match final audit-compliant platform behavior
 
 ## [Batch 1] - 2025-07-02
 ### Added

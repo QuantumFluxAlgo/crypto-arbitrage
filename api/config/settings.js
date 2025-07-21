@@ -1,3 +1,10 @@
+// ExecutionMode centralizes mode names and enables dry-run enforcement
+export const ExecutionMode = Object.freeze({
+  LIVE: 'live',
+  SANDBOX: 'sandbox',
+  DRY_RUN: 'dry-run',
+});
+
 export const settings = {
   schema_version: 1,
   sandbox_mode: process.env.SANDBOX_MODE === "true",
@@ -11,12 +18,14 @@ export const settings = {
   latencyMaxMs: 250,
 };
 
+// Returns ExecutionMode for the current request.
+// Used by logging such as `[DRY-RUN] Skipping cold wallet transfer`.
 export function getExecutionMode(req) {
   const sessionMode = req?.session?.mode;
-  if (sessionMode === 'live' || sessionMode === 'sandbox') {
+  if (sessionMode === ExecutionMode.LIVE || sessionMode === ExecutionMode.SANDBOX) {
     return sessionMode;
   }
-  return settings.sandbox_mode ? 'sandbox' : 'live';
+  return settings.sandbox_mode ? ExecutionMode.SANDBOX : ExecutionMode.LIVE;
 }
 
 export default settings;
