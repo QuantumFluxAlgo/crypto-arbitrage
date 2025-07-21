@@ -74,6 +74,7 @@ opening a pull request to avoid a failed push.
 
 For sandbox demonstrations, copy values from `.env.sandbox.example` into your
 own `.env.sandbox` file. This file is ignored by Git and must never be
+
 committed. Detailed instructions are available in
 [docs/sandbox.md](sandbox.md).
 
