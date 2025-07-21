@@ -23,7 +23,10 @@ spec:
           resources: {{- toYaml .Values.feedAggregator.resources | nindent 12 }}
           envFrom:
             - secretRef:
-                name: feed-aggregator-secrets
+                name: prod-secrets
+          volumeMounts:
+            - name: prism-logs
+              mountPath: /var/log/prism-arbitrage
           readinessProbe:
             httpGet:
               path: /health
@@ -36,6 +39,11 @@ spec:
               port: {{ .Values.feedAggregator.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
+      volumes:
+        - name: prism-logs
+          hostPath:
+            path: /var/log/prism-arbitrage
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

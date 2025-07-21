@@ -92,6 +92,9 @@ function buildApp() {
 const app = buildApp();
 
 logger.info('API initialized');
+['BINANCE_KEY', 'SMTP_USER', 'SMTP_PASS'].forEach(key => {
+  logger.info(`${key} present: ${process.env[key] ? 'true' : 'false'}`);
+});
 
 const alertSettings = {
   smtp_user: '',

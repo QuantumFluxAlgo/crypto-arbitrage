@@ -21,7 +21,10 @@ spec:
           resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           envFrom:
             - secretRef:
-                name: executor-secrets
+                name: prod-secrets
+          volumeMounts:
+            - name: prism-logs
+              mountPath: /var/log/prism-arbitrage
           readinessProbe:
             exec:
               command: ["pgrep", "-f", "Executor"]
@@ -32,3 +35,8 @@ spec:
               command: ["pgrep", "-f", "Executor"]
             initialDelaySeconds: 10
             periodSeconds: 10
+      volumes:
+        - name: prism-logs
+          hostPath:
+            path: /var/log/prism-arbitrage
+            type: DirectoryOrCreate

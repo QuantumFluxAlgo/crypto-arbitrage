@@ -5,6 +5,11 @@ const winston = require("winston");
 const fs = require("fs");
 const normalize = require("./lib/normalize");
 
+const logDir = process.env.LOG_DIR || "/var/log/prism-arbitrage";
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
 const FEED_URL = process.env.FEED_URL || "wss://example.com/feed";
 const CHANNEL = process.env.ORDERBOOK_CHANNEL || "orderbook";
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
@@ -28,7 +33,10 @@ const logger = winston.createLogger({
       `${timestamp} ${level} [${service}] ${message}`
     )
   ),
-  transports: [new winston.transports.Console()],
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: `${logDir}/${service}.log` }),
+  ],
 });
 
 const redis = process.env.MOCK_REDIS
@@ -40,7 +48,7 @@ const lastAlertTimes = {};
 
 function fallbackAlert(payload) {
   fs.appendFile(
-    "alerts-fallback.log",
+    `${logDir}/alerts-fallback.log`,
     `${new Date().toISOString()} ${payload}\n`,
     (err) => {
       if (err) logger.error("Failed to write fallback alert", err);

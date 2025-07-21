@@ -18,7 +18,9 @@ const transporter = nodemailer.createTransport({
 
 async function sendEmail(subject, body) {
   if (!user || !pass || !recipient) {
-    throw new Error('SMTP credentials not set');
+    const reason = 'SMTP credentials not set';
+    logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${reason}`);
+    throw new Error(reason);
   }
 
   const mailOptions = {
@@ -32,7 +34,7 @@ async function sendEmail(subject, body) {
       await transporter.sendMail(mailOptions);
       logger.info('Email alert sent');
     } catch (error) {
-      logger.error(`Failed to send email alert: ${error.message}`);
+      logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${error.message}`);
       throw error;
     }
 }

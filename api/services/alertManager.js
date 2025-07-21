@@ -21,14 +21,14 @@ async function sendAlert(type, message) {
   switch (type) {
     case 'email':
       if (!hasEmailConfig()) {
-        logger.warn('Email alert skipped: missing SMTP config');
+        logger.error('[ALERT FAILURE] Panic alert email failed to send: missing SMTP config');
         return;
       }
       try {
         await sendEmail('Crypto Alert', message);
         logger.info('Email alert sent');
       } catch (err) {
-        logger.error(`Email alert failed: ${err.message}`);
+        logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
         throw err;
       }
       break;
