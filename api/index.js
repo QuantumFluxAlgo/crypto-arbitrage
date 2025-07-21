@@ -16,6 +16,7 @@ import modelRoutes from './routes/models.js';
 import metricsRoutes from './routes/metrics.js';
 import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
+import resumeRoutes from './routes/resume.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
@@ -113,7 +114,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       '/api/metrics/live',
       '/api/metrics/sandbox',
       '/api/metrics',
-      ...(process.env.SANDBOX_MODE !== 'true' ? ['/api/resume'] : []),
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
     ];
     if (openPaths.includes(req.url)) return;
@@ -152,11 +153,6 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     return { loggedOut: true };
   });
 
-  api.post('/resume', async () => {
-    if (testState) testState.panic = false;
-    await redis.publish('control-feed', 'resume');
-    return { resumed: true };
-  });
 
   api.get('/system/status', async () => ({
     panic: testState.panic,
@@ -187,6 +183,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
   api.register(modelRoutes, { pool });
+  api.register(resumeRoutes, { redis, testState });
   api.register(metricsRoutes, { testState });
   api.register(analyticsRoutes, { pool });
   api.register(cgtRoutes, { pool });
