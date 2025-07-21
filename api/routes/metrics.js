@@ -1,5 +1,7 @@
+// Exposes Prometheus metrics and seeded data in sandbox
 import axios from 'axios';
 import { getExecutionMode } from '../config/settings.js';
+// PROM_* env variables choose Prometheus endpoint
 
 const PROM_LIVE_URL = process.env.PROM_LIVE_URL || process.env.PROM_URL || 'http://prometheus:9090';
 const PROM_SANDBOX_URL = process.env.PROM_SANDBOX_URL || 'http://prometheus-sandbox:9090';

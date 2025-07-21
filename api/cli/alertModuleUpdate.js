@@ -1,3 +1,4 @@
+// CLI helper to send model update alerts via Node API
 import minimist from 'minimist';
 import { alertModelUpdate } from '../services/alertManager.js';
 

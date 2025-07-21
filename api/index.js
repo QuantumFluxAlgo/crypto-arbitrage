@@ -1,3 +1,4 @@
+// API service entrypoint for Fastify server and route wiring
 import Fastify from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
@@ -20,6 +21,7 @@ import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 
 const { Pool } = pg;
+// Hard stop if credentials or mode are misconfigured
 
 if (process.env.NODE_ENV === 'production') {
   Sentry.init({
@@ -37,6 +39,7 @@ if (process.env.NODE_ENV === 'production') {
     process.exit(1);
   }
 }
+// Test mode disables external side effects
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
 const testState = { panic: false, reason: '' };
@@ -51,6 +54,7 @@ function buildApp() {
     secret: process.env.JWT_SECRET || 'change-me',
     cookie: { cookieName: 'token' }
   });
+    // Postgres connection via env vars for local or prod
 
     pool = new Pool({
       host: process.env.PGHOST || 'localhost',
@@ -63,6 +67,7 @@ function buildApp() {
     if (isTest) {
       redis = { publish: async () => 1 };
     } else {
+      // Redis connection parameters via env vars
       redis = new Redis({
         host: process.env.REDIS_HOST || '127.0.0.1',
         port: process.env.REDIS_PORT || 6379,
@@ -98,6 +103,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   api.register(settingsRoutes, { redis });
   api.register(auditLogger, { pool });
 
+    // Routes allowed without JWT
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
       '/api/login',

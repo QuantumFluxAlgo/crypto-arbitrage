@@ -1,9 +1,11 @@
+// Trade history and DB access for analytics
 import { settings } from './settings.js';
 
 export default async function analyticsRoutes(app, opts) {
   const { pool } = opts;
 
   app.get('/trades/history', async (req) => {
+    // When SANDBOX_MODE, return synthetic trades
     if (settings.sandbox_mode) {
       const now = Date.now();
       const trades = [];

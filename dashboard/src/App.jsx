@@ -1,3 +1,4 @@
+// SPA routing and auth gate for dashboard
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -11,6 +12,7 @@ import Alerts from './pages/Alerts';
 import Login from './pages/Login';
 import Infrastructure from './pages/Infrastructure';
 import AdminPanel from './pages/AdminPanel';
+// Guard routes so only logged-in users see them
 
 function RequireAuth({ children }) {
   const { isLoggedIn } = useAuth();

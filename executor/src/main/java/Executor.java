@@ -1,3 +1,4 @@
+// Core trading loop consuming spreads and executing trades
 
 package executor;
 
@@ -108,6 +109,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         logger.info("Executor starting");
         // ✅ Config validation for runtime safety
         try {
+            // Values from env guard against dangerous configs
             ConfigValidator validator = new ConfigValidator(
                 Double.parseDouble(System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0")),
                 Double.parseDouble(System.getenv().getOrDefault("LATENCY_MAX_MS", "250.0")),
@@ -122,6 +124,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         }
 
         int attempts = 0;
+        // Retry DB connection using env-controlled limits
         boolean connected = false;
         int maxRetries = Integer.parseInt(System.getenv().getOrDefault("DB_RETRIES", "3"));
         long retryDelayMs = Long.parseLong(System.getenv().getOrDefault("DB_RETRY_DELAY_MS", "2000"));

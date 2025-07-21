@@ -1,3 +1,4 @@
+# Flask analytics service exposing model predictions and metrics
 import os
 import sys
 import time
@@ -25,6 +26,7 @@ import joblib
 # Load .env variables
 load_dotenv()
 
+# Detect GPU for optional acceleration
 logger.info("Analytics app starting")
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -124,6 +126,7 @@ def recent_performance(days: int = 7) -> dict:
     return {"volatility": vol, "win_rate": win_rate}
 
 # Load model
+# MODEL_PATH env allows swapping models without rebuilds
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
 SHADOW_MODEL_PATH = os.getenv("MODEL_SHADOW_PATH", "model_shadow.h5")
 

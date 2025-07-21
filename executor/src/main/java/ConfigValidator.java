@@ -1,3 +1,4 @@
+// Safety validator rejecting aggressive settings
 package executor;
 
 /**

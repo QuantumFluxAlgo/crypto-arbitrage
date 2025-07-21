@@ -1,3 +1,4 @@
+// Runtime settings loaded from env and patched via API
 // ExecutionMode centralizes mode names and enables dry-run enforcement
 export const ExecutionMode = Object.freeze({
   LIVE: 'live',
@@ -7,6 +8,7 @@ export const ExecutionMode = Object.freeze({
 
 export const settings = {
   schema_version: 1,
+  // SANDBOX_MODE forces dry-run when true
   sandbox_mode: process.env.SANDBOX_MODE === "true",
   canary_mode: false,
   useEnsemble: true,

@@ -1,9 +1,11 @@
+// CGT export for compliance reporting
 import { settings } from './settings.js';
 
 export default async function cgtRoutes(app, opts) {
   const { pool } = opts;
 
   app.get('/cgt/export', async (req, reply) => {
+    // Skip DB query when running in test or sandbox
     if (settings.sandbox_mode || process.env.NODE_ENV === 'test') {
       return [];
     }

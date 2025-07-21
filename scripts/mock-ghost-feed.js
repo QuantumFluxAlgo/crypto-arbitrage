@@ -1,3 +1,4 @@
+// Simple trade generator for dashboard demos
 #!/usr/bin/env node
 
 // scripts/mock-ghost-feed.js
@@ -10,6 +11,7 @@ const Redis = require('ioredis');
 const args = minimist(process.argv.slice(2), {
   string: ['host', 'port', 'channel', 'interval'],
   alias: { h: 'host', p: 'port', c: 'channel', i: 'interval' },
+// Configurable via REDIS_* env vars
   default: {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: process.env.REDIS_PORT || 6379,

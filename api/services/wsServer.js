@@ -1,8 +1,9 @@
+// Lightweight WS server relaying ghost_feed messages
 import { WebSocketServer } from 'ws';
 import Redis from 'ioredis';
 import logger from './logger.js';
 
-const WS_PORT = process.env.WS_PORT || 8070;
+const WS_PORT = process.env.WS_PORT || 8070; // override via env for tests
 const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 

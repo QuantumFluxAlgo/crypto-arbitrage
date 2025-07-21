@@ -1,6 +1,8 @@
+// Example dashboard showing metrics from API
 import React, { useEffect } from 'react';
 
 function Dashboard({ metrics }) {
+  // Fetch live metrics on mount
   useEffect(() => {
     fetch('/api/metrics')
       .then((res) => res.json())

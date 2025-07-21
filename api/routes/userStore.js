@@ -1,3 +1,4 @@
+// In-memory user store for demo and tests
 import bcrypt from 'bcryptjs';
 
 const users = [

@@ -1,3 +1,4 @@
+// Halts trading when loss or latency exceed limits
 package executor;
 
 /**

@@ -1,3 +1,4 @@
+# Retrain LSTM model using spread data from Redis
 import argparse
 import json
 import redis

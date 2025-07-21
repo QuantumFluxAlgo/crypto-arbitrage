@@ -1,3 +1,4 @@
+// Login endpoint handling sandbox demo credentials
 import bcrypt from 'bcryptjs';
 import { findByEmail } from './userStore.js';
 
@@ -6,6 +7,7 @@ const SANDBOX_PASS = 'demo1234';
 const HARD_CODED_JWT = 'demo-token';
 
 export default async function loginRoutes(app) {
+  // In demo mode use static creds
   const sandboxMode = process.env.SANDBOX_MODE === 'true';
 
   app.post('/login', async (req, reply) => {
