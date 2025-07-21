@@ -1,6 +1,7 @@
 #!/bin/bash
 # deploy-prod.sh - Provision and deploy the production K8s cluster
 #
+# Must run as root with internet access
 # Usage: sudo ./deploy-prod.sh
 #
 # This script installs container runtime and Kubernetes tooling, initializes a

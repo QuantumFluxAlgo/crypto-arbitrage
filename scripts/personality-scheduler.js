@@ -1,7 +1,9 @@
+// Adjusts trading mode based on volatility stats
 #!/usr/bin/env node
 
 const axios = require('axios');
 
+// Target endpoints derived from ENV for portability
 const ANALYTICS_URL = process.env.ANALYTICS_URL || 'http://localhost:5000/performance';
 const SETTINGS_URL = process.env.SETTINGS_URL || 'http://localhost:8080/api/settings';
 const INTERVAL_MS = Number(process.env.SWITCH_INTERVAL_MS || 300000);

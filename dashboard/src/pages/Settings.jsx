@@ -1,5 +1,7 @@
+// UI for adjusting trading personality mode
 import React, { useState } from 'react';
 
+// PATCH selected mode to API
 async function saveSettings(mode) {
   try {
     const res = await fetch('/api/settings', {

@@ -1,3 +1,4 @@
+// Simple auth context storing JWT in localStorage
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Restore session from existing token in localStorage
+    // On mount, check if token persists from prior login
     if (localStorage.getItem('token')) {
       setIsLoggedIn(true);
     }

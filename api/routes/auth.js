@@ -1,3 +1,4 @@
+// User auth routes for password changes and resets
 import bcrypt from 'bcryptjs';
 import { findByEmail, addUser, updatePassword } from './userStore.js';
 
@@ -18,6 +19,7 @@ export default async function authRoutes(app) {
     }
   });
 
+  // Requires ADMIN_TOKEN header for privileged reset
   app.post('/reset-password', async (req, reply) => {
     const adminToken = req.headers['x-admin-token'];
     if (adminToken !== (process.env.ADMIN_TOKEN || 'admin-secret')) {

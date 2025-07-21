@@ -1,3 +1,4 @@
+// Trips when win rate or drawdown hit thresholds
 package executor;
 
 import org.slf4j.Logger;

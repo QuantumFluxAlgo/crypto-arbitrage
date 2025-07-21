@@ -13,6 +13,7 @@ def main() -> None:
         logger.error("Failed to load model. Exiting.")
         sys.exit(1)
 
+    # DEBUG mode toggled via FLASK_ENV
     debug = os.getenv("FLASK_ENV") != "production"
     app.run(host="0.0.0.0", port=5000, debug=debug)
 

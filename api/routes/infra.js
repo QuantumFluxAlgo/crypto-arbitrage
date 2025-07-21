@@ -1,10 +1,11 @@
+// System health checks and GPU usage metrics
 import { execSync } from 'child_process';
 
 export default async function infraRoutes(app, opts) {
   const { redis, pool } = opts;
 
   app.get('/infra/status', async () => {
-      // In sandbox mode we just return a hardcoded healthy state
+      // Sandbox skips system checks to avoid heavy calls
       if (process.env.SANDBOX_MODE === 'true') {
         return {
           pods: [

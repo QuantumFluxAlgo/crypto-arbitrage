@@ -4,6 +4,7 @@
 # Loads .env.sandbox and runs API, dashboard, and executor with ghost trading
 # enabled. Also spawns the mock trade publisher so the UI can display example
 # data. Used by founders, demo operators, or testers.
+# Reads env vars from .env.sandbox for local demos
 #
 # Usage: ./scripts/start-sandbox.sh
 

@@ -1,3 +1,4 @@
+// Shares panic brake status across components
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const SystemStatusContext = createContext({ panic: false, reason: '' });
@@ -8,6 +9,7 @@ export function SystemStatusProvider({ children }) {
   const [panic, setPanic] = useState(false);
   const [reason, setReason] = useState('');
 
+  // Poll API for current panic state
   async function fetchStatus() {
     try {
       const res = await fetch('/api/system/status');

@@ -1,3 +1,4 @@
+# Helm default values for Kubernetes deployment
 replicaCount: 1
 # SealedSecrets required — CI fails if plain Secrets are used
 secrets:
