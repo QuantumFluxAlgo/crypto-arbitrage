@@ -1,11 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: postgres
+  name: {{ .Release.Name }}-postgres
   labels:
     app: postgres
+    {{- include "crypto-arbitrage.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  serviceName: {{ .Release.Name }}-postgres
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: postgres
@@ -19,9 +21,6 @@ spec:
           image: postgres:16-alpine
           ports:
             - containerPort: 5432
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
           envFrom:
             - secretRef:
                 name: postgres-secrets
@@ -42,15 +41,24 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-data
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - {{ .Values.postgres.accessMode }}
+        storageClassName: {{ .Values.postgres.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: {{ .Release.Name }}-postgres
   labels:
     app: postgres
 spec:

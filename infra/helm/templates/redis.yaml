@@ -1,11 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: redis
+  name: {{ .Release.Name }}-redis
   labels:
     app: redis
+    {{- include "crypto-arbitrage.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  serviceName: {{ .Release.Name }}-redis
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: redis
@@ -36,11 +38,24 @@ spec:
             limits:
               cpu: "100m"
               memory: "128Mi"
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes:
+          - {{ .Values.redis.accessMode }}
+        storageClassName: {{ .Values.redis.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.storage }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
+  name: {{ .Release.Name }}-redis
   labels:
     app: redis
 spec:
