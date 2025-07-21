@@ -66,11 +66,11 @@ public class PanicBrakeTest {
     }
 
     @Test
-    void publishesPauseToSandboxChannel() {
+    void doesNotPublishPauseInDryRun() {
         DummyRedis redis = new DummyRedis();
         Config config = new Config(ExecutionMode.SANDBOX);
         assertTrue(PanicBrake.shouldHalt(redis, config, 4.0, 100.0, 0.8));
-        assertEquals("control-feed-sandbox", redis.channel);
-        assertEquals("pause", redis.message);
+        assertNull(redis.channel);
+        assertNull(redis.message);
     }
 }

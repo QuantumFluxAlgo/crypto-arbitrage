@@ -85,6 +85,13 @@ public class RiskFilter {
     }
 
     /**
+     * @return maximum allowed latency in milliseconds
+     */
+    public long getMaxLatencyMs() {
+        return maxLatencyMs;
+    }
+
+    /**
      * Evaluate a full spread opportunity.
      *
      * @param opportunity spread opportunity

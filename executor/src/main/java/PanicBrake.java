@@ -73,22 +73,24 @@ public class PanicBrake {
         double profitSoFar = ProfitTracker.getCumulativeProfit();
 
         boolean triggered = false;
+        String reason = null;
 
         if (dailyLossPct > lossCap) {
-            logger.warn("PANIC BRAKE TRIGGERED: loss {}% > {}%", dailyLossPct, lossCap);
-            triggered = true;
+            reason = "LOSS_CAP";
         } else if (avgLatencyMs > latencyCap) {
-            logger.warn("PANIC BRAKE TRIGGERED: latency {}ms > {}ms", avgLatencyMs, latencyCap);
-            triggered = true;
+            reason = "LATENCY_CAP";
         } else if (winRate < winRateThresh) {
-            logger.warn("PANIC BRAKE TRIGGERED: winRate {} < {}", winRate, winRateThresh);
-            triggered = true;
+            reason = "WIN_RATE";
         } else if (profitTarget > 0 && profitSoFar >= profitTarget) {
-            logger.warn("PANIC BRAKE TRIGGERED: profit {} >= target {}", profitSoFar, profitTarget);
+            reason = "PROFIT_TARGET";
+        }
+
+        if (reason != null) {
+            logger.error("[PANIC TRIGGERED] reason={} ts={}", reason, System.currentTimeMillis());
             triggered = true;
         }
 
-        if (triggered && redis != null) {
+        if (triggered && redis != null && config != null && !config.isDryRun()) {
             redis.publishControl(config, "pause");
         }
 
