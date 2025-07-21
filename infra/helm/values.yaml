@@ -87,3 +87,13 @@ feedAggregator:
     # REDIS_PORT: "6379"
     # ORDERBOOK_CHANNEL: "orderbook"
     # ALERT_CHANNEL: "alerts"
+
+redis:
+  storage: 5Gi
+  storageClass: standard
+  accessMode: ReadWriteOnce
+
+postgres:
+  storage: 10Gi
+  storageClass: standard
+  accessMode: ReadWriteOnce
