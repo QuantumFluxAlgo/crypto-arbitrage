@@ -9,7 +9,7 @@
 
 ## Overview
 
-**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana.
+**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana. Live and sandbox modes run side by side on the same server so you can test without disrupting production.
 
 ---
 
@@ -22,6 +22,9 @@
 - React dashboard for live monitoring
 - Predictive analytics with optional GPU acceleration
 - Alerting and circuit breaking for risk management
+- Audit-compliant panic brake with a live banner; resume only works if the heartbeat is healthy, the cold sweeper is idle, and panic flags are cleared
+- Sandbox and live modes share the same host using Redis channels `control-feed-live` and `control-feed-sandbox`
+- Dry-run mode enforced by the `ExecutionMode` enum with logs like `[DRY-RUN] Skipping cold wallet transfer`
 
 ---
 
@@ -89,7 +92,7 @@ git config core.hooksPath githooks
 
 ## Envs & Secrets
 
-Example environment files live under `api/.env.example`, `analytics/.env.example`, and `executor/.env.example`. Copy them to `.env` for local development. Secrets should be sealed with `kubeseal` before committing.
+Example environment files live under `api/.env.example`, `analytics/.env.example`, and `executor/.env.example`. Copy them to `.env` for local development. All production secrets must be stored as SealedSecrets. Use `kubeseal` to encrypt the secret YAML before committing. GitHub Actions will fail if any raw `.env` files are detected.
 
 ### Common variables
 - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` – Postgres connection
@@ -123,6 +126,11 @@ Run the local mocked suite and the live dry-run integration:
 ./test/run-live.sh       # dry-run integration [test:live]
 ```
 For an explanation of these tags and sample CI output see [docs/testing.md](docs/testing.md).
+During dry-run, the executor logs messages such as `[DRY-RUN] Skipping cold wallet transfer` to indicate that no funds are moved.
+
+### Continuous Integration
+
+GitHub Actions blocks pushes that fail any safety gate. The `test/verify-env.sh` script ensures no plaintext `.env` files or unsealed Kubernetes secrets are committed.
   
   
 ### Live Trade Simulation
@@ -148,6 +156,7 @@ npx wscat -c ws://localhost:3000/ws/trades
 - **Sentry** captures runtime exceptions
 - **Prometheus** scrapes metrics from all agents
 - **StatusCake** monitors uptime of public endpoints
+- Metrics are separated by mode: `/metrics/live` and `/metrics/sandbox`
 
 ---
 

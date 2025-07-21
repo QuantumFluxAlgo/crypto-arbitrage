@@ -1,6 +1,6 @@
 # Sealed Secrets Setup
 
-The Secret Manager agent encrypts credentials so they can be safely stored in Git and deployed to Kubernetes.
+The Secret Manager agent encrypts credentials so they can be safely stored in Git and deployed to Kubernetes. All secrets in this repository must be sealed before merging.
 
 ---
 
@@ -69,7 +69,8 @@ kubectl apply -f sealed-secret.yaml
 
 Our GitHub Actions workflow executes `test/verify-env.sh` to enforce this
 policy. The script fails the build if any plaintext `.env` files or unsealed
-`Secret` objects are present in the repository.
+`Secret` objects are present in the repository. Run the script locally before
+opening a pull request to avoid a failed push.
 
 ---
 
