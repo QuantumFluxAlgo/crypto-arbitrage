@@ -72,6 +72,10 @@ policy. The script fails the build if any plaintext `.env` files or unsealed
 `Secret` objects are present in the repository. Run the script locally before
 opening a pull request to avoid a failed push.
 
+For sandbox demonstrations, copy values from `.env.sandbox.example` into your
+own `.env.sandbox` file. This file is ignored by Git and must never be
+committed.
+
 ---
 
 ## Rotation
