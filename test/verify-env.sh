@@ -12,6 +12,12 @@ for file in api/.env executor/.env dashboard/.env; do
   fi
 done
 
+# sandbox environment file should never be committed
+if [ -f ".env.sandbox" ]; then
+  echo "Error: plaintext .env.sandbox file detected" >&2
+  exit 1
+fi
+
 # ensure no plain Kubernetes Secret manifests exist in Helm templates
 if grep -q "kind: Secret" infra/helm/templates/*.yaml 2>/dev/null; then
   echo "Error: unsealed Kubernetes Secret found in Helm templates" >&2

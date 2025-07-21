@@ -12,6 +12,7 @@ DerivedData/
 
 # Environment files
 .env
+.env.sandbox
 
 # Log files
 logs/
