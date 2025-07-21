@@ -1,4 +1,10 @@
 import winston from 'winston';
+import fs from 'fs';
+
+const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
 
 const service = process.env.SERVICE_NAME || 'api';
 
@@ -10,7 +16,10 @@ const logger = winston.createLogger({
       `${timestamp} ${level} [${service}] ${message}`
     )
   ),
-  transports: [new winston.transports.Console()],
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: `${logDir}/${service}.log` }),
+  ],
 });
 
 export default logger;
