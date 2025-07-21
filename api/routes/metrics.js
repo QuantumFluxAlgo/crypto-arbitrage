@@ -19,7 +19,7 @@ export default async function metricsRoutes(app, { testState } = {}) {
   const fetchMetrics = async (req, mode) => {
     const execMode = mode || getExecutionMode(req);
     if (execMode === 'sandbox' || process.env.NODE_ENV === 'test') {
-      return { ...seeded, panicActive: testState?.panic ?? false };
+      return { ...seeded, panicActive: testState?.paused ?? false };
     }
 
     const promUrl = execMode === 'live' ? PROM_LIVE_URL : PROM_SANDBOX_URL;

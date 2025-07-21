@@ -6,11 +6,12 @@ const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'testsecret';
 let buildApp;
+let testState;
 let app;
 let warnSpy;
 
 beforeAll(async () => {
-  ({ buildApp } = await import('../index.js'));
+  ({ buildApp, testState } = await import('../index.js'));
   app = buildApp();
   await app.listen({ port: 0 });
 });
@@ -30,6 +31,7 @@ afterEach(() => {
 
 describeLocal('resume endpoint auth', () => {
   test('200 with admin token', async () => {
+    testState.paused = true;
     const token = app.jwt.sign({ role: 'admin' }, { algorithm: 'HS256' });
     const res = await request(app.server)
       .post('/api/resume')
@@ -43,6 +45,7 @@ describeLocal('resume endpoint auth', () => {
   });
 
   test('logs rejection for non-admin', async () => {
+    testState.paused = true;
     const token = app.jwt.sign({ role: 'user' }, { algorithm: 'HS256' });
     const res = await request(app.server)
       .post('/api/resume')
@@ -53,6 +56,7 @@ describeLocal('resume endpoint auth', () => {
 
   test('200 in sandbox without token', async () => {
     process.env.EXECUTION_MODE = 'sandbox';
+    testState.paused = true;
     const res = await request(app.server).post('/api/resume');
     expect(res.statusCode).toBe(200);
   });

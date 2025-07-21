@@ -17,6 +17,7 @@ import metricsRoutes from './routes/metrics.js';
 import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
+import configRoutes from './routes/config.js';
 import { sendAlert } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
@@ -43,7 +44,7 @@ if (process.env.NODE_ENV === 'production') {
 // Test mode disables external side effects
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
-const testState = { panic: false, reason: '' };
+const testState = { paused: false, panicReason: null };
 
 let redis;
 let pool;
@@ -155,20 +156,34 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
 
 
   api.get('/system/status', async () => ({
-    panic: testState.panic,
-    reason: testState.reason,
+    paused: testState.paused,
+    panic_reason: testState.panicReason,
   }));
 
     if (isTest) {
-      api.post('/test/panic', async () => {
-        testState.panic = true;
+      api.post('/test/panic', async (req, reply) => {
+        if (process.env.MODE !== 'dry-run') {
+          reply.code(403);
+          return { error: 'forbidden' };
+        }
+        testState.paused = true;
+        testState.panicReason = req.body?.type || null;
         await redis.publish('control-feed', 'halt');
         await sendAlert('email', 'Panic brake triggered (test mode)');
         return { triggered: true };
       });
 
-      api.post('/test/resume', async () => {
-        testState.panic = false;
+      api.post('/test/resume', async (_req, reply) => {
+        if (process.env.MODE !== 'dry-run') {
+          reply.code(403);
+          return { error: 'forbidden' };
+        }
+        if (!testState.paused) {
+          reply.code(400);
+          return { error: 'not paused' };
+        }
+        testState.paused = false;
+        testState.panicReason = null;
         await redis.publish('control-feed', 'resume');
         return { resumed: true };
       });
@@ -183,6 +198,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
   api.register(modelRoutes, { pool });
+  api.register(configRoutes);
   api.register(resumeRoutes, { redis, testState });
   api.register(metricsRoutes, { testState });
   api.register(analyticsRoutes, { pool });
