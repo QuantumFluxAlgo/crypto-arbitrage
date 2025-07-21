@@ -10,3 +10,5 @@ To prevent unsafe restarts, the resume action now verifies several health checks
 If any check fails, the resume endpoint responds with HTTP `503` and the dashboard disables the **Resume Trading** button. Operators should inspect the logs for the specific reason before retrying.
 
 Redis publishes the resume event to either `control-feed-live` or `control-feed-sandbox` depending on the current mode. The executor listens to the correct channel and will not restart if the message arrives on the wrong one.
+
+In live operation the `/resume` API requires an authenticated admin JWT. Sandbox mode leaves the endpoint open so QA environments can easily toggle panic states.
