@@ -9,7 +9,7 @@
 
 ## Overview
 
-**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana. Live and sandbox modes run side by side on the same server so you can test without disrupting production.
+**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana. Live and sandbox modes run side by side on the same server so you can test without disrupting production. For a step-by-step sandbox setup, see [docs/sandbox.md](docs/sandbox.md).
 
 ---
 

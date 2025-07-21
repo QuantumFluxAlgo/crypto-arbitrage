@@ -67,6 +67,17 @@ cp api/.env.example api/.env
 cp dashboard/.env.example dashboard/.env
 cp executor/.env.example executor/.env
 cp analytics/.env.example analytics/.env
+cp .env.sandbox.example .env.sandbox
+```
+
+After copying the files, edit `.env.sandbox` with demo credentials. See
+[docs/sandbox.md](../sandbox.md) for detailed sandbox usage.
+
+Before committing, run the verifier to ensure no plaintext secrets are
+accidentally included:
+
+```bash
+bash test/verify-env.sh
 ```
 
 ### Install dashboard dependencies
