@@ -199,6 +199,7 @@ public class TriangularArbDetector {
                         node.put("sellExchange", "triangular");
                         node.put("grossEdge", grossEdge);
                         node.put("netEdge", netEdge);
+                        node.put("timestamp", System.currentTimeMillis());
                         bestMessage = node.toString();
                     }
                 }

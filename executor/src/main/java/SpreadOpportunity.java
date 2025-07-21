@@ -17,6 +17,7 @@ public class SpreadOpportunity {
   private long roundTripLatencyMs;
   private long latencyMicros;
   private long roundTripLatencyMicros;
+  private long timestamp;
 
   /**
    * Factory method for creating exchange adapters. Allows tests to override with custom behaviour.
@@ -33,6 +34,18 @@ public class SpreadOpportunity {
       double grossEdge,
       double netEdge,
       long latencyMs) {
+    this(pair, buyExchange, sellExchange, grossEdge, netEdge, latencyMs,
+        System.currentTimeMillis());
+  }
+
+  public SpreadOpportunity(
+      String pair,
+      String buyExchange,
+      String sellExchange,
+      double grossEdge,
+      double netEdge,
+      long latencyMs,
+      long timestamp) {
     this.pair = pair;
     this.buyExchange = buyExchange;
     this.sellExchange = sellExchange;
@@ -42,6 +55,7 @@ public class SpreadOpportunity {
     this.roundTripLatencyMs = latencyMs;
     this.latencyMicros = latencyMs * 1000;
     this.roundTripLatencyMicros = latencyMs * 1000;
+    this.timestamp = timestamp;
   }
 
   /** Parse an opportunity from a JSON payload. */
@@ -50,13 +64,16 @@ public class SpreadOpportunity {
       ObjectMapper mapper = new ObjectMapper();
       JsonNode node = mapper.readTree(json);
       long latency = node.has("latencyMs") ? node.get("latencyMs").asLong() : 0L;
+      long ts = node.has("timestamp") ? node.get("timestamp").asLong()
+                                        : System.currentTimeMillis();
       return new SpreadOpportunity(
           node.get("pair").asText(),
           node.get("buyExchange").asText(),
           node.get("sellExchange").asText(),
           node.get("grossEdge").asDouble(),
           node.get("netEdge").asDouble(),
-          latency);
+          latency,
+          ts);
     } catch (Exception e) {
       throw new IllegalArgumentException("Invalid opportunity JSON", e);
     }
@@ -66,7 +83,13 @@ public class SpreadOpportunity {
   public static SpreadOpportunity fromSpread(Spread spread) {
     SpreadOpportunity opp =
         new SpreadOpportunity(
-            "", "", "", spread.getEdge(), spread.getEdge(), spread.getLatencyMs());
+            "",
+            "",
+            "",
+            spread.getEdge(),
+            spread.getEdge(),
+            spread.getLatencyMs(),
+            System.currentTimeMillis());
     opp.roundTripLatencyMs = spread.getLatencyMs();
     opp.latencyMicros = spread.getLatencyMs() * 1000;
     opp.roundTripLatencyMicros = spread.getLatencyMs() * 1000;
@@ -205,6 +228,13 @@ public class SpreadOpportunity {
     return roundTripLatencyMicros;
   }
 
+  /**
+   * @return creation timestamp of the opportunity
+   */
+  public long getTimestamp() {
+    return timestamp;
+  }
+
   @Override
   public String toString() {
     return "SpreadOpportunity{"
@@ -223,6 +253,8 @@ public class SpreadOpportunity {
         + netEdge
         + ", latencyMs="
         + latencyMs
+        + ", timestamp="
+        + timestamp
         + '}';
   }
 }

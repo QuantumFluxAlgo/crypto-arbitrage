@@ -98,7 +98,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
-        this.sandboxMode = this.config.isDryRun();
+        boolean envDryRun = "dry-run".equalsIgnoreCase(System.getenv().getOrDefault("MODE", ""));
+        this.sandboxMode = this.config.isDryRun() || envDryRun;
         this.maxOpenTrades = Integer.parseInt(System.getenv().getOrDefault("MAX_OPEN_TRADES", "5"));
     }
 
@@ -210,6 +211,13 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         logger.debug("Received message: {}", message);
         SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
         logger.debug("Parsed opportunity: {}", opp);
+        long delay = Math.max(0L, System.currentTimeMillis() - opp.getTimestamp());
+        long totalLatency = opp.getRoundTripLatencyMs() + delay;
+        if (totalLatency > riskFilter.getMaxLatencyMs()) {
+            logger.warn("[QUEUE-LATENCY] Dropping {} due to total latency {}ms > {}", opp.getPair(), totalLatency, riskFilter.getMaxLatencyMs());
+            nearMissLogger.log(opp, "queue_latency");
+            return;
+        }
 
         double predictedProb = fetchModelScore(opp);
         logger.info("Model score for {}: {}", opp.getPair(), predictedProb);
@@ -374,18 +382,24 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Manually resume trading after a user initiated halt.
      */
     public void resumeTrading() {
-        isPanic.set(false);
-        circuitBreaker.reset();
-        logger.info("Trading manually resumed.");
+        if (isPanic.compareAndSet(true, false)) {
+            circuitBreaker.reset();
+            logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", System.currentTimeMillis());
+        } else {
+            logger.warn("[RESUME IGNORED] already active");
+        }
     }
 
     /**
      * Resume trading after a panic brake was triggered.
      */
     public void resumeFromPanic() {
-        isPanic.set(false);
-        circuitBreaker.reset();
-        logger.info("PANIC RESUME SIGNAL RECEIVED");
+        if (isPanic.compareAndSet(true, false)) {
+            circuitBreaker.reset();
+            logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", System.currentTimeMillis());
+        } else {
+            logger.warn("[RESUME IGNORED] already active");
+        }
     }
 
     /**
