@@ -11,7 +11,7 @@ jobs:
   verify-env:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
       - name: Run environment verifier
         run: bash test/verify-env.sh
 
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
       - name: Install kubectl and jq
         run: |
           sudo apt-get update
@@ -42,11 +42,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: 18
-      - uses: actions/cache@v3
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('api/package-lock.json') }}
@@ -59,7 +59,7 @@ jobs:
           npm test -- --json --outputFile=../test-results/api-jest.json
         working-directory: api
       - name: Upload API test report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: api-jest-report
           path: test-results/api-jest.json
@@ -73,7 +73,7 @@ jobs:
       - name: Build api image
         run: podman build -t api ./api
       - name: Run Trivy scan on api
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
         with:
           image-ref: api
           format: table
@@ -86,11 +86,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: 18
-      - uses: actions/cache@v3
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('dashboard/package-lock.json') }}
@@ -103,7 +103,7 @@ jobs:
           npx jest --json --outputFile=../test-results/dashboard-jest.json
         working-directory: dashboard
       - name: Upload Dashboard test report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: dashboard-jest-report
           path: test-results/dashboard-jest.json
@@ -117,7 +117,7 @@ jobs:
       - name: Build dashboard image
         run: podman build -t dashboard ./dashboard
       - name: Run Trivy scan on dashboard
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
         with:
           image-ref: dashboard
           format: table
@@ -130,14 +130,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: 18
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
         with:
           python-version: '3.10'
-      - uses: actions/cache@v3
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
         with:
           path: |
             ~/.npm
@@ -152,7 +152,7 @@ jobs:
           pytest --junitxml=../test-results/feed-aggregator-pytest.xml
         working-directory: feed-aggregator
       - name: Upload feed-aggregator test report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: feed-aggregator-pytest-report
           path: test-results/feed-aggregator-pytest.xml
@@ -166,7 +166,7 @@ jobs:
       - name: Build feed-aggregator image
         run: podman build -t feed-aggregator ./feed-aggregator
       - name: Run Trivy scan on feed-aggregator
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
         with:
           image-ref: feed-aggregator
           format: table
@@ -179,11 +179,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
         with:
           python-version: '3.10'
-      - uses: actions/cache@v3
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -199,7 +199,7 @@ jobs:
           pytest --junitxml=../test-results/analytics-pytest.xml
         working-directory: analytics
       - name: Upload analytics test report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: analytics-pytest-report
           path: test-results/analytics-pytest.xml
@@ -210,7 +210,7 @@ jobs:
       - name: Test analytics container
         run: podman run --rm analytics python --version
       - name: Run Trivy scan on analytics
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
         with:
           image-ref: analytics
           format: table
@@ -223,12 +223,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: actions/cache@v3
+      - uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
         with:
           path: |
             ~/.gradle/caches
@@ -245,7 +245,7 @@ jobs:
           cp -r build/test-results/test ../test-results/executor || true
         working-directory: executor
       - name: Upload Executor test report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: executor-gradle-report
           path: test-results/executor
@@ -254,7 +254,7 @@ jobs:
       - name: Test executor container
         run: podman run --rm executor java -version
       - name: Run Trivy scan on executor
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
         with:
           image-ref: executor
           format: table
@@ -271,7 +271,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
       - name: Install kubectl and jq
         run: |
           sudo apt-get update
@@ -285,7 +285,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && secrets.XEON_HOST != ''
     steps:
       - name: Run live tests on Xeon server
-        uses: appleboy/ssh-action@v0.1.7
+        uses: appleboy/ssh-action@d91a1af6f57cd4478ceee14d7705601dafabaa19
         with:
           host: ${{ secrets.XEON_HOST }}
           username: ${{ secrets.XEON_USER }}
