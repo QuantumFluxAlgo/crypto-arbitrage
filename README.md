@@ -9,22 +9,24 @@
 
 ## Overview
 
-**Crypto Arbitrage** is a multi-agent platform that scans dozens of centralized and decentralized exchanges for price discrepancies and executes low-latency trades. Each service is containerized and communicates through Redis and PostgreSQL while metrics flow to Prometheus and Grafana. Live and sandbox modes run side by side on the same server so you can test without disrupting production. For a step-by-step sandbox setup, see [docs/sandbox.md](docs/sandbox.md).
+**Crypto Arbitrage** is an audited multi-agent platform that executes cross-exchange trades.  A feed aggregator publishes order books to Redis, a Java executor reacts to spreads, and supporting services expose APIs, analytics, and a real‑time operator dashboard.  The system can run in `live` or `sandbox` mode on the same host.  Sandbox mode performs every action except fund movement so strategies can be tested safely.
+
+For a guided sandbox walkthrough see [docs/sandbox.md](docs/sandbox.md).
 
 ---
 
 ## Features
 
-- Real-time order book aggregation across 14 exchanges
-- Feed aggregator service publishes normalized books to Redis
-- Java executor for sub-60µs trade execution
-- REST API with JWT authentication
-- React dashboard for live monitoring
+- WebSocket feed aggregation across 14 venues
+- Sub‑60µs Java trade executor
+- REST API secured by JWTs and an admin token
+- React dashboard with persistent system status banner
 - Predictive analytics with optional GPU acceleration
-- Alerting and circuit breaking for risk management
-- Audit-compliant panic brake with a live banner; resume only works if the heartbeat is healthy, the cold sweeper is idle, and panic flags are cleared
-- Sandbox and live modes share the same host using Redis channels `control-feed-live` and `control-feed-sandbox`
-- Dry-run mode enforced by the `ExecutionMode` enum with logs like `[DRY-RUN] Skipping cold wallet transfer`
+- Panic brake halts trading on loss, latency, or win‑rate breaches
+- Resume only succeeds when heartbeat checks pass and the cold sweeper is idle
+- Mode specific Redis channels `control-feed-live` and `control-feed-sandbox`
+- Dry‑run behavior via `ExecutionMode.SANDBOX` with logs like `[DRY-RUN] Skipping cold wallet transfer`
+- Container builds produce SBOMs and are scanned by Trivy during CI
 
 ---
 
@@ -45,26 +47,25 @@ graph TD
 
 - `api/` – Fastify API server
 - `dashboard/` – React frontend
-- `analytics/` – Flask ML microservice
+- `analytics/` – Python ML service
 - `executor/` – Java trading engine
-- `scripts/` – helper CLI tools
+- `feed-aggregator/` – order book collector
+- `scripts/` – CLI helpers and ops tools
 - `infra/` – Kubernetes Helm charts
 
 ---
 
 ## Required Tools
 
-The pre-push hook runs tests across multiple languages. Make sure the following tools are installed locally:
+The git hooks run tests across all languages. Install the following before contributing:
 
- - **Node.js 20** with `npm`
-- **Python 3.10** with `pytest`
-- **Java 17** with `gradle`
-- **Podman** for building container images
+- **Node.js 20** and `npm`
+- **Python 3.10** and `pytest`
+- **Java 17** and `gradle`
+- **Podman** for container builds
 - **Helm** and `kubectl` for Kubernetes
 
-Ensure these tools are available in your `PATH` so `githooks/pre-push` can execute them.
-
-To enable the Git hooks in this repository run:
+Enable the hooks once by running:
 
 ```bash
 git config core.hooksPath githooks
@@ -74,7 +75,7 @@ git config core.hooksPath githooks
 
 ## Dev Setup
 
-1. Start Colima using the Podman runtime:
+1. Start the local container runtime:
    ```bash
    colima start --runtime podman
    ```
@@ -87,141 +88,126 @@ git config core.hooksPath githooks
    helm dependency update infra/helm
    helm install arb infra/helm
    ```
+3. Copy any `*.env.example` file to `.env` and adjust for your environment.  For demos, create `.env.sandbox` and run `./scripts/start-sandbox.sh`.
 
 ---
 
-## Envs & Secrets
+## Environment & Secrets
 
-Example environment files live under `api/.env.example`, `analytics/.env.example`, and `executor/.env.example`. Copy them to `.env` for local development. All production secrets must be stored as SealedSecrets. Use `kubeseal` to encrypt the secret YAML before committing. GitHub Actions will fail if any raw `.env` files are detected.
+All production credentials are stored as SealedSecrets.  Never commit plain `.env` files.  `test/verify-env.sh` fails if unsealed secrets or `.env.sandbox` exist in the repository.
 
-### Common variables
-- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` – Postgres connection
-- `REDIS_HOST`, `REDIS_PORT` – Redis connection
-- `JWT_SECRET` – token signing key for the API (required in production)
-- `ADMIN_TOKEN` – admin-only endpoints in the API (set a strong value for production)
-- `SENTRY_DSN` – API error reporting endpoint
-- `PROM_URL` – Prometheus base URL for metrics
-- `SANDBOX_MODE` – enable demo login without a DB (must be disabled in production)
+To seal a new secret:
 
-### Executor specific
-- `STARTING_BALANCE`, `COIN_CAP_PCT`, `MAX_BOOK_DEPTH_USD` – risk parameters
-- `PREDICT_URL` – ML scoring endpoint
-- `CB_WIN_RATE_THRESHOLD`, `CB_MAX_DRAWDOWN_PCT` – circuit breaker limits
-- `CANARY_MODE`, `GHOST_MODE`, `USE_ENSEMBLE` – feature toggles
-- `sweep_cadence` – choose Daily, Monthly, or None for automatic cold sweeps
-- `TEST_COLD_WALLET_ADDRESS` – wallet address used in sweep tests
-- `GHOST_FEED_CHANNEL` – Redis channel for ghost trades overlay
-- `DB_RETRIES`, `DB_RETRY_DELAY_MS` – DB reconnection settings
+```bash
+kubectl create secret generic api-keys --from-literal=API_KEY=abc123 \
+  --dry-run=client -o yaml > secret.yaml
+kubeseal < secret.yaml > sealed-secret.yaml
+```
 
-### Analytics specific
-- `MODEL_PATH`, `MODEL_SHADOW_PATH` – model files
+Commit the sealed file and apply it during deployment:
+
+```bash
+kubectl apply -f sealed-secret.yaml
+```
 
 ---
 
 ## Running Tests
 
-Run the local mocked suite and the live dry-run integration:
+Run all mocked tests locally:
 ```bash
-./test/run-local.sh      # mocked tests [test:local]
-./test/run-live.sh       # dry-run integration [test:live]
+./test/run-local.sh
 ```
-For an explanation of these tags and sample CI output see [docs/testing.md](docs/testing.md).
-During dry-run, the executor logs messages such as `[DRY-RUN] Skipping cold wallet transfer` to indicate that no funds are moved.
-
-### Continuous Integration
-
-GitHub Actions blocks pushes that fail any safety gate. The `test/verify-env.sh` script ensures no plaintext `.env` files or unsealed Kubernetes secrets are committed.
-  
-  
-### Live Trade Simulation
-
-- Toggle ghost mode in settings
-- Simulated trades appear in dashboard overlay
-- Data streamed from Redis → WebSocket → UI
-- Disable for live trading
-
-To feed sample trades, use the CLI mock tester:
+For the optional live dry‑run suite:
 ```bash
-node scripts/replay-trade.js --pair BTC-USD
+./test/run-live.sh
 ```
-Inspect raw WebSocket messages:
+
+Individual service tests can be run with `npm test`, `pytest`, or `./gradlew test`.
+
+---
+
+## Continuous Integration
+
+GitHub Actions enforces safety gates:
+
+1. `test/verify-env.sh` blocks plaintext secrets or unsealed manifests.
+2. Each service runs unit tests and ESLint/flake8 checks.
+3. Containers build with Podman and are scanned by Trivy.
+4. Kubernetes manifests are validated with kubeconform and a dry‑run apply.
+5. All Actions are pinned to commit SHAs for reproducibility.
+
+Run `bash test/verify-env.sh` before pushing to mirror the CI checks.
+
+---
+
+## Live Trade Simulation
+
+Enable ghost mode in settings or run:
 ```bash
-npx wscat -c ws://localhost:3000/ws/trades
+node scripts/mock-ghost-feed.js --pair BTC-USD
 ```
+Trades stream through Redis and appear on the dashboard.  Disable ghost mode for real trading.
 
 ---
 
 ## Monitoring
 
-- **Sentry** captures runtime exceptions
-- **Prometheus** scrapes metrics from all agents
-- **StatusCake** monitors uptime of public endpoints
-- Metrics are separated by mode: `/metrics/live` and `/metrics/sandbox`
+- **Sentry** captures runtime exceptions.
+- **Prometheus** scrapes `/metrics/live` or `/metrics/sandbox`.
+- **StatusCake** monitors public endpoints using the API token and contact group defined in `.env.example`.
+
+Port‑forward services locally to inspect metrics:
+```bash
+kubectl -n arbitrage port-forward svc/api 9100:8080 &
+kubectl -n arbitrage port-forward svc/executor 9200:9100 &
+kubectl -n arbitrage port-forward svc/analytics 9300:5000 &
+
+curl http://localhost:9100/api/metrics/live
+curl http://localhost:9100/api/metrics/sandbox
+curl http://localhost:9200/metrics
+curl http://localhost:9300/metrics
+```
 
 ---
 
 ## ML Training Pipeline
 
-- **Feature logging**: the Java executor stores trade inputs via `FeatureLogger`.
-- **Export**: run `analytics/train/export_features.py` to dump recent rows from
-  the `training_features` table as CSV or NumPy files.
-- **Model retraining**: execute `analytics/train/retrain.py` to train the
-  `SpreadLSTM` model on exported features and log results.
-- **Versioning**: models are recorded in the `model_metadata` table for
-  reproducibility.
-- **Shadow testing**: new models are validated against the live model before
-  promotion.
-- **Rollback**: use `model_swap.py` to swap to a prior model if issues arise.
-- **Scheduling**: `crontab.txt` runs `retrain.py` every Sunday at 2&nbsp;AM.
-- **Retrain flow**: features are loaded, the LSTM trains for 10 epochs, and
-  validation loss and Sharpe ratio are saved for review.
+1. Export features:
+   ```bash
+   python analytics/train/export_features.py
+   ```
+2. Retrain the LSTM model:
+   ```bash
+   python analytics/train/retrain.py --epochs 10
+   ```
+3. Swap to a previous model if required:
+   ```bash
+   python analytics/model_swap.py --version <hash>
+   ```
 
-### AI Lifecycle
-
-- Trade execution → feature log → weekly retrain → scoring → version tag
-
-### Model Registry
-
-- Git-based model archive under `analytics/models/archive`
-- SHA256 hash used to track each saved model
-- Model audit endpoint: `GET /api/model/version`
-- Rollback via `analytics/model_swap.py` with alert notifications
-
-**CLI**
-
-```bash
-python analytics/train/retrain.py --epochs 10
-python analytics/model_swap.py --version <hash>
-```
-
-**API**
-
-```bash
-curl http://localhost:3000/api/model/version
-```
+Model versions are stored in `analytics/models/archive` and tracked via SHA256 hashes.
 
 ---
 
 ## Deployment
 
-The platform runs on a Xeon host and is orchestrated by Kubernetes. Deploy or upgrade services using Helm charts located in `infra/helm`.
+Deploy or upgrade services using Helm:
+```bash
+./scripts/ops-tools.sh start
+```
+Check pod status:
+```bash
+./scripts/ops-tools.sh status
+```
 
-## SBOM Generation
-
-Each container build produces a Software Bill of Materials using Syft. The JSON artifacts are uploaded to GitHub Releases so dependencies remain transparent.
-
-## Rollback Procedures
-
-Refer to [docs/ops/helm-rollback-guide.MD](docs/ops/helm-rollback-guide.MD) for step-by-step instructions on rolling back a failed deployment using Helm.
+See [docs/ops/helm-rollback-guide.MD](docs/ops/helm-rollback-guide.MD) for rollback instructions.
 
 ---
+
 ## System Documentation
 
-Additional guides covering architecture, strategy modes, UI features, risk controls, and environment variables live under the [`docs/`](docs/) directory. Start with [docs/architecture.md](docs/architecture.md) for a high-level overview of the platform.
-
-## AI & ML Model Registry Lifecycle
-
-The platform uses a Git-backed registry to track every model version and related metrics. Each training run stores a version hash and evaluation scores. Shadow models are compared to production prior to promotion, and all updates trigger audit logs and notifications.
+Additional architecture, strategy, and operations guides are in the [`docs/`](docs/) directory.
 
 ## License
 
