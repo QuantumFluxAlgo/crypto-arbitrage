@@ -1,8 +1,11 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  @apply mx-auto p-4 text-center max-w-full;
+}
+
+@media (min-width: 480px) {
+  #root {
+    max-width: 90%;
+  }
 }
 
 .logo {

@@ -2,6 +2,7 @@ const WebSocket = require("ws");
 const Redis = require("ioredis");
 const Fastify = require("fastify");
 const winston = require("winston");
+const createLogger = require("../lib/logger.js");
 const fs = require("fs");
 const normalize = require("./lib/normalize");
 
@@ -25,19 +26,8 @@ let reconnectAttempts = 0;
 
 const service = "feed-aggregator";
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.printf(({ level, message, timestamp }) =>
-      `${timestamp} ${level} [${service}] ${message}`
-    )
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: `${logDir}/${service}.log` }),
-  ],
-});
+const logger = createLogger(service);
+logger.add(new winston.transports.File({ filename: `${logDir}/${service}.log` }));
 
 const redis = process.env.MOCK_REDIS
   ? { publish: () => Promise.resolve() }
