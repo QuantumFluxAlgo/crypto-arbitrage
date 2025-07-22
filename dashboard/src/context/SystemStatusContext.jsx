@@ -3,6 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const SystemStatusContext = createContext({ panic: false, reason: '' });
 
+export { SystemStatusContext };
+
 export const useSystemStatus = () => useContext(SystemStatusContext);
 
 export function SystemStatusProvider({ children }) {

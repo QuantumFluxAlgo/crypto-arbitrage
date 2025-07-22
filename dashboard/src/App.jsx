@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SystemStatusProvider } from './context/SystemStatusContext.jsx';
-import Header from './layout/Header.jsx';
+import Header from './Layout/Header.jsx';
 import SystemStatusBanner from './components/SystemStatusBanner.jsx';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
