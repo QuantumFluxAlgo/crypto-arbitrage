@@ -67,3 +67,15 @@ button:focus-visible {
   }
 }
 
+@media (max-width: 768px) {
+  body {
+    @apply p-2;
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    @apply p-4;
+  }
+}
+

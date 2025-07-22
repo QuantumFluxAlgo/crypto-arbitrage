@@ -7,8 +7,8 @@ export default function SystemStatusBanner() {
 
   async function loadStatus() {
     try {
-      const data = await fetchSystemStatus(mode);
-      setMode(data.mode);
+      const data = await fetchSystemStatus();
+      if (data.mode) setMode(data.mode);
       setPanic(Boolean(data.panic));
     } catch (err) {
       console.error('Failed to fetch system status', err);
