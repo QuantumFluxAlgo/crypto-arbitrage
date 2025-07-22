@@ -15,6 +15,7 @@ spec:
       labels:
         app: api
     spec:
+      serviceAccountName: {{ .Release.Name }}-api
       containers:
         - name: api
           image: {{ .Values.api.image }}

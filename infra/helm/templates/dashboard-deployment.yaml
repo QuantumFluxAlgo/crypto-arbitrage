@@ -15,6 +15,7 @@ spec:
       labels:
         app: dashboard
     spec:
+      serviceAccountName: {{ .Release.Name }}-dashboard
       containers:
         - name: dashboard
           image: {{ .Values.dashboard.image }}

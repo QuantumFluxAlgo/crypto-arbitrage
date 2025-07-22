@@ -15,6 +15,7 @@ spec:
       labels:
         app: executor
     spec:
+      serviceAccountName: {{ .Release.Name }}-executor
       containers:
         - name: executor
           image: {{ .Values.executor.image }}

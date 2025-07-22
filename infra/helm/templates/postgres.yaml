@@ -1,12 +1,11 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ .Release.Name }}-postgres
   labels:
     app: postgres
     {{- include "crypto-arbitrage.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ .Release.Name }}-postgres
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -16,6 +15,7 @@ spec:
       labels:
         app: postgres
     spec:
+      serviceAccountName: {{ .Release.Name }}-postgres
       containers:
         - name: postgres
           image: postgres:16-alpine
@@ -44,16 +44,9 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-  volumeClaimTemplates:
-    - metadata:
-        name: postgres-data
-      spec:
-        accessModes:
-          - {{ .Values.postgres.accessMode }}
-        storageClassName: {{ .Values.postgres.storageClass }}
-        resources:
-          requests:
-            storage: {{ .Values.postgres.storage }}
+      volumes:
+        - name: postgres-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
