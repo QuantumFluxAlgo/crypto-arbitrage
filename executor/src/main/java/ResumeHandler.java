@@ -2,6 +2,7 @@ package executor;
 
 
 import executor.Executor;
+import executor.RedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * associated executor when trading should continue.
  */
 public class ResumeHandler {
-    private static final String CHANNEL = "control-feed";
+    private static final String CHANNEL = RedisClient.getControlChannel();
      private static final Logger logger = LoggerFactory.getLogger(ResumeHandler.class);
 
     private final Object redis;

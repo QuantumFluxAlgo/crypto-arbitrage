@@ -30,4 +30,8 @@ export function getExecutionMode(req) {
   return settings.sandbox_mode ? ExecutionMode.SANDBOX : ExecutionMode.LIVE;
 }
 
+export function getControlChannel() {
+  return `control-feed-${process.env.NODE_ENV || 'development'}`;
+}
+
 export default settings;

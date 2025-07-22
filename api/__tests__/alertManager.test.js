@@ -1,12 +1,12 @@
 import { jest } from '@jest/globals';
 
-jest.mock('../alerts/emailAlert.js', () => ({
+jest.mock('../../alerts/emailAlert.js', () => ({
   sendEmail: jest.fn(() => {
     throw new Error('fail');
   })
 }));
 
-import { sendAlert } from '../alerts/alertAgent.js';
+import { sendAlert } from '../../alerts/alertAgent.js';
 
 describe('sendAlert error handling', () => {
   beforeEach(() => {

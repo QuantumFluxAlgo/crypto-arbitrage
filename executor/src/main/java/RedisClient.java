@@ -69,6 +69,11 @@ public class RedisClient extends Thread {
         }
     }
 
+    static String getControlChannel() {
+        String env = System.getenv().getOrDefault("NODE_ENV", "development");
+        return "control-feed-" + env;
+    }
+
     /**
      * Publish a message to the given channel.
      *
@@ -87,12 +92,12 @@ public class RedisClient extends Thread {
      * Publish a message to the control channel derived from execution mode.
      */
     public void publishControl(Config config, String message) {
+        String channel;
         if (config == null) {
-            publish("control-feed-live", message);
-            return;
+            channel = getControlChannel();
+        } else {
+            channel = getControlChannel();
         }
-        String channel = config.getExecutionMode() == ExecutionMode.LIVE
-                ? "control-feed-live" : "control-feed-sandbox";
         publish(channel, message);
     }
 
@@ -141,12 +146,12 @@ public class RedisClient extends Thread {
      * Subscribe to the control channel derived from execution mode.
      */
     public void subscribeControl(Config config, Consumer<String> handler) {
+        String channel;
         if (config == null) {
-            subscribe("control-feed-live", handler);
-            return;
+            channel = getControlChannel();
+        } else {
+            channel = getControlChannel();
         }
-        String channel = config.getExecutionMode() == ExecutionMode.LIVE
-                ? "control-feed-live" : "control-feed-sandbox";
         subscribe(channel, handler);
     }
 

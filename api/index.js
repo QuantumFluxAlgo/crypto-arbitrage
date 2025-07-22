@@ -18,8 +18,10 @@ import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import configRoutes from './routes/config.js';
+import { getControlChannel } from './config/settings.js';
 import { baseOpenPaths } from './lib/constants.js';
 import { sendAlert } from '../alerts/alertAgent.js';
+import { sendEmail } from '../alerts/emailAlert.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 
@@ -181,6 +183,21 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     }
   });
 
+  api.get('/alerts/verify', async (req, reply) => {
+    if (process.env.SANDBOX_MODE !== 'true') {
+      return reply.code(403).send();
+    }
+    try {
+      await sendAlert('email', 'Alert verification');
+      req.log.info('SMTP verification sent');
+      return { sent: true };
+    } catch (err) {
+      req.log.error('SMTP verify failed', err);
+      reply.code(500);
+      return { error: 'failed' };
+    }
+  });
+
 
   api.post('/logout', async (req, reply) => {
     reply.clearCookie('token');
@@ -200,7 +217,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
         }
         testState.paused = true;
         testState.panicReason = req.body?.type || null;
-        await redis.publish('control-feed', 'halt');
+        await redis.publish(getControlChannel(), 'halt');
         await sendAlert('email', 'Panic brake triggered (test mode)');
         return { triggered: true };
       });
@@ -215,7 +232,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
         }
         testState.paused = false;
         testState.panicReason = null;
-        await redis.publish('control-feed', 'resume');
+        await redis.publish(getControlChannel(), 'resume');
         return { resumed: true };
       });
 
@@ -224,7 +241,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
           return reply.code(403).send();
         }
         logger.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
-        await redis.publish('control-feed', 'sweep');
+        await redis.publish(getControlChannel(), 'sweep');
         return { swept: true };
       });
     }
