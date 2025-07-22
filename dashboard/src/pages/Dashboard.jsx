@@ -8,7 +8,20 @@ export default function Dashboard() {
   const [mode, setMode] = useState('auto');
   const [walletBalance, setWalletBalance] = useState(null);
   const [metrics, setMetrics] = useState({ equityCurve: [], latency: [], openTrades: [], winRate: [] });
+  const [tradeStatus, setTradeStatus] = useState([]);
   const { panic, refreshStatus } = useSystemStatus();
+
+  const renderTradeStatus = () => {
+    if (!tradeStatus.length) return 'No open trades';
+    const info = tradeStatus
+      .map((t) => {
+        const pair = t.pair || t.symbol;
+        const sec = t.duration || t.seconds || 0;
+        return `${pair} (${sec}s)`;
+      })
+      .join(', ');
+    return `${tradeStatus.length} trades open: ${info}`;
+  };
 
   useEffect(() => {
     async function load() {
@@ -38,6 +51,25 @@ export default function Dashboard() {
     load();
   }, [refreshStatus]);
 
+  useEffect(() => {
+    async function fetchTradeStatus() {
+      try {
+        const res = await fetch('/api/trades/status');
+        if (res.ok) {
+          const data = await res.json();
+          setTradeStatus(data.trades || []);
+        } else {
+          setTradeStatus([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch trade status', err);
+      }
+    }
+    fetchTradeStatus();
+    const id = setInterval(fetchTradeStatus, 5000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="p-4 space-y-4 text-text">
       <h1 className="text-2xl font-bold">Arbitrage Summary</h1>
@@ -48,9 +80,7 @@ export default function Dashboard() {
         <div>
           Wallet Balance: <span data-testid="wallet-balance">{walletBalance ?? 'N/A'}</span>
         </div>
-        <div>
-          Open Trades: {metrics.openTrades ? metrics.openTrades.length : 0}
-        </div>
+        <div data-testid="trade-status">{renderTradeStatus()}</div>
         <div className="space-x-2">
           {['auto', 'realistic', 'aggressive'].map((m) => (
             <button
