@@ -99,8 +99,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
-        String envMode = System.getenv().getOrDefault("EXECUTION_MODE",
-                System.getenv().getOrDefault("MODE", ""));
+        String envMode = System.getenv().getOrDefault("EXECUTION_MODE", "live");
         boolean envDryRun = envMode.equalsIgnoreCase("sandbox") || envMode.equalsIgnoreCase("dry-run");
         this.sandboxMode = this.config.isDryRun() || envDryRun;
         this.maxOpenTrades = Integer.parseInt(System.getenv().getOrDefault("MAX_OPEN_TRADES", "5"));
@@ -111,6 +110,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      */
     public void start() {
         logger.info("Executor starting");
+        logger.info("Execution mode: {}", sandboxMode ? "DRY-RUN" : "LIVE");
         // ✅ Config validation for runtime safety
         try {
             // Values from env guard against dangerous configs
@@ -181,6 +181,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                 resumeFromPanic();
             } else if (msg != null && msg.startsWith("mode:")) {
                 String newMode = msg.substring(5).trim();
+                logger.info("[MODE-UPDATE] source=control value={}", newMode);
                 riskFilter.setMode(newMode);
             }
         });
@@ -200,28 +201,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * @param message JSON encoded opportunity
      */
     public void handleMessage(String message) {
-        if (isPanic.get()) {
-            logger.warn("Trading halted due to panic brake.");
-            return;
-        }
-        if (circuitBreaker.isTripped()) {
-            logger.warn("Trading halted due to circuit breaker.");
-            return;
-        }
-
-        if (currentOpenTrades.get() >= maxOpenTrades) {
-            logger.warn("Max open trades ({}) reached; skipping opportunity", maxOpenTrades);
-            return;
-        }
-
-        logger.debug("Received message: {}", message);
-        SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
-        logger.debug("Parsed opportunity: {}", opp);
-        long delay = Math.max(0L, System.currentTimeMillis() - opp.getTimestamp());
-        long totalLatency = opp.getRoundTripLatencyMs() + delay;
-        if (totalLatency > riskFilter.getMaxLatencyMs()) {
-            logger.warn("[QUEUE-LATENCY] Dropping {} due to total latency {}ms > {}", opp.getPair(), totalLatency, riskFilter.getMaxLatencyMs());
-            nearMissLogger.log(opp, "queue_latency");
+        SpreadOpportunity opp = validateMessage(message);
+        if (opp == null) {
             return;
         }
 
@@ -236,13 +217,58 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
+        TradeResult result = executeOpportunity(opp, predictedProb, message);
+        if (result == null) {
+            return;
+        }
+
+        recordMetrics(opp, result);
+
+        if (!sandboxMode && PanicBrake.shouldHalt(redisClient, config, dailyLossPct, avgLatencyMs, winRate)) {
+            if (isPanic.compareAndSet(false, true)) {
+                logger.error("PANIC BRAKE TRIGGERED - trading paused");
+                AlertManager.sendAlert("PANIC", "BRAKE TRIGGERED");
+                redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
+            }
+        }
+    }
+
+    private SpreadOpportunity validateMessage(String message) {
+        if (isPanic.get()) {
+            logger.warn("Trading halted due to panic brake.");
+            return null;
+        }
+        if (circuitBreaker.isTripped()) {
+            logger.warn("Trading halted due to circuit breaker.");
+            return null;
+        }
+
+        if (currentOpenTrades.get() >= maxOpenTrades) {
+            logger.warn("Max open trades ({}) reached; skipping opportunity", maxOpenTrades);
+            return null;
+        }
+
+        logger.debug("Received message: {}", message);
+        SpreadOpportunity opp = SpreadOpportunity.fromJson(message);
+        logger.debug("Parsed opportunity: {}", opp);
+        long delay = Math.max(0L, System.currentTimeMillis() - opp.getTimestamp());
+        long totalLatency = opp.getRoundTripLatencyMs() + delay;
+        if (totalLatency > riskFilter.getMaxLatencyMs()) {
+            logger.warn("[QUEUE-LATENCY] Dropping {} due to total latency {}ms > {}", opp.getPair(), totalLatency, riskFilter.getMaxLatencyMs());
+            nearMissLogger.log(opp, "queue_latency");
+            return null;
+        }
+        return opp;
+    }
+
+    private TradeResult executeOpportunity(SpreadOpportunity opp, double predictedProb, String rawMessage) {
         if (!riskFilter.passes(opp)) {
             String summary = String.format("%s %s->%s edge=%.4f",
                     opp.getPair(), opp.getBuyExchange(),
                     opp.getSellExchange(), opp.getNetEdge());
             logger.warn("Opportunity rejected [{}]: risk filter", summary);
             nearMissLogger.log(opp, "rejected_by_risk_filter");
-            return;
+            return null;
         }
         logger.info("Opportunity accepted by risk filter: {}", opp);
 
@@ -252,23 +278,23 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                     opp.getSellExchange(), opp.getNetEdge());
             logger.warn("Opportunity rejected [{}]: scoring engine", summary);
             nearMissLogger.log(opp, "rejected_by_scoring");
-            return;
+            return null;
         }
 
         if (ghostMode) {
             logger.info("GHOST MODE — broadcasting opportunity");
-            redisClient.publish("ghost_feed", message);
-            return;
+            redisClient.publish("ghost_feed", rawMessage);
+            return null;
         }
 
         if (canaryMode) {
             logger.info("CANARY MODE — trade bypassed");
-            return;
+            return null;
         }
 
         if (isPanic.get()) {
             logger.warn("Panic brake active; skipping execution.");
-            return;
+            return null;
         }
 
         logger.info("Executing opportunity: {}", opp.getPair());
@@ -276,6 +302,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         double tradeSize = riskSettings.computeTradeSize();
         TradeResult result;
         currentOpenTrades.incrementAndGet();
+        long start = System.currentTimeMillis();
         try {
             if (sandboxMode) {
                 SandboxExchangeAdapter adapter = new SandboxExchangeAdapter(
@@ -288,19 +315,28 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         } finally {
             currentOpenTrades.decrementAndGet();
         }
+        long observedLatency = System.currentTimeMillis() - start;
+        if (observedLatency > riskFilter.getMaxLatencyMs()) {
+            AlertManager.sendAlert("LATENCY",
+                    opp.getPair() + " latency " + observedLatency + "ms ts=" + start);
+        }
+        return result;
+    }
 
+    private void recordMetrics(SpreadOpportunity opp, TradeResult result) {
         updatePerformanceMetrics(result);
 
         if (result.success) {
             if (tradeLogger != null) {
                 tradeLogger.logTrade(opp, result.pnl);
             }
-        if (cgtPool != null) {
-            String asset = parseBaseAsset(opp.getPair());
-            double buyPrice = 1.0;
-            double sellPrice = 1.0 + (result.pnl / tradeSize);
-            cgtPool.recordBuy(asset, tradeSize, buyPrice);
-            cgtPool.recordSell(asset, tradeSize, sellPrice);
+            if (cgtPool != null) {
+                String asset = parseBaseAsset(opp.getPair());
+                double tradeSize = riskSettings.computeTradeSize();
+                double buyPrice = 1.0;
+                double sellPrice = 1.0 + (result.pnl / tradeSize);
+                cgtPool.recordBuy(asset, tradeSize, buyPrice);
+                cgtPool.recordSell(asset, tradeSize, sellPrice);
             }
             ProfitTracker.record(result.pnl);
             dailyLossPct = ProfitTracker.getDailyLossPct();
@@ -321,21 +357,12 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             featureLogger.logFeatureVector(opp.getPair(), opp.getNetEdge(), slippage, volatility, latencySec, label);
         }
 
-        
         double drawdown = 0.0;
         double globalTotal = ProfitTracker.getGlobalTotal();
         if (globalTotal < 0) {
             drawdown = (-globalTotal / ProfitTracker.getStartingBalance()) * 100.0;
         }
         circuitBreaker.check(winRate, drawdown);
-
-        if (PanicBrake.shouldHalt(redisClient, config, dailyLossPct, avgLatencyMs, winRate)) {
-            if (isPanic.compareAndSet(false, true)) {
-                logger.error("PANIC BRAKE TRIGGERED - trading paused");
-                AlertManager.sendAlert("PANIC", "BRAKE TRIGGERED");
-                redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
-            }
-        }
     }
 
     private double fetchModelScore(SpreadOpportunity opp) {
@@ -388,12 +415,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Manually resume trading after a user initiated halt.
      */
     public void resumeTrading() {
+        if (sandboxMode) {
+            logger.info("[DRY-RUN] resume ignored");
+            return;
+        }
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
             logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", ts);
-            AlertManager.sendAlert("RESUME", "Trading resumed at " + ts);
+            AlertManager.send("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
+            redisClient.publish(controlChannel, "resume:" + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");
         }
@@ -403,12 +435,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * Resume trading after a panic brake was triggered.
      */
     public void resumeFromPanic() {
+        if (sandboxMode) {
+            logger.info("[DRY-RUN] resume ignored");
+            return;
+        }
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
             logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", ts);
-            AlertManager.sendAlert("RESUME", "Trading resumed at " + ts);
+            AlertManager.send("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
+            redisClient.publish(controlChannel, "resume:" + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");
         }

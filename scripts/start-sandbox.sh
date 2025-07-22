@@ -39,7 +39,7 @@ UI_PID=$(cat "$ROOT_DIR/.ui.pid")
 # Start Java executor in ghost mode
 (
   cd "$ROOT_DIR/executor"
-  GHOST_MODE=true ./gradlew run &
+  EXECUTION_MODE=sandbox GHOST_MODE=true ./gradlew run &
   echo $! > "$ROOT_DIR/.exec.pid"
 )
 EXEC_PID=$(cat "$ROOT_DIR/.exec.pid")

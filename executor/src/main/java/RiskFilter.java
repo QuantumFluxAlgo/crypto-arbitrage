@@ -31,6 +31,11 @@ public class RiskFilter {
         setMode(mode);
     }
 
+    /** Current personality mode. */
+    public String getMode() {
+        return mode;
+    }
+
     /**
      * Create a custom filter with explicit thresholds.
      *
