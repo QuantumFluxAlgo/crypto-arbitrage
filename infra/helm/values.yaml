@@ -1,5 +1,7 @@
 # Helm default values for Kubernetes deployment
 replicaCount: 1
+gitCommit: "unset"
+environment: "unset"
 # SealedSecrets required — CI fails if plain Secrets are used
 secrets:
   useSealed: true  # must remain true; unsealed secrets are rejected in CI
