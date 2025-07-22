@@ -19,7 +19,13 @@ describeLocal('dashboard basics', () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ panic: false, reason: 'loss limit' }),
+        json: () =>
+          Promise.resolve({
+            paused: false,
+            panic_reason: 'loss limit',
+            sandbox_mode: false,
+            balance: 1000,
+          }),
       })
     );
     await act(async () => {

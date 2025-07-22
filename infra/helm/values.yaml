@@ -99,3 +99,8 @@ postgres:
   storage: 10Gi
   storageClass: standard
   accessMode: ReadWriteOnce
+
+logForwarder:
+  enabled: true
+  image: grafana/fluent-bit-plugin-loki:latest
+
