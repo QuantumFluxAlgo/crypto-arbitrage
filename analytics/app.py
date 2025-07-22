@@ -13,6 +13,7 @@ from prometheus_client import (
     CollectorRegistry,
     Counter,
     Histogram,
+    Gauge,
     ProcessCollector,
     GCCollector,
     generate_latest,
@@ -45,17 +46,25 @@ registry = CollectorRegistry()
 ProcessCollector(registry=registry)
 GCCollector(registry=registry)
 
-request_count = Counter('request_count', 'Total HTTP requests', registry=registry)
-request_latency = Histogram(
-    'request_latency_seconds',
-    'Request latency in seconds',
+request_count_total = Counter('request_count_total', 'Total HTTP requests', registry=registry)
+request_latency_ms = Histogram(
+    'request_latency_ms',
+    'Request latency in milliseconds',
     registry=registry,
 )
-inference_latency = Histogram(
-    'inference_latency_seconds',
-    'Model inference latency in seconds',
+inference_latency_ms = Histogram(
+    'inference_latency_ms',
+    'Model inference latency in milliseconds',
     registry=registry,
 )
+
+# Panic/resume state and daily loss percentage
+panic_triggered = Gauge('panic_triggered', '1 if panic activated', registry=registry)
+resume_signal = Gauge('resume_signal', '1 when resume issued', registry=registry)
+daily_loss_pct = Gauge('daily_loss_pct', 'Daily loss percentage', registry=registry)
+panic_triggered.set(0)
+resume_signal.set(0)
+daily_loss_pct.set(0)
 
 # In-memory trade store
 MAX_TRADES = 1000
@@ -173,9 +182,9 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    latency = time.time() - g.start_time
-    request_count.inc()
-    request_latency.observe(latency)
+    latency_ms = (time.time() - g.start_time) * 1000
+    request_count_total.inc()
+    request_latency_ms.observe(latency_ms)
     return response
 
 @app.route('/')
@@ -215,10 +224,10 @@ def predict():
         logger.info("Input shape: %s", features.shape)
         start_inf = time.time()
         preds = model.predict(features)
-        duration = time.time() - start_inf
-        inference_latency.observe(duration)
+        duration_ms = (time.time() - start_inf) * 1000
+        inference_latency_ms.observe(duration_ms)
         logger.info("Output shape: %s", np.array(preds).shape)
-        logger.info("Inference took %.4f seconds", duration)
+        logger.info("Inference took %.2f ms", duration_ms)
 
         shadow_preds = None
         if shadow_model is not None:

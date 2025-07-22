@@ -28,7 +28,7 @@ export default async function metricsRoutes(app, { testState } = {}) {
         params: { query: 'equity' },
       });
       const lat = await axios.get(`${promUrl}/api/v1/query`, {
-        params: { query: 'request_latency_seconds' },
+        params: { query: 'request_latency_ms' },
       });
 
       const equityCurve = eq.data.data?.result?.[0]?.values?.map(v => parseFloat(v[1])) || [];

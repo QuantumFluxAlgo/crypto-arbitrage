@@ -2828,7 +2828,7 @@ Allows scoring of 1,000+ spreads per second
 14.6 Prometheus Metrics
 Analytics service exposes several Prometheus-compatible metrics under /metrics.
 Exported Metrics:
-inference_latency_seconds – Histogram of time taken for predictions
+inference_latency_ms – Histogram of prediction latency in ms
 
 
 inference_count_total – Total number of prediction requests
@@ -2839,6 +2839,12 @@ gpu_mode_enabled – 1 if GPU active, 0 otherwise
 
 prediction_error_count – Number of failed prediction attempts
 
+daily_loss_pct – Current day loss percentage
+
+panic_triggered – 1 when panic mode active
+
+resume_signal – 1 after manual resume
+
 
 training_loss – Loss value during model training (if in dev mode)
 
@@ -2846,9 +2852,9 @@ training_loss – Loss value during model training (if in dev mode)
 Example Metric Output:
 bash
 CopyEdit
-# HELP inference_latency_seconds Average time to run prediction
-# TYPE inference_latency_seconds histogram
-inference_latency_seconds_bucket{le="0.01"} 238
+# HELP inference_latency_ms Average time to run prediction
+# TYPE inference_latency_ms histogram
+inference_latency_ms_bucket{le="10"} 238
 ...
 
 These can be visualized in Grafana and used to trigger alerts if latency spikes.
@@ -2966,13 +2972,16 @@ Exporter Format:
 15.2 Analytics Metrics to Grafana
 The Analytics service also exposes metrics to Prometheus, which can be visualized and correlated with trade activity.
 Analytics Metrics:
-inference_latency_seconds: Time to compute predictions
+inference_latency_ms: Time to compute predictions in ms
 
 
 inference_count_total: Total predictions served
 
 
 gpu_mode_enabled: 1 if GPU detected, 0 otherwise
+panic_triggered: 1 when panic mode active
+resume_signal: 1 after manual resume
+daily_loss_pct: Current day loss percentage
 
 
 rolling_win_rate: Proportion of profitable trades
