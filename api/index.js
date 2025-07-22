@@ -18,6 +18,7 @@ import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import configRoutes from './routes/config.js';
+import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
 import { baseOpenPaths } from './lib/constants.js';
 import { sendAlert } from '../alerts/alertAgent.js';
@@ -70,7 +71,10 @@ function buildApp() {
     });
 
     if (isTest) {
-      redis = { publish: async () => 1 };
+      redis = {
+        publish: async () => 1,
+        get: async () => '[]'
+      };
     } else {
       // Redis connection parameters via env vars
       redis = new Redis({
@@ -106,9 +110,11 @@ const alertSettings = {
   webhook_url: '',
 };
 
-async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginRoute);
+async function apiRoutes(api, { testState, redis, pool }) {
+  api.register(loginRoute);
   api.register(authRoute);
   api.register(settingsRoutes, { redis });
+  api.register(opportunitiesRoutes, { redis });
   api.register(auditLogger, { pool });
 
   api.addHook('onRequest', async (req, reply) => {
@@ -162,7 +168,6 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     Sentry.captureException(error);
   });
 
-  api.get('/opportunities', async () => []);
 
   api.get('/alerts', async () => alertSettings);
   api.post('/alerts', async req => {
