@@ -3,7 +3,9 @@ package executor;
 
 /**
  * Utility class that determines when trading should halt based on a few
- * safety thresholds.  All thresholds are fixed and checked in the static
+ * safety thresholds. Default values are 5% daily loss, 250&nbsp;ms latency
+ * and a 50% win rate. Thresholds may be overridden via {@link Config}
+ * or environment variables and are checked in the static
  * {@link #shouldHalt(RedisClient, Config, double, double, double)} method.
  */
 import org.slf4j.Logger;
@@ -24,33 +26,42 @@ public class PanicBrake {
      * @return {@code true} if trading should halt
      */
 
-    private static double getLossCapPct() {
+    private static double getLossCapPct(Config config) {
+        if (config != null) {
+            return config.getLossCapPct();
+        }
         String val = System.getProperty("LOSS_CAP_PCT",
-                System.getenv().getOrDefault("LOSS_CAP_PCT", "3.0"));
+                System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0"));
         try {
             return Double.parseDouble(val);
         } catch (NumberFormatException e) {
-            return 3.0;
+            return 5.0;
         }
     }
 
-    private static double getLatencyMaxMs() {
+    private static double getLatencyMaxMs(Config config) {
+        if (config != null) {
+            return config.getLatencyMaxMs();
+        }
         String val = System.getProperty("LATENCY_MAX_MS",
-                System.getenv().getOrDefault("LATENCY_MAX_MS", "500.0"));
+                System.getenv().getOrDefault("LATENCY_MAX_MS", "250"));
         try {
             return Double.parseDouble(val);
         } catch (NumberFormatException e) {
-            return 500.0;
+            return 250.0;
         }
     }
 
-    private static double getWinRateThreshold() {
+    private static double getWinRateThreshold(Config config) {
+        if (config != null) {
+            return config.getWinRateThreshold();
+        }
         String val = System.getProperty("WIN_RATE_THRESHOLD",
-                System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.4"));
+                System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.5"));
         try {
             return Double.parseDouble(val);
         } catch (NumberFormatException e) {
-            return 0.4;
+            return 0.5;
         }
     }
 
@@ -66,9 +77,9 @@ public class PanicBrake {
 
     public static boolean shouldHalt(RedisClient redis, Config config,
                                      double dailyLossPct, double avgLatencyMs, double winRate) {
-        double lossCap = getLossCapPct();
-        double latencyCap = getLatencyMaxMs();
-        double winRateThresh = getWinRateThreshold();
+        double lossCap = getLossCapPct(config);
+        double latencyCap = getLatencyMaxMs(config);
+        double winRateThresh = getWinRateThreshold(config);
         double profitTarget = getProfitTargetUsd();
         double profitSoFar = ProfitTracker.getCumulativeProfit();
 

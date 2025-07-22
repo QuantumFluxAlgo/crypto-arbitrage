@@ -17,7 +17,7 @@ public class SandboxExchangeAdapterTest {
         String message;
         DummyRedis() { super("localhost", 6379, "chan", (c,m)->{}); }
         @Override public void start() {}
-        @Override public void publish(String ch, String msg) { this.channel = ch; this.message = msg; }
+        @Override public boolean publish(String ch, String msg) { this.channel = ch; this.message = msg; return true; }
     }
 
     @Test

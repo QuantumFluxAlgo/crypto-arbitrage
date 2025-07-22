@@ -80,25 +80,42 @@ public class RedisClient extends Thread {
      * @param channel redis channel
      * @param message payload to publish
      */
-    public void publish(String channel, String message) {
-        try (Jedis jedis = new Jedis(host, port)) {
-            jedis.publish(channel, message);
-        } catch (Exception e) {
-            logger.error("Redis publish failed: {}", e.getMessage());
+    public boolean publish(String channel, String message) {
+        int attempts = 0;
+        while (attempts < 3) {
+            try (Jedis jedis = new Jedis(host, port)) {
+                jedis.publish(channel, message);
+                return true;
+            } catch (Exception e) {
+                attempts++;
+                long delay = Math.min(maxDelayMs, (1L << (attempts - 1)) * baseDelayMs);
+                logger.error("Redis publish failed (attempt {}): {}", attempts, e.getMessage());
+                if (attempts >= 3) {
+                    logger.error("Redis publish giving up after {} attempts", attempts);
+                    break;
+                }
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
         }
+        return false;
     }
 
     /**
      * Publish a message to the control channel derived from execution mode.
      */
-    public void publishControl(Config config, String message) {
+    public boolean publishControl(Config config, String message) {
         String channel;
         if (config == null) {
             channel = getControlChannel();
         } else {
             channel = getControlChannel();
         }
-        publish(channel, message);
+        return publish(channel, message);
     }
 
     /**

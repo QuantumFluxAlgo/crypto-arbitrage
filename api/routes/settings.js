@@ -134,9 +134,19 @@ export default async function settingsRoutes(app, opts) {
     }
     if (typeof req.body.maxLossPct === "number") {
       settings.maxLossPct = req.body.maxLossPct;
+      try {
+        await redis.publish(getControlChannel(), `lossCap:${req.body.maxLossPct}`);
+      } catch (err) {
+        logger.error('Failed to publish lossCap update', err);
+      }
     }
     if (typeof req.body.latencyMaxMs === "number") {
       settings.latencyMaxMs = req.body.latencyMaxMs;
+      try {
+        await redis.publish(getControlChannel(), `latency:${req.body.latencyMaxMs}`);
+      } catch (err) {
+        logger.error('Failed to publish latency update', err);
+      }
     }
     return { saved: true };
   };

@@ -183,6 +183,27 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                 String newMode = msg.substring(5).trim();
                 logger.info("[MODE-UPDATE] source=control value={}", newMode);
                 riskFilter.setMode(newMode);
+            } else if (msg != null && msg.startsWith("lossCap:")) {
+                try {
+                    double v = Double.parseDouble(msg.substring(8));
+                    riskFilter.setLossCap(v);
+                } catch (NumberFormatException ignore) {
+                    logger.warn("Invalid lossCap update: {}", msg);
+                }
+            } else if (msg != null && msg.startsWith("latency:")) {
+                try {
+                    int v = Integer.parseInt(msg.substring(8));
+                    riskFilter.setLatencyMax(v);
+                } catch (NumberFormatException ignore) {
+                    logger.warn("Invalid latency update: {}", msg);
+                }
+            } else if (msg != null && msg.startsWith("winRate:")) {
+                try {
+                    double v = Double.parseDouble(msg.substring(8));
+                    riskFilter.setWinRateThreshold(v);
+                } catch (NumberFormatException ignore) {
+                    logger.warn("Invalid winRate update: {}", msg);
+                }
             }
         });
     }
@@ -449,6 +470,13 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         } else {
             logger.warn("[RESUME IGNORED] already active");
         }
+    }
+
+    /**
+     * @return true if panic brake is currently active
+     */
+    public boolean isPanicActive() {
+        return isPanic.get();
     }
 
     /**

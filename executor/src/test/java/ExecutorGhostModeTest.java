@@ -16,9 +16,10 @@ public class ExecutorGhostModeTest {
         @Override
         public void start() {}
         @Override
-        public void publish(String channel, String message) {
+        public boolean publish(String channel, String message) {
             this.publishedChannel = channel;
             this.publishedMessage = message;
+            return true;
         }
     }
 

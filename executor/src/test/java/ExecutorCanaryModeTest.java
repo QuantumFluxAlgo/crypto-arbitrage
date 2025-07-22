@@ -14,7 +14,7 @@ public class ExecutorCanaryModeTest {
         @Override
         public void start() {}
         @Override
-        public void publish(String channel, String message) {}
+        public boolean publish(String channel, String message) { return true; }
     }
 
     static class DummyExecutor extends Executor {
