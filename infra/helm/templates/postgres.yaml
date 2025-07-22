@@ -24,15 +24,15 @@ spec:
           envFrom:
             - secretRef:
                 name: postgres-secrets
-          livenessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 10
-            periodSeconds: 10
           readinessProbe:
-            tcpSocket:
-              port: 5432
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
             initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            failureThreshold: 3
             periodSeconds: 10
           resources:
             requests:

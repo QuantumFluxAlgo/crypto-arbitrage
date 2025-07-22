@@ -29,6 +29,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
+        readinessProbe:
+          exec:
+            command: ["nvidia-smi"]
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        livenessProbe:
+          exec:
+            command: ["nvidia-smi"]
+          failureThreshold: 5
+          periodSeconds: 30
         volumeMounts:
           - name: device-plugin
             mountPath: /var/lib/kubelet/device-plugins

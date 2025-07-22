@@ -21,15 +21,15 @@ spec:
           image: redis:7.2-alpine
           ports:
             - containerPort: 6379
-          livenessProbe:
-            tcpSocket:
-              port: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 10
-          readinessProbe:
-            tcpSocket:
-              port: 6379
-            initialDelaySeconds: 5
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            failureThreshold: 3
             periodSeconds: 10
           resources:
             requests:

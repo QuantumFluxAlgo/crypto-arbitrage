@@ -29,15 +29,15 @@ spec:
               mountPath: /var/log/prism-arbitrage
           readinessProbe:
             httpGet:
-              path: /api/metrics
+              path: /health
               port: {{ .Values.api.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /api/metrics
+              path: /health
               port: {{ .Values.api.port }}
-            initialDelaySeconds: 10
+            failureThreshold: 3
             periodSeconds: 10
       volumes:
         - name: prism-logs
