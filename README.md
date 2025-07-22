@@ -52,6 +52,8 @@ Enable git hooks once by running:
 ```bash
 git config core.hooksPath githooks
 ```
+This installs the `githooks/pre-push` script so pushes are blocked when tests fail.
+Branch protection rules require the CI checks to succeed before merging.
 
 ---
 
@@ -139,6 +141,18 @@ Run all mocked tests locally:
 ## System Documentation
 
 Additional guides are located in the [`docs/`](docs/) directory, including [dashboard instructions](docs/dashboard.md), [SMTP setup](docs/smtp_setup.md), and [Telegram setup](docs/telegram_setup.md).
+
+## Monitoring Access
+
+To view platform metrics locally:
+
+```bash
+kubectl port-forward svc/prometheus-server 9090:9090
+kubectl port-forward svc/grafana 3001:3000
+```
+
+- Prometheus scrape endpoint: <http://localhost:9090/metrics>
+- Grafana: <http://localhost:3001> (default `admin`/`admin`)
 
 ## License
 

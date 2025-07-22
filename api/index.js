@@ -18,7 +18,7 @@ import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import configRoutes from './routes/config.js';
-import { sendAlert } from './services/alertManager.js';
+import { sendAlert } from '../alerts/alertAgent.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 

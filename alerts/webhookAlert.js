@@ -1,5 +1,5 @@
 import axios from 'axios';
-import logger from './logger.js';
+import logger from '../api/services/logger.js';
 
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
@@ -8,8 +8,7 @@ async function sendWebhook(payload, attempt = 1) {
     throw new Error('Missing WEBHOOK_URL');
   }
 
-  const body =
-    typeof payload === 'string' ? { message: payload } : payload;
+  const body = typeof payload === 'string' ? { message: payload } : payload;
 
   try {
     await axios.post(WEBHOOK_URL, body);

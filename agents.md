@@ -59,19 +59,20 @@ This document defines all autonomous agents, modules, and services operating acr
 
 ---
 
-## 🚨 Alert Manager Agent (`alerts`)
+## 🚨 Alert Agent (`alert-agent`)
 
 - **Language**: Node.js
-- **Role**: Sends notifications across channels.
+- **Role**: Dedicated module that dispatches notifications.
 - **Triggers**:
-  - Panic activation.
-  - Mode switching.
+  - Panic activation and recovery.
+  - Mode switching events.
   - Latency spikes.
   - Daily loss thresholds.
 - **Channels**:
   - Gmail SMTP
   - Telegram Bot
   - JSON Webhooks (Slack/Pushover ready)
+- **Interface**: Listens on the `alert-queue` Redis channel or can be imported directly.
 - **Config**: `.env` or sealed-secrets.
 
 ---

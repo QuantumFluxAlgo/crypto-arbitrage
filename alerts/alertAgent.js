@@ -1,9 +1,8 @@
-// Sends alerts via email, telegram, or webhook based on config
-import logger from './logger.js';
+// Central alert dispatcher used by services or CLI
+import logger from '../api/services/logger.js';
 import { sendEmail } from './emailAlert.js';
 import { sendTelegram } from './telegramAlert.js';
 import { sendWebhook } from './webhookAlert.js';
-// Config helpers verify env vars before alerting
 
 function hasEmailConfig() {
   return process.env.SMTP_USER && process.env.SMTP_PASS && process.env.ALERT_RECIPIENT;
