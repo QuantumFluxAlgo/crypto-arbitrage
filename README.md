@@ -111,7 +111,7 @@ Branch protection rules require the CI checks to succeed before merging.
    ```bash
    curl -X POST http://localhost:8080/api/test/panic
    ```
-   ⚠️ **Test endpoints operate only in sandbox mode.**
+   ⚠️ **Test endpoints operate only when `SANDBOX_MODE=true` in the API `.env`.**
 4. Use the dashboard **Resume Trading** button to clear the panic state and check logs for `[RESUME SIGNAL RECEIVED]`.
 5. Validate Prometheus and Grafana dashboards if installed.
 

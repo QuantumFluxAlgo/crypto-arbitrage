@@ -169,6 +169,9 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   });
 
   api.post('/alerts/test/:type', async (req, reply) => {
+    if (process.env.SANDBOX_MODE !== 'true') {
+      return reply.code(403).send();
+    }
     try {
       await sendAlert(req.params.type, 'Test alert');
       return { sent: true };
@@ -192,7 +195,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
 
     if (isTest) {
       api.post('/test/panic', async (req, reply) => {
-        if (process.env.MODE !== 'dry-run') {
+        if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
         }
         testState.paused = true;
@@ -203,7 +206,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       });
 
       api.post('/test/resume', async (_req, reply) => {
-        if (process.env.MODE !== 'dry-run') {
+        if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
         }
         if (!testState.paused) {
@@ -217,7 +220,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       });
 
       api.post('/test/sweep', async (_req, reply) => {
-        if (process.env.MODE !== 'dry-run') {
+        if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
         }
         logger.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
