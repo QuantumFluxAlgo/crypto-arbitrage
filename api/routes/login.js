@@ -21,7 +21,13 @@ export default async function loginRoutes(app) {
     const user = findByEmail(email);
     const match = user && await bcrypt.compare(password, user.password);
     if (match || (process.env.NODE_ENV === 'test' && email === 'user' && password === 'pass')) {
-      const token = app.jwt.sign({ email, isAdmin: user.isAdmin }, { algorithm: 'HS256' });
+      const payload = {
+        id: user?.id || 0,
+        email,
+        isAdmin: user?.isAdmin || false,
+        role: user?.isAdmin ? 'admin' : 'user',
+      };
+      const token = app.jwt.sign(payload, { algorithm: 'HS256' });
       reply.setCookie('token', token, { httpOnly: true });
       return { token };
     }

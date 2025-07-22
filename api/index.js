@@ -108,7 +108,6 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   api.register(settingsRoutes, { redis });
   api.register(auditLogger, { pool });
 
-    // Routes allowed without JWT
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
       '/api/login',
@@ -126,6 +125,45 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
       await req.jwtVerify();
     } catch {
       reply.code(401).send({ error: 'unauthorized' });
+    }
+  });
+
+  // Enforce auth on mutating routes
+  api.addHook('preHandler', async (req, reply) => {
+    if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return;
+    const openPaths = [
+      '/api/login',
+      '/login',
+      '/api/reset-password',
+      '/reset-password',
+      '/api/metrics/live',
+      '/api/metrics/sandbox',
+      '/api/metrics',
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
+      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
+    ];
+    if (openPaths.includes(req.url)) return;
+
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey) {
+      if (apiKey !== process.env.API_KEY) {
+        logger.warn(`[UNAUTHORIZED] ${req.method} ${req.url} rejected`);
+        return reply.code(403).send({ error: 'Unauthorized' });
+      }
+      req.user = { id: 'api-key' };
+      return;
+    }
+
+    try {
+      await req.jwtVerify();
+    } catch {
+      logger.warn(`[UNAUTHORIZED] ${req.method} ${req.url} rejected`);
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+
+    if (!req.user || (!req.user.id && !req.user.email)) {
+      logger.warn(`[UNAUTHORIZED] ${req.method} ${req.url} rejected`);
+      return reply.code(401).send({ error: 'Unauthorized' });
     }
   });
 
@@ -166,8 +204,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
     if (isTest) {
       api.post('/test/panic', async (req, reply) => {
         if (process.env.MODE !== 'dry-run') {
-          reply.code(403);
-          return { error: 'forbidden' };
+          return reply.code(403).send();
         }
         testState.paused = true;
         testState.panicReason = req.body?.type || null;
@@ -178,8 +215,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
 
       api.post('/test/resume', async (_req, reply) => {
         if (process.env.MODE !== 'dry-run') {
-          reply.code(403);
-          return { error: 'forbidden' };
+          return reply.code(403).send();
         }
         if (!testState.paused) {
           reply.code(400);
@@ -191,7 +227,10 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
         return { resumed: true };
       });
 
-      api.post('/test/sweep', async () => {
+      api.post('/test/sweep', async (_req, reply) => {
+        if (process.env.MODE !== 'dry-run') {
+          return reply.code(403).send();
+        }
         logger.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
         await redis.publish('control-feed', 'sweep');
         return { swept: true };

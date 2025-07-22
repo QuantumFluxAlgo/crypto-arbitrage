@@ -32,7 +32,7 @@ afterEach(() => {
 describeLocal('resume endpoint auth', () => {
   test('200 with admin token', async () => {
     testState.paused = true;
-    const token = app.jwt.sign({ role: 'admin' }, { algorithm: 'HS256' });
+    const token = app.jwt.sign({ id: 1, role: 'admin' }, { algorithm: 'HS256' });
     const res = await request(app.server)
       .post('/api/resume')
       .set('Cookie', `token=${token}`);
@@ -46,7 +46,7 @@ describeLocal('resume endpoint auth', () => {
 
   test('logs rejection for non-admin', async () => {
     testState.paused = true;
-    const token = app.jwt.sign({ role: 'user' }, { algorithm: 'HS256' });
+    const token = app.jwt.sign({ id: 2, role: 'user' }, { algorithm: 'HS256' });
     const res = await request(app.server)
       .post('/api/resume')
       .set('Cookie', `token=${token}`);
