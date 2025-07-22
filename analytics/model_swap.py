@@ -5,6 +5,8 @@ import shutil
 import socket
 import subprocess
 import time
+
+DRY_RUN = os.getenv("DRY_RUN", "True").lower() == "true"
 from .logger import logger
 
 from .model_tracker import insert_metadata, send_event
@@ -23,6 +25,9 @@ def load_metadata():
 
 
 def save_metadata(meta):
+    if DRY_RUN:
+        logger.info("[DRY-RUN] Metadata not saved")
+        return
     with open(METADATA_FILE, "w") as f:
         json.dump(meta, f, indent=2)
 
@@ -39,6 +44,9 @@ def swap_model(version_hash: str):
     src = os.path.join(ARCHIVE_DIR, f"{version_hash}.h5")
     if not os.path.exists(src):
         raise FileNotFoundError(src)
+    if DRY_RUN:
+        logger.info("[DRY-RUN] Skipping swap of %s", version_hash)
+        return
     shutil.copy2(src, MODEL_FILE)
 
 
@@ -71,24 +79,30 @@ def main():
     log_note(meta, version)
     save_metadata(meta)
     print(f"Activated model {version}")
-    try:
-        subprocess.run(["git", "add", METADATA_FILE], check=True, capture_output=True)
-        subprocess.run([
-            "git",
-            "commit",
-            "-m",
-            f"swap model {version}",
-        ], check=True, capture_output=True)
-    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-        logger.warning("Git commit failed: %s", exc)
+    if not DRY_RUN:
+        try:
+            subprocess.run(["git", "add", METADATA_FILE], check=True, capture_output=True)
+            subprocess.run([
+                "git",
+                "commit",
+                "-m",
+                f"swap model {version}",
+            ], check=True, capture_output=True)
+        except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+            logger.warning("Git commit failed: %s", exc)
+    else:
+        logger.info("[DRY-RUN] Git commit skipped")
     user = os.getenv("USER", "unknown")
     try:
         ip = socket.gethostbyname(socket.gethostname())
     except Exception:
         ip = None
     change = "rollback" if args.version else "swap"
-    insert_metadata(version, changed_by=user, change_type=change, source_ip=ip)
-    send_event(version, change, user, ip)
+    if not DRY_RUN:
+        insert_metadata(version, changed_by=user, change_type=change, source_ip=ip)
+        send_event(version, change, user, ip)
+    else:
+        logger.info("[DRY-RUN] Metadata logging skipped")
 
 
 if __name__ == "__main__":

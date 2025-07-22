@@ -1,17 +1,6 @@
 import os
 import json
 import urllib.request
-import psycopg2
-
-
-def _get_conn():
-    return psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        port=os.getenv("PGPORT", 5432),
-        dbname=os.getenv("PGDATABASE", "arbdb"),
-        user=os.getenv("PGUSER", "postgres"),
-        password=os.getenv("PGPASSWORD", "")
-    )
 
 
 def insert_metadata(version_hash: str, sharpe: float | None = None,
@@ -20,21 +9,32 @@ def insert_metadata(version_hash: str, sharpe: float | None = None,
                      notes: str | None = None,
                      changed_by: str | None = None,
                      change_type: str | None = None,
-                     source_ip: str | None = None) -> None:
-    """Insert a row into the model_metadata table."""
-    conn = _get_conn()
+                     source_ip: str | None = None,
+                     api_url: str | None = None) -> None:
+    """Send model metadata to the tracker service.
+
+    This function no longer writes directly to the database. Metadata is
+    published to a REST endpoint where another service persists it.
+    """
+    if api_url is None:
+        api_url = os.getenv('MODEL_TRACKER_URL', 'http://localhost:8080/api/models/metadata')
+
+    payload = {
+        'version_hash': version_hash,
+        'sharpe': sharpe,
+        'win_rate': win_rate,
+        'val_loss': val_loss,
+        'notes': notes,
+        'changed_by': changed_by,
+        'change_type': change_type,
+        'source_ip': source_ip,
+    }
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json'})
     try:
-        with conn, conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO model_metadata
-                    (version_hash, trained_at, sharpe, win_rate, val_loss, notes, changed_by, change_type, source_ip)
-                VALUES (%s, NOW(), %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (version_hash, sharpe, win_rate, val_loss, notes, changed_by, change_type, source_ip)
-            )
-    finally:
-        conn.close()
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
 
 
 def send_event(version_hash: str, change_type: str, changed_by: str | None = None,

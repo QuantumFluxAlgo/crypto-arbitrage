@@ -2,6 +2,8 @@ import argparse
 import hashlib
 from .logger import logger
 import os
+
+DRY_RUN = os.getenv("DRY_RUN", "True").lower() == "true"
 import socket
 import subprocess
 import shutil
@@ -56,24 +58,27 @@ def main():
     except Exception:
         ip = None
 
-    insert_metadata(
-        version_hash,
-        sharpe=sharpe,
-        win_rate=win_rate,
-        val_loss=val_loss,
-        notes=args.notes,
-        changed_by=user,
-        change_type="train",
-        source_ip=ip
-    )
+    if not DRY_RUN:
+        insert_metadata(
+            version_hash,
+            sharpe=sharpe,
+            win_rate=win_rate,
+            val_loss=val_loss,
+            notes=args.notes,
+            changed_by=user,
+            change_type="train",
+            source_ip=ip
+        )
 
-    send_event(version_hash, "train", user, ip)
-    logger.info("Logged metadata with hash %s", version_hash)
+        send_event(version_hash, "train", user, ip)
+        logger.info("Logged metadata with hash %s", version_hash)
+    else:
+        logger.info("[DRY-RUN] Metadata logging skipped")
 
     # Notify via Node.js CLI alert script
     script = Path(__file__).resolve().parents[1] / 'api' / 'cli' / 'alertModelUpdate.js'
-   node_bin = shutil.which('node')
-    if node_bin:
+    node_bin = shutil.which('node')
+    if not DRY_RUN and node_bin:
         try:
             subprocess.run(
                 [node_bin, str(script), '--version', version_hash, '--accuracy', f"{win_rate:.2f}"],
@@ -81,8 +86,10 @@ def main():
             )
         except Exception as exc:
             logger.warning("Failed to send model update alert: %s", exc)
-    else:
+    elif not node_bin:
         logger.warning("Node.js not found; skipping model update alert")
+    else:
+        logger.info("[DRY-RUN] Model update alert skipped")
 
 
 

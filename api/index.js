@@ -18,6 +18,7 @@ import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import configRoutes from './routes/config.js';
+import { baseOpenPaths } from './lib/constants.js';
 import { sendAlert } from '../alerts/alertAgent.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
@@ -110,13 +111,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
 
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
-      '/api/login',
-      '/login',
-      '/api/reset-password',
-      '/reset-password',
-      '/api/metrics/live',
-      '/api/metrics/sandbox',
-      '/api/metrics',
+      ...baseOpenPaths,
       ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
     ];
@@ -132,13 +127,7 @@ async function apiRoutes(api, { testState, redis, pool }) {  api.register(loginR
   api.addHook('preHandler', async (req, reply) => {
     if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return;
     const openPaths = [
-      '/api/login',
-      '/login',
-      '/api/reset-password',
-      '/reset-password',
-      '/api/metrics/live',
-      '/api/metrics/sandbox',
-      '/api/metrics',
+      ...baseOpenPaths,
       ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
     ];
