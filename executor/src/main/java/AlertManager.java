@@ -6,6 +6,11 @@ package executor;
  */
 public class AlertManager {
 
+    /** Convenience wrapper matching new API naming. */
+    public static void send(String type, String message) {
+        sendAlert(type, message);
+    }
+
     /**
      * Publish an alert to Redis and send via SMTP if configured.
      *

@@ -55,6 +55,10 @@ public class Main {
 
         String mode = System.getenv().getOrDefault("PERSONALITY_MODE", "REALISTIC");
         RiskFilter riskFilter = new RiskFilter(mode);
+        String execMode = System.getenv().getOrDefault("EXECUTION_MODE", "live");
+        ExecutionMode executionMode = execMode.equalsIgnoreCase("sandbox") || execMode.equalsIgnoreCase("dry-run")
+                ? ExecutionMode.SANDBOX : ExecutionMode.LIVE;
+        Config configObj = new Config(executionMode);
         NearMissLogger nearMissLogger = new NearMissLogger(conn);
         TradeLogger tradeLogger = new TradeLogger(conn);
         SweepLogger sweepLogger = new SweepLogger(conn);
@@ -63,7 +67,7 @@ public class Main {
         RedisClient redisClient = new RedisClient(redisHost, redisPort, redisChannel,
                 (ch, msg) -> holder[0].handleMessage(msg));
 
-        holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger);
+        holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger, configObj);
         holder[0].start();
 
         TriangularArbDetector arbDetector = new TriangularArbDetector(holder[0]);

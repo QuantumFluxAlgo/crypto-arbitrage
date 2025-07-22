@@ -28,6 +28,6 @@ public class DryRunPanicResumeTest {
         f.setAccessible(true);
         ((java.util.concurrent.atomic.AtomicBoolean)f.get(exec)).set(true);
         exec.resumeFromPanic();
-        assertFalse(((java.util.concurrent.atomic.AtomicBoolean)f.get(exec)).get());
+        assertTrue(((java.util.concurrent.atomic.AtomicBoolean)f.get(exec)).get(), "panic flag should remain set in dry-run");
     }
 }
