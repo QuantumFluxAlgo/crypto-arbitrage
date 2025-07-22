@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 
 // PATCH selected settings to API
-async function saveSettings(values) {
+async function patchSettings(values) {
   try {
     const res = await fetch('/api/settings', {
       method: 'PATCH',
@@ -31,11 +31,11 @@ export default function Settings() {
           if (data.personality_mode) {
             setMode(data.personality_mode.toLowerCase());
           }
-          if (typeof data.maxLossPct === 'number') {
-            setLossCapPct(data.maxLossPct);
+          if (typeof data.loss_cap_pct === 'number') {
+            setLossCapPct(data.loss_cap_pct);
           }
-          if (typeof data.latencyMaxMs === 'number') {
-            setLatencyMaxMs(data.latencyMaxMs);
+          if (typeof data.latency_max_ms === 'number') {
+            setLatencyMaxMs(data.latency_max_ms);
           }
         }
       } catch (err) {
@@ -66,8 +66,9 @@ export default function Settings() {
         </label>
         <input
           type="range"
-          min="0"
-          max="20"
+          min="1"
+          max="10"
+          step="0.5"
           value={lossCapPct}
           onChange={(e) => setLossCapPct(Number(e.target.value))}
         />
@@ -82,16 +83,20 @@ export default function Settings() {
           max="1000"
           step="50"
           value={latencyMaxMs}
-          onChange={(e) => setLatencyMaxMs(Number(e.target.value))}
+          onChange={async (e) => {
+            const val = Number(e.target.value);
+            setLatencyMaxMs(val);
+            await patchSettings({ latency_max_ms: val });
+          }}
         />
       </div>
       <button
         className="bg-blue-600 text-white px-3 py-1 rounded"
         onClick={() =>
-          saveSettings({
+          patchSettings({
             personality_mode: mode,
-            maxLossPct: lossCapPct,
-            latencyMaxMs,
+            loss_cap_pct: lossCapPct,
+            latency_max_ms: latencyMaxMs,
           })
         }
       >
