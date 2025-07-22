@@ -1,6 +1,7 @@
 import { z } from "zod";
 import logger from "../services/logger.js";
 import { setMode as setRiskFilterMode } from "../services/riskFilter.js";
+import { getControlChannel } from "../config/settings.js";
 
 export let settings = {
   schema_version: 1,
@@ -16,7 +17,8 @@ export let settings = {
   latencyMaxMs: 250,
 };
 
-export default async function settingsRoutes(app) {
+export default async function settingsRoutes(app, opts) {
+  const { redis } = opts;
   app.get("/settings", async () => settings);
 
   const schema = z
@@ -114,6 +116,11 @@ export default async function settingsRoutes(app) {
       if (req.body.personality_mode !== settings.personality_mode) {
         settings.personality_mode = req.body.personality_mode;
         setRiskFilterMode(req.body.personality_mode);
+        try {
+          await redis.publish(getControlChannel(), `mode:${req.body.personality_mode}`);
+        } catch (err) {
+          logger.error('Failed to publish mode update', err);
+        }
       }
     }
     if (typeof req.body.sweep_cadence === "string") {

@@ -20,6 +20,9 @@ dependencies {
     // ✅ Redis
     implementation 'redis.clients:jedis:6.0.0'
 
+    // ✅ SMTP
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+
     // ✅ JSON parsing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
 

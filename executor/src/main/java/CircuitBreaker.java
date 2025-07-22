@@ -31,7 +31,7 @@ public class CircuitBreaker {
         if (!tripped.get() && (winRate < minWinRate || drawdownPct > maxDrawdownPct)) {
             tripped.set(true);
             logger.error("CIRCUIT BREAKER TRIPPED winRate={} drawdownPct={}", winRate, drawdownPct);
-            AlertManager.sendAlert("CIRCUIT BREAKER TRIPPED");
+            AlertManager.sendAlert("CIRCUIT", "CIRCUIT BREAKER TRIPPED");
             redisClient.publish("alerts", "CIRCUIT BREAKER TRIPPED");
             redisClient.publish(RedisClient.getControlChannel(), "halt");
         }

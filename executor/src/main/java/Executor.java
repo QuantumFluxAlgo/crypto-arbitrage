@@ -99,7 +99,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.circuitBreaker = new CircuitBreaker(redisClient, cbWinRate, cbDrawdown);
         this.canaryMode = Boolean.parseBoolean(System.getenv().getOrDefault("CANARY_MODE", "false"));
         this.ghostMode = Boolean.parseBoolean(System.getenv().getOrDefault("GHOST_MODE", "false"));
-        boolean envDryRun = "dry-run".equalsIgnoreCase(System.getenv().getOrDefault("MODE", ""));
+        String envMode = System.getenv().getOrDefault("EXECUTION_MODE",
+                System.getenv().getOrDefault("MODE", ""));
+        boolean envDryRun = envMode.equalsIgnoreCase("sandbox") || envMode.equalsIgnoreCase("dry-run");
         this.sandboxMode = this.config.isDryRun() || envDryRun;
         this.maxOpenTrades = Integer.parseInt(System.getenv().getOrDefault("MAX_OPEN_TRADES", "5"));
     }
@@ -177,6 +179,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             if ("resume".equalsIgnoreCase(msg)) {
                 logger.info("Resume signal received on {}", controlChannel);
                 resumeFromPanic();
+            } else if (msg != null && msg.startsWith("mode:")) {
+                String newMode = msg.substring(5).trim();
+                riskFilter.setMode(newMode);
             }
         });
     }
@@ -327,7 +332,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         if (PanicBrake.shouldHalt(redisClient, config, dailyLossPct, avgLatencyMs, winRate)) {
             if (isPanic.compareAndSet(false, true)) {
                 logger.error("PANIC BRAKE TRIGGERED - trading paused");
-                AlertManager.sendAlert("PANIC BRAKE TRIGGERED");
+                AlertManager.sendAlert("PANIC", "BRAKE TRIGGERED");
                 redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
             }
         }
@@ -387,7 +392,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
             logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", ts);
-            AlertManager.sendAlert("Trading resumed at " + ts);
+            AlertManager.sendAlert("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");
@@ -402,7 +407,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
             logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", ts);
-            AlertManager.sendAlert("Trading resumed at " + ts);
+            AlertManager.sendAlert("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");

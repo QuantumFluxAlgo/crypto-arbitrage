@@ -8,7 +8,7 @@ Follow these steps to run the platform in sandbox mode without exposing real cre
 cp .env.sandbox.example .env.sandbox
 ```
 
-Edit `.env.sandbox` and provide test-safe values. This file contains:
+Edit `.env.sandbox` and provide test-safe values. Ensure `EXECUTION_MODE` is set so the executor runs in dry-run mode:
 
 ```env
 API_KEY=your_value_here
