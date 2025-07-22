@@ -19,6 +19,7 @@ public class ColdSweeper {
     private final SweepLogger sweepLogger;
     private final Config config;
     private final boolean isDryRun;
+    private final java.util.concurrent.atomic.AtomicBoolean busy = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     /**
      * Default: sweep when profit ≥ $5,000 or ≥ 30% of capital.
@@ -68,6 +69,11 @@ public class ColdSweeper {
         this.isDryRun = configObj != null && configObj.isDryRun();
     }
 
+    /** @return true if a sweep is currently in progress */
+    public boolean isBusy() {
+        return busy.get();
+    }
+
     private String maskAddress(String address) {
         if (address == null || address.length() <= 10) {
             return "********";
@@ -102,6 +108,7 @@ public class ColdSweeper {
      * Uses the address from {@link ColdSweeperConfig}.
      */
     public void sweepToColdWallet(double amountUsd) {
+        busy.set(true);
         String address = sweeperConfig.getTestColdWalletAddress();
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
@@ -113,6 +120,7 @@ public class ColdSweeper {
         if (sweepLogger != null) {
             sweepLogger.logSweep(amountUsd, address, "auto");
         }
+        busy.set(false);
     }
 
     /**
@@ -122,6 +130,7 @@ public class ColdSweeper {
      * @param amountUsd amount to sweep
      */
     public void sweepToColdWallet(String address, double amountUsd) {
+        busy.set(true);
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
             logger.info("[DRY-RUN] Skipping cold wallet transfer");
@@ -132,5 +141,6 @@ public class ColdSweeper {
         if (sweepLogger != null) {
             sweepLogger.logSweep(amountUsd, address, "manual");
         }
+        busy.set(false);
     }
 }

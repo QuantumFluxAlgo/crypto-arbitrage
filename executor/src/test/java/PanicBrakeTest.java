@@ -16,12 +16,12 @@ public class PanicBrakeTest {
         String message;
         DummyRedis() { super("localhost", 6379, "chan", (c,m)->{}); }
         @Override public void start() {}
-        @Override public void publish(String ch, String msg) { this.channel = ch; this.message = msg; }
+        @Override public boolean publish(String ch, String msg) { this.channel = ch; this.message = msg; return true; }
     }
 
     @Test
     void triggersOnHighLoss() {
-        assertTrue(PanicBrake.shouldHalt(null, new Config(ExecutionMode.LIVE), 4.0, 100.0, 0.8));
+        assertTrue(PanicBrake.shouldHalt(null, new Config(ExecutionMode.LIVE), 6.0, 100.0, 0.8));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class PanicBrakeTest {
     void doesNotPublishPauseInDryRun() {
         DummyRedis redis = new DummyRedis();
         Config config = new Config(ExecutionMode.SANDBOX);
-        assertTrue(PanicBrake.shouldHalt(redis, config, 4.0, 100.0, 0.8));
+        assertTrue(PanicBrake.shouldHalt(redis, config, 6.0, 100.0, 0.8));
         assertNull(redis.channel);
         assertNull(redis.message);
     }

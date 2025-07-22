@@ -16,6 +16,12 @@ public class RiskFilter {
     private long maxLatencyMs;
     private double maxSlippagePct = Double.parseDouble(
         System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "1.0"));
+    private double lossCapPct = Double.parseDouble(
+        System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0"));
+    private int latencyMax = Integer.parseInt(
+        System.getenv().getOrDefault("LATENCY_MAX_MS", "250"));
+    private double winRateThreshold = Double.parseDouble(
+        System.getenv().getOrDefault("WIN_RATE_THRESHOLD", "0.5"));
     private String mode;
 
     /** Construct using the default personality mode. */
@@ -76,6 +82,24 @@ public class RiskFilter {
             }
         }
         logger.info("RiskFilter mode set to {} (minEdge={}, latency={})", this.mode, this.minEdge, this.maxLatencyMs);
+    }
+
+    /** Update loss cap percentage at runtime. */
+    public void setLossCap(double pct) {
+        this.lossCapPct = pct;
+        logger.info("[SETTINGS] lossCapPct updated to {}", pct);
+    }
+
+    /** Update latency max threshold at runtime. */
+    public void setLatencyMax(int ms) {
+        this.latencyMax = ms;
+        logger.info("[SETTINGS] latencyMax updated to {}ms", ms);
+    }
+
+    /** Update win rate threshold at runtime. */
+    public void setWinRateThreshold(double threshold) {
+        this.winRateThreshold = threshold;
+        logger.info("[SETTINGS] winRateThreshold updated to {}", threshold);
     }
 
     /**

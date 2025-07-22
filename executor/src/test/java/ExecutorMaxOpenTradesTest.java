@@ -11,7 +11,7 @@ public class ExecutorMaxOpenTradesTest {
     static class DummyRedisClient extends RedisClient {
         DummyRedisClient() { super("localhost", 6379, "chan", (c,m) -> {}); }
         @Override public void start() {}
-        @Override public void publish(String channel, String message) {}
+        @Override public boolean publish(String channel, String message) { return true; }
     }
 
     static class DummyExecutor extends Executor {
