@@ -1,5 +1,5 @@
 // UI for adjusting trading personality mode
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // PATCH selected mode to API
 async function saveSettings(mode) {
@@ -19,6 +19,23 @@ async function saveSettings(mode) {
 
 export default function Settings() {
   const [mode, setMode] = useState('auto');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.personality_mode) {
+            setMode(data.personality_mode.toLowerCase());
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings', err);
+      }
+    }
+    load();
+  }, []);
 
   return (
     <div className="p-4 space-y-4 text-text">
