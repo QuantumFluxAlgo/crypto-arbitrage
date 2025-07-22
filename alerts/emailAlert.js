@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import logger from './logger.js';
+import logger from '../api/services/logger.js';
 
 const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
@@ -9,7 +9,7 @@ const host = process.env.SMTP_HOST || 'smtp.gmail.com';
 logger.info(`Using SMTP host: ${host}`);
 
 const transporter = nodemailer.createTransport({
-    host,
+  host,
   auth: {
     user,
     pass,
@@ -30,13 +30,13 @@ async function sendEmail(subject, body) {
     text: body,
   };
 
-    try {
-      await transporter.sendMail(mailOptions);
-      logger.info('Email alert sent');
-    } catch (error) {
-      logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${error.message}`);
-      throw error;
-    }
+  try {
+    await transporter.sendMail(mailOptions);
+    logger.info('Email alert sent');
+  } catch (error) {
+    logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${error.message}`);
+    throw error;
+  }
 }
 
 export { sendEmail };

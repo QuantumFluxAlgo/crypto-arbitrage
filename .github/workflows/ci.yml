@@ -56,8 +56,13 @@ jobs:
       - name: Run API tests
         run: |
           mkdir -p ../test-results
-          npm test -- --json --outputFile=../test-results/api-jest.json
+          npm test -- --coverage --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}' --json --outputFile=../test-results/api-jest.json
         working-directory: api
+      - name: Upload API coverage
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        with:
+          name: api-coverage
+          path: api/coverage
       - name: Upload API test report
         uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
@@ -100,8 +105,13 @@ jobs:
       - name: Run Dashboard tests
         run: |
           mkdir -p ../test-results
-          npx jest --json --outputFile=../test-results/dashboard-jest.json
+          npx jest --coverage --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}' --json --outputFile=../test-results/dashboard-jest.json
         working-directory: dashboard
+      - name: Upload Dashboard coverage
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        with:
+          name: dashboard-coverage
+          path: dashboard/coverage
       - name: Upload Dashboard test report
         uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
@@ -188,7 +198,7 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pylint
       - name: Install Podman
         run: |
           sudo apt-get update
@@ -196,8 +206,15 @@ jobs:
       - name: Run Analytics tests
         run: |
           mkdir -p ../test-results
-          pytest --junitxml=../test-results/analytics-pytest.xml
+          pytest --cov=analytics --cov-report=xml:../test-results/analytics-coverage.xml --cov-fail-under=80 --junitxml=../test-results/analytics-pytest.xml
         working-directory: analytics
+      - name: Upload analytics coverage
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        with:
+          name: analytics-coverage
+          path: test-results/analytics-coverage.xml
+      - name: Run Pylint
+        run: pylint analytics/ --fail-under=9
       - name: Upload analytics test report
         uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
@@ -241,14 +258,20 @@ jobs:
       - name: Run Executor tests
         run: |
           mkdir -p ../test-results/executor
-          ./gradlew test
+          ./gradlew test jacocoTestReport jacocoTestCoverageVerification
           cp -r build/test-results/test ../test-results/executor || true
+          cp build/reports/jacoco/test/jacocoTestReport.xml ../test-results/executor/jacoco.xml || true
         working-directory: executor
       - name: Upload Executor test report
         uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
         with:
           name: executor-gradle-report
           path: test-results/executor
+      - name: Upload Executor coverage
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5
+        with:
+          name: executor-coverage
+          path: test-results/executor/jacoco.xml
       - name: Build executor image
         run: podman build -t executor ./executor
       - name: Test executor container

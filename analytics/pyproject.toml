@@ -1,0 +1,8 @@
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.pylint]
+max-line-length = 88
+disable = ["missing-module-docstring", "missing-function-docstring"]
