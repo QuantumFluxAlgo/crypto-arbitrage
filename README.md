@@ -38,6 +38,10 @@ graph TD
   Executor --> Postgres[(PostgreSQL)]
 ```
 
+Redis and Postgres deployments are configured with ephemeral `emptyDir` volumes.
+All data will be lost if the pods restart. Configure an external database if
+persistent storage is required.
+
 ---
 
 ## Required Tools

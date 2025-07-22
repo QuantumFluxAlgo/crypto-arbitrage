@@ -91,14 +91,10 @@ feedAggregator:
     # ALERT_CHANNEL: "alerts"
 
 redis:
-  storage: 5Gi
-  storageClass: standard
-  accessMode: ReadWriteOnce
+  # uses emptyDir for non-persistent storage
 
 postgres:
-  storage: 10Gi
-  storageClass: standard
-  accessMode: ReadWriteOnce
+  # uses emptyDir for non-persistent storage
 
 logForwarder:
   enabled: true

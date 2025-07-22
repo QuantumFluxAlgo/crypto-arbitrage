@@ -15,6 +15,7 @@ spec:
       labels:
         app: analytics
     spec:
+      serviceAccountName: {{ .Release.Name }}-analytics
       containers:
         - name: analytics
           image: {{ .Values.analytics.image }}

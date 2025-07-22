@@ -15,6 +15,7 @@ spec:
       labels:
         app: feed-aggregator
     spec:
+      serviceAccountName: {{ .Release.Name }}-feed-aggregator
       containers:
         - name: feed-aggregator
           image: {{ .Values.feedAggregator.image }}
