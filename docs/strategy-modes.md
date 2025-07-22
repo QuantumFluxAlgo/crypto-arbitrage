@@ -16,4 +16,4 @@ In Auto mode the system evaluates market volatility and win rate every minute. H
 
 ## Hot Reload
 
-Operators can switch modes from the dashboard settings panel. Updates are applied instantly without restarting services.
+Operators can switch modes from the dashboard settings panel. The API publishes a `mode:<value>` message on the control feed so the executor updates thresholds immediately without restarting services.

@@ -180,7 +180,7 @@ public class RedisClient extends Thread {
             } catch (Exception e) {
                 long delay = Math.min(maxDelayMs, (1L << attempt) * baseDelayMs);
                 logger.error("Redis connection failed: {}", e.getMessage());
-                AlertManager.sendAlert("Redis connection lost: " + e.getMessage());
+                AlertManager.sendAlert("REDIS", "connection lost: " + e.getMessage());
                 try {
                     Thread.sleep(delay);
                 } catch (InterruptedException ie) {

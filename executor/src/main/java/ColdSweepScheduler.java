@@ -80,6 +80,8 @@ public class ColdSweepScheduler {
         if (sweeper.shouldSweep(profit, capital)) {
             logger.info("Cold sweep triggered");
             sweeper.sweepToColdWallet(profit);
+            String summary = String.format("profit=%.2f capital=%.2f", profit, capital);
+            AlertManager.sendAlert("SWEEP", summary);
         }
     }
 
