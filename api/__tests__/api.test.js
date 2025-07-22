@@ -51,6 +51,11 @@ describeLocal('API authentication', () => {
       .get('/api/opportunities')
       .set('Cookie', cookie);
     expect(authRes.statusCode).toBe(200);
+    expect(authRes.body).toEqual({
+      opportunities: [],
+      dryRun: true,
+      timestamp: expect.any(String)
+    });
   });
 
   test('/resume requires auth and publishes message', async () => {
