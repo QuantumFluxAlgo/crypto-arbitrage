@@ -18,6 +18,7 @@ public class ExecutorSandboxModeTest {
         }
         @Override
         public void start() {}
+        @Override public boolean ping() { return true; }
         @Override
         public boolean publish(String ch, String msg) {
             this.channel = ch;

@@ -15,6 +15,7 @@ public class ExecutorGhostModeTest {
         }
         @Override
         public void start() {}
+        @Override public boolean ping() { return true; }
         @Override
         public boolean publish(String channel, String message) {
             this.publishedChannel = channel;

@@ -180,6 +180,20 @@ public class RedisClient extends Thread {
         interrupt();
     }
 
+    /**
+     * Ping Redis to check availability.
+     *
+     * @return true if Redis responds with PONG
+     */
+    public boolean ping() {
+        try (Jedis jedis = new Jedis(host, port)) {
+            return "PONG".equalsIgnoreCase(jedis.ping());
+        } catch (Exception e) {
+            logger.error("Redis ping failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void run() {
