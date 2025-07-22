@@ -1,14 +1,15 @@
-// Adjusts trading mode based on volatility stats
 #!/usr/bin/env node
+// Personality Scheduler service
 
+require('dotenv').config();
 const axios = require('axios');
 
-// Target endpoints derived from ENV for portability
 const ANALYTICS_URL = process.env.ANALYTICS_URL || 'http://localhost:5000/performance';
 const SETTINGS_URL = process.env.SETTINGS_URL || 'http://localhost:8080/api/settings';
 const INTERVAL_MS = Number(process.env.SWITCH_INTERVAL_MS || 300000);
 const VOL_THRESHOLD = Number(process.env.VOL_THRESHOLD || 1);
 const WIN_THRESHOLD = Number(process.env.WIN_THRESHOLD || 0.55);
+const DRY_RUN = process.env.DRY_RUN === 'true';
 
 async function checkAndUpdate() {
   try {
@@ -18,20 +19,23 @@ async function checkAndUpdate() {
     if (volatility > VOL_THRESHOLD && win_rate >= WIN_THRESHOLD) {
       mode = 'Aggressive';
     }
-    await axios.patch(SETTINGS_URL, { personality_mode: mode });
-    console.log(`updated mode to ${mode}`);
+    if (DRY_RUN) {
+      console.log(`[DRY-RUN] would set mode to ${mode}`);
+    } else {
+      await axios.patch(SETTINGS_URL, { personality_mode: mode });
+      console.log(`personality mode set to ${mode}`);
+    }
   } catch (err) {
-    console.error('scheduler error:', err.message);
+    console.error('[personality-scheduler] error:', err.message);
   }
 }
 
-let running = false;
-async function loop() {
-  if (running) return;
-  running = true;
-  await checkAndUpdate();
-  running = false;
-  setTimeout(loop, INTERVAL_MS);
+function loop() {
+  checkAndUpdate().finally(() => {
+    setTimeout(loop, INTERVAL_MS);
+  });
 }
 
+console.log(`Starting personality scheduler. Interval ${INTERVAL_MS} ms. Dry run: ${DRY_RUN}`);
 loop();
+

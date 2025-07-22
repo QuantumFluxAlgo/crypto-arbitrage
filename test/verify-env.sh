@@ -5,10 +5,12 @@
 set -euo pipefail
 
 # fail fast if any development secrets are committed
-for file in api/.env executor/.env dashboard/.env; do
-  if [ -f "$file" ]; then
-    echo "Error: unsealed secret file $file detected" >&2
+for dir in api executor dashboard; do
+  if [ -f "$dir/.env" ]; then
+    echo "Error: unsealed secret file $dir/.env detected" >&2
     exit 1
+  elif [ -f "$dir/.env.example" ]; then
+    echo "Found $dir/.env.example (ok)"
   fi
 done
 
