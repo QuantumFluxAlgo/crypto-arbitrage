@@ -227,6 +227,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
+        if (!redisClient.ping()) {
+            logger.warn("[DRY-RUN ENFORCEMENT] Trade blocked: Redis unavailable");
+            return;
+        }
+
         double predictedProb = fetchModelScore(opp);
         logger.info("Model score for {}: {}", opp.getPair(), predictedProb);
         double simulatedPnl = profitEstimator.estimate(opp);
@@ -318,6 +323,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return null;
         }
 
+        if (!redisClient.ping()) {
+            logger.warn("[DRY-RUN ENFORCEMENT] Trade blocked: Redis unavailable");
+            return null;
+        }
+
         logger.info("Executing opportunity: {}", opp.getPair());
 
         double tradeSize = riskSettings.computeTradeSize();
@@ -347,7 +357,9 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private void recordMetrics(SpreadOpportunity opp, TradeResult result) {
         updatePerformanceMetrics(result);
 
-        if (result.success) {
+        if ("PARTIAL_ABORTED".equals(result.status)) {
+            logger.warn("[PARTIAL_ABORTED] {} trade legs canceled", opp.getPair());
+        } else if (result.success) {
             if (tradeLogger != null) {
                 tradeLogger.logTrade(opp, result.pnl);
             }

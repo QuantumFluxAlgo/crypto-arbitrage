@@ -12,6 +12,7 @@ public class CircuitBreakerTest {
         String message;
         DummyRedisClient() { super("localhost", 6379, "chan", (c,m)->{}); }
         @Override public void start() {}
+        @Override public boolean ping() { return true; }
         @Override public boolean publish(String ch, String msg) { channel = ch; message = msg; return true; }
     }
 

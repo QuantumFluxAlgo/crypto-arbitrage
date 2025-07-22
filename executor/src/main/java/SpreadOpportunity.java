@@ -111,29 +111,18 @@ public class SpreadOpportunity {
     boolean buyOk = false;
     boolean sellOk = false;
     boolean partial = false;
-    int attempts = 0;
-    final int maxRetries = 3;
 
-    while (attempts < maxRetries && !buyOk) {
-      buyOk = buy.placeIocOrder(pair, "BUY", size, price);
-      buyCancel += buy.getLastCancelFee();
-      if (!buyOk && buy.getLastFillSize() > 0) {
-        partial = true;
-        break;
-      }
-      attempts++;
+    buyOk = buy.placeIocOrder(pair, "BUY", size, price);
+    buyCancel += buy.getLastCancelFee();
+    if (!buyOk && buy.getLastFillSize() > 0) {
+      partial = true;
     }
 
     if (!partial) {
-      attempts = 0;
-      while (attempts < maxRetries && !sellOk) {
-        sellOk = sell.placeIocOrder(pair, "SELL", size, price);
-        sellCancel += sell.getLastCancelFee();
-        if (!sellOk && sell.getLastFillSize() > 0) {
-          partial = true;
-          break;
-        }
-        attempts++;
+      sellOk = sell.placeIocOrder(pair, "SELL", size, price);
+      sellCancel += sell.getLastCancelFee();
+      if (!sellOk && sell.getLastFillSize() > 0) {
+        partial = true;
       }
     }
 
@@ -161,8 +150,9 @@ public class SpreadOpportunity {
     double sellFee = size * price * sell.getFeeRate(pair);
     double pnl = netEdge - buyFee - sellFee - buyCancel - sellCancel;
     boolean success = !partial && buyOk && sellOk;
+    String status = partial ? "PARTIAL_ABORTED" : (success ? "FILLED" : "FAILED");
 
-    return new TradeResult(success, success ? pnl : 0.0, latencyMs);
+    return new TradeResult(success, success ? pnl : 0.0, latencyMs, status);
   }
 
   /**

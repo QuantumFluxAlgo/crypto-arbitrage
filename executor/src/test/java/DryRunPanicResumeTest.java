@@ -12,6 +12,7 @@ public class DryRunPanicResumeTest {
     static class DummyRedis extends RedisClient {
         DummyRedis() { super("localhost", 6379, "chan", (c,m)->{}); }
         @Override public void start() {}
+        @Override public boolean ping() { return true; }
     }
 
     static class DummyExecutor extends Executor {

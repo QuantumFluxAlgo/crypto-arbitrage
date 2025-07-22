@@ -13,6 +13,8 @@ public class SweepHandlerTest {
             super("localhost", 6379, "chan", (c, m) -> {}, 1L, 2L);
         }
 
+        @Override public boolean ping() { return true; }
+
         @Override
         public void subscribe(redis.clients.jedis.JedisPubSub listener, String... channels) {
             listener.onMessage(channels[0], "sweep");

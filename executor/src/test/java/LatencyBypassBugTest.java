@@ -10,6 +10,7 @@ public class LatencyBypassBugTest {
     static class DummyRedis extends RedisClient {
         DummyRedis() { super("localhost", 6379, "chan", (c,m)->{}); }
         @Override public void start() {}
+        @Override public boolean ping() { return true; }
         @Override public boolean publish(String c, String m) { return true; }
     }
 

@@ -18,6 +18,7 @@ public class ExecutorRedisRecoveryTest {
         java.util.function.Consumer<String> controlHandler;
         StubRedisClient() { super("localhost", 6379, "chan", (c,m)->{}, 1L, 2L); }
         @Override public void start() {}
+        @Override public boolean ping() { return true; }
         @Override public void subscribe(String channel, MessageHandler handler) { feedHandler = handler; }
         @Override public void subscribeControl(Config config, java.util.function.Consumer<String> handler) { controlHandler = handler; }
         void sendFeed(String msg) { if (feedHandler != null) feedHandler.onMessage("chan", msg); }

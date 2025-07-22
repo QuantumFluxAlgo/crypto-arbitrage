@@ -131,26 +131,38 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         double sellCancel = 0.0;
         boolean buyOk = false;
         boolean sellOk = false;
+        boolean partial = false;
         double buyPrice = price;
         double sellPrice = price;
-        int attempts = 0;
-        final int maxRetries = 3;
+        String buyOrderId = "BUY-" + System.nanoTime();
+        String sellOrderId = "SELL-" + System.nanoTime();
 
-        while (attempts < maxRetries && !buyOk) {
-            buyOk = placeOrder(opp.getPair(), "BUY", size, price);
-            buyCancel += getLastCancelFee();
-            buyPrice = getLastExecPrice();
-            attempts++;
+        buyOk = placeOrder(opp.getPair(), "BUY", size, price);
+        buyCancel += getLastCancelFee();
+        buyPrice = getLastExecPrice();
+        if (!buyOk && getLastFillSize() > 0) {
+            partial = true;
         }
 
-        if (buyOk) {
-            attempts = 0;
-            while (attempts < maxRetries && !sellOk) {
-                sellOk = placeOrder(opp.getPair(), "SELL", size, price);
-                sellCancel += getLastCancelFee();
-                sellPrice = getLastExecPrice();
-                attempts++;
+        if (!partial) {
+            sellOk = placeOrder(opp.getPair(), "SELL", size, price);
+            sellCancel += getLastCancelFee();
+            sellPrice = getLastExecPrice();
+            if (!sellOk && getLastFillSize() > 0) {
+                partial = true;
             }
+        }
+
+        if (partial) {
+            cancel(buyOrderId);
+            cancel(sellOrderId);
+            logger.info("[CANCEL] Partial fill detected. Canceling all legs: {}, {}", buyOrderId, sellOrderId);
+        } else if (!buyOk) {
+            cancel(sellOrderId);
+            logger.info("[CANCEL] Orphan order canceled: {}", sellOrderId);
+        } else if (!sellOk) {
+            cancel(buyOrderId);
+            logger.info("[CANCEL] Orphan order canceled: {}", buyOrderId);
         }
 
         long end = System.currentTimeMillis();
@@ -162,10 +174,12 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         double slippageLoss = (buyPrice - price) * size + (price - sellPrice) * size;
         double pnl = opp.getNetEdge() - buyFee - sellFee - buyCancel - sellCancel - slippageLoss;
 
-        boolean success = buyOk && sellOk;
+        boolean success = !partial && buyOk && sellOk;
         if (!success) {
             pnl = 0.0;
         }
+
+        String status = partial ? "PARTIAL_ABORTED" : (success ? "FILLED" : "FAILED");
 
         if (redisClient != null) {
             try {
@@ -182,6 +196,6 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
             }
         }
 
-        return new TradeResult(success, pnl, latency);
+        return new TradeResult(success, pnl, latency, status);
     }
 }

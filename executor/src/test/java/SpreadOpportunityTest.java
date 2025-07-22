@@ -73,6 +73,17 @@ public class SpreadOpportunityTest {
   }
 
   @Test
+  void partialFillReturnsAbortedStatus() {
+    MockExchangeAdapter buy = new MockExchangeAdapter("A", 0.0002, new FixedRandom(0.85));
+    MockExchangeAdapter sell = new MockExchangeAdapter("B", 0.0002, new FixedRandom(0.5));
+    TestOpportunity opp = new TestOpportunity(buy, sell);
+
+    TradeResult result = opp.execute(1.0, 100.0);
+    assertFalse(result.success);
+    assertEquals("PARTIAL_ABORTED", result.status);
+  }
+
+  @Test
   void bothLegsPartialFillCancelBoth() {
     MockExchangeAdapter buy = new MockExchangeAdapter("A", 0.0002, new FixedRandom(0.85));
     MockExchangeAdapter sell = new MockExchangeAdapter("B", 0.0002, new FixedRandom(0.85));
