@@ -1,4 +1,5 @@
 import { listUsers, addUser, updatePassword, removeUser } from './userStore.js';
+import { requireFields } from '../middleware/validate.js';
 
 export default async function userRoutes(app) {
   app.addHook('preHandler', async (req, reply) => {
@@ -9,23 +10,15 @@ export default async function userRoutes(app) {
 
   app.get('/', async () => listUsers());
 
-  app.post('/', async (req, reply) => {
+  app.post('/', { preHandler: requireFields(['email', 'password']) }, async (req) => {
     const { email, password, isAdmin } = req.body;
-    if (!email || !password) {
-      reply.code(400);
-      return { error: 'email and password required' };
-    }
     const user = await addUser(email, password, !!isAdmin);
     return user;
   });
 
-  app.put('/:id', async (req, reply) => {
+  app.put('/:id', { preHandler: requireFields(['password']) }, async (req, reply) => {
     const { id } = req.params;
     const { password } = req.body;
-    if (!password) {
-      reply.code(400);
-      return { error: 'password required' };
-    }
     const updated = await updatePassword(id, password);
     if (!updated) {
       reply.code(404);

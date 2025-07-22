@@ -196,6 +196,7 @@ describeLocal('API authentication', () => {
     });
 
   test('POST /alerts/test/email returns 200', async () => {
+    process.env.SANDBOX_MODE = 'true';
     const login = await request(app.server)
       .post('/api/login')
       .send({ email: 'user', password: 'pass' });
@@ -204,6 +205,20 @@ describeLocal('API authentication', () => {
       .post('/api/alerts/test/email')
       .set('Cookie', cookie);
     expect(res.statusCode).toBe(200);
+    delete process.env.SANDBOX_MODE;
+  });
+
+  test('GET /alerts/verify returns 200', async () => {
+    process.env.SANDBOX_MODE = 'true';
+    const login = await request(app.server)
+      .post('/api/login')
+      .send({ email: 'user', password: 'pass' });
+    const cookie = login.headers['set-cookie'][0].split(';')[0];
+    const res = await request(app.server)
+      .get('/api/alerts/verify')
+      .set('Cookie', cookie);
+    expect(res.statusCode).toBe(200);
+    delete process.env.SANDBOX_MODE;
   });
 
   test('/infra/status returns infra summary', async () => {

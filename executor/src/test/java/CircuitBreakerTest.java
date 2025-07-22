@@ -21,7 +21,7 @@ public class CircuitBreakerTest {
         CircuitBreaker cb = new CircuitBreaker(client, 0.5, 5.0);
         cb.check(0.4, 1.0);
         assertTrue(cb.isTripped());
-        assertEquals("control-feed", client.channel);
+        assertEquals(RedisClient.getControlChannel(), client.channel);
         assertEquals("halt", client.message);
     }
 

@@ -33,7 +33,7 @@ public class CircuitBreaker {
             logger.error("CIRCUIT BREAKER TRIPPED winRate={} drawdownPct={}", winRate, drawdownPct);
             AlertManager.sendAlert("CIRCUIT BREAKER TRIPPED");
             redisClient.publish("alerts", "CIRCUIT BREAKER TRIPPED");
-            redisClient.publish("control-feed", "halt");
+            redisClient.publish(RedisClient.getControlChannel(), "halt");
         }
     }
 

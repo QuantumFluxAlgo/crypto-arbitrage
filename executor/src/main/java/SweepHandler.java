@@ -2,12 +2,13 @@ package executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import executor.RedisClient;
 
 /**
  * Listens for "sweep" commands on a Redis channel and triggers the cold wallet sweep.
  */
 public class SweepHandler {
-    private static final String CHANNEL = "control-feed";
+    private static final String CHANNEL = RedisClient.getControlChannel();
     private static final Logger logger = LoggerFactory.getLogger(SweepHandler.class);
 
     private final Object redis;

@@ -31,6 +31,7 @@ def analytics_app(monkeypatch):
     prom.CollectorRegistry = lambda: None
     prom.Counter = lambda *a, **kw: types.SimpleNamespace(inc=lambda *args: None)
     prom.Histogram = lambda *a, **kw: types.SimpleNamespace(observe=lambda *args: None)
+    prom.Gauge = lambda *a, **kw: types.SimpleNamespace(set=lambda *args: None)
     prom.ProcessCollector = lambda *a, **kw: None
     prom.GCCollector = lambda *a, **kw: None
     prom.generate_latest = lambda reg=None: b""

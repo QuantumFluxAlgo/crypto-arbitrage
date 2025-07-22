@@ -11,6 +11,7 @@ import executor.ConfigValidator;
 import executor.CircuitBreaker;
 import executor.Config;
 import executor.ExecutionMode;
+import executor.RedisClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -85,7 +86,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         this.redisHost = redisHost;
         this.redisPort = redisPort;
         this.config = config == null ? new Config(ExecutionMode.LIVE) : config;
-        this.controlChannel = this.config.getExecutionMode() == ExecutionMode.LIVE ? "control-feed-live" : "control-feed-sandbox";
+        this.controlChannel = RedisClient.getControlChannel();
         this.riskFilter = riskFilter;
         this.nearMissLogger = nearMissLogger;
         this.scoringEngine = new ScoringEngine();
@@ -384,7 +385,10 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeTrading() {
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
-            logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", System.currentTimeMillis());
+            long ts = System.currentTimeMillis();
+            logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", ts);
+            AlertManager.sendAlert("Trading resumed at " + ts);
+            redisClient.publish("alerts", "Trading resumed at " + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");
         }
@@ -396,7 +400,10 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeFromPanic() {
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
-            logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", System.currentTimeMillis());
+            long ts = System.currentTimeMillis();
+            logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", ts);
+            AlertManager.sendAlert("Trading resumed at " + ts);
+            redisClient.publish("alerts", "Trading resumed at " + ts);
         } else {
             logger.warn("[RESUME IGNORED] already active");
         }
