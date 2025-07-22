@@ -5,7 +5,7 @@ const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV
   : describe.skip;
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'testsecret';
-process.env.MODE = 'dry-run';
+process.env.SANDBOX_MODE = 'true';
 let buildApp;
 let testState;
 let app;

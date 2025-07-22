@@ -3,7 +3,8 @@ import { requireAdmin } from '../middleware/auth.js';
 
 export const config = {
   maxLoss: 5,
-  maxLatency: 500,
+  // align with executor default of 250ms
+  maxLatency: 250,
 };
 
 export default async function configRoutes(app) {
