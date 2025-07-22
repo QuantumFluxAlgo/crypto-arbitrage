@@ -8,10 +8,19 @@ export default function SystemStatusBanner() {
   async function loadStatus() {
     try {
       const data = await fetchSystemStatus();
-      if (data.mode) setMode(data.mode);
-      setPanic(Boolean(data.panic));
+      setPanic(Boolean(data.paused));
     } catch (err) {
       console.error('Failed to fetch system status', err);
+    }
+
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const cfg = await res.json();
+        setMode(cfg.sandbox_mode ? 'sandbox' : 'live');
+      }
+    } catch (err) {
+      console.error('Failed to fetch mode', err);
     }
   }
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import logger from "../services/logger.js";
+import { setMode as setRiskFilterMode } from "../services/riskFilter.js";
 
 export let settings = {
   schema_version: 1,
@@ -110,7 +111,10 @@ export default async function settingsRoutes(app) {
       }
     }
     if (typeof req.body.personality_mode === "string") {
-      settings.personality_mode = req.body.personality_mode;
+      if (req.body.personality_mode !== settings.personality_mode) {
+        settings.personality_mode = req.body.personality_mode;
+        setRiskFilterMode(req.body.personality_mode);
+      }
     }
     if (typeof req.body.sweep_cadence === "string") {
       const allowed = ["Daily", "Monthly", "None"];

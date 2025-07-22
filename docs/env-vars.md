@@ -54,6 +54,8 @@ Lists environment variables used across services.
 | `ALERT_RECIPIENT` | Email address for alerts |
 | `TELEGRAM_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram alert settings |
 | `WEBHOOK_URL` | Generic alert webhook |
+| `API_KEY` | Required for API access (e.g., `dummy123`) |
+| `BINANCE_KEY` / `BINANCE_SECRET` | Exchange credentials (defaults `dummy123`) |
 | `WS_PORT` | WebSocket server port |
 | `LOG_LEVEL` | Log level for API service |
 | `NODE_ENV` | Node runtime mode |
