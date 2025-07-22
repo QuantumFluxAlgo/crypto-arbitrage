@@ -66,12 +66,6 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 log "Applying NVIDIA GPU plugin"
 kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.12.3/nvidia-device-plugin.yml
 
-log "Deploying Kubernetes manifests"
-for manifest in "$ROOT_DIR/infra/k8s"/*.yaml; do
-    [ -f "$manifest" ] || continue
-    kubectl apply -f "$manifest"
-done
-
 log "Deploying Helm chart"
-helm install prism-arbitrage "$ROOT_DIR/infra/helm" \
+helm upgrade --install --atomic prism "$ROOT_DIR/infra/helm" \
   --namespace arbitrage --create-namespace

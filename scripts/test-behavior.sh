@@ -2,6 +2,12 @@
 
 set -e
 
+# Ensure kubectl is available before running tests
+if ! command -v kubectl &> /dev/null; then
+  echo "kubectl is required. Please install it."
+  exit 1
+fi
+
 echo "🔧 Running runtime behavior simulation tests..."
 
 echo "🧪 Triggering panic brake (loss > 5%)"
