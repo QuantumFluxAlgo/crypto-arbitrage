@@ -7,12 +7,11 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'testsecret';
 process.env.SANDBOX_MODE = 'true';
 let buildApp;
-let testState;
 let app;
 let cookie;
 
 beforeAll(async () => {
-  ({ buildApp, testState } = await import('../index.js'));
+  ({ buildApp } = await import('../index.js'));
   app = buildApp();
   await app.listen({ port: 0 });
   const login = await request(app.server)

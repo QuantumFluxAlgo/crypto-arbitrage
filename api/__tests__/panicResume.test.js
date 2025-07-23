@@ -5,13 +5,17 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'testsecret';
 process.env.SANDBOX_MODE = 'true';
 let buildApp;
-let testState;
 let app;
+let cookie;
 
 beforeAll(async () => {
-  ({ buildApp, testState } = await import('../index.js'));
+  ({ buildApp } = await import('../index.js'));
   app = buildApp();
   await app.listen({ port: 0 });
+  const login = await request(app.server)
+    .post('/api/login')
+    .send({ email: 'user', password: 'pass' });
+  cookie = login.headers['set-cookie'][0].split(';')[0];
 });
 
 afterAll(async () => {
@@ -24,14 +28,20 @@ describeLocal('panic resume cycle', () => {
       .post('/api/test/panic')
       .send({ type: 'loss' });
     expect(panicRes.statusCode).toBe(200);
-    expect(testState.paused).toBe(true);
+    const status1 = await request(app.server)
+      .get('/api/system/status')
+      .set('Cookie', cookie);
+    expect(status1.body.paused).toBe(true);
 
     const metrics1 = await request(app.server).get('/api/metrics/sandbox');
     expect(metrics1.body.panicActive).toBe(true);
 
     const resumeRes = await request(app.server).post('/api/test/resume');
     expect(resumeRes.statusCode).toBe(200);
-    expect(testState.paused).toBe(false);
+    const status2 = await request(app.server)
+      .get('/api/system/status')
+      .set('Cookie', cookie);
+    expect(status2.body.paused).toBe(false);
 
     const metrics2 = await request(app.server).get('/api/metrics/sandbox');
     expect(metrics2.body.panicActive).toBe(false);
