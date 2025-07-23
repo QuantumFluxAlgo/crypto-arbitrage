@@ -52,6 +52,10 @@ metadata:
   name: api
   labels:
     app: api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/api/metrics"
 spec:
   type: ClusterIP
   selector:

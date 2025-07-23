@@ -10,9 +10,14 @@ const PROM_SANDBOX_URL = process.env.PROM_SANDBOX_URL || 'http://prometheus-sand
 import { getPauseState } from '../services/pauseState.js';
 
 const panicGauge = new Gauge({ name: 'panic_state', help: '1 if paused, 0 otherwise' });
+const systemPausedGauge = new Gauge({
+  name: 'system_paused',
+  help: 'Trading paused status',
+  labelNames: ['source'],
+});
 const resumeCounter = new Counter({ name: 'resume_event_total', help: 'Total resume events' });
 
-export { panicGauge, resumeCounter };
+export { panicGauge, resumeCounter, systemPausedGauge };
 
 export default async function metricsRoutes(app, { redis } = {}) {
   const seeded = {
@@ -63,6 +68,7 @@ export default async function metricsRoutes(app, { redis } = {}) {
   app.get('/metrics', async (_req, reply) => {
     const paused = await getPauseState(redis);
     panicGauge.set(paused ? 1 : 0);
+    systemPausedGauge.set({ source: 'api' }, paused ? 1 : 0);
     reply.header('Content-Type', register.contentType);
     reply.send(await register.metrics());
   });

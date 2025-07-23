@@ -3,6 +3,13 @@
   "panels": [
     {
       "type": "graph",
+      "title": "Trading Status",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "system_paused{source=\"api\"}" }],
+      "options": {"steppedLine": true}
+    },
+    {
+      "type": "graph",
       "title": "Panic State",
       "datasource": "Prometheus",
       "targets": [{ "expr": "panic_state" }],
@@ -25,6 +32,18 @@
       "title": "Win Rate %",
       "datasource": "Prometheus",
       "targets": [{ "expr": "win_rate_pct" }]
+    },
+    {
+      "type": "graph",
+      "title": "Pod Memory Usage",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "container_memory_usage_bytes{pod=~\".+\"}" }]
+    },
+    {
+      "type": "graph",
+      "title": "Pod CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "container_cpu_usage_seconds_total{pod=~\".+\"}" }]
     }
   ],
   "schemaVersion": 36,
