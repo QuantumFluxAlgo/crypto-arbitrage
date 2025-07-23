@@ -50,7 +50,13 @@ export default async function settingsRoutes(app, opts) {
 
     if (typeof data.maxLossPct === "number" && data.maxLossPct > 20) {
       logger.warn(
-        `[SETTINGS-REJECTED] maxLossPct=${data.maxLossPct} exceeds limit`,
+        JSON.stringify({
+          event: "unauthorized_config_change",
+          field: "maxLossPct",
+          value: data.maxLossPct,
+          status: "rejected",
+          ts: new Date().toISOString(),
+        })
       );
       reply.code(400);
       return { error: "maxLossPct exceeds limit" };
@@ -58,7 +64,13 @@ export default async function settingsRoutes(app, opts) {
 
     if (typeof data.latencyMaxMs === "number" && data.latencyMaxMs > 1000) {
       logger.warn(
-        `[SETTINGS-REJECTED] latencyMaxMs=${data.latencyMaxMs} exceeds limit`,
+        JSON.stringify({
+          event: "unauthorized_config_change",
+          field: "latencyMaxMs",
+          value: data.latencyMaxMs,
+          status: "rejected",
+          ts: new Date().toISOString(),
+        })
       );
       reply.code(400);
       return { error: "latencyMaxMs exceeds limit" };
@@ -66,7 +78,13 @@ export default async function settingsRoutes(app, opts) {
 
     if (typeof data.coinExposureLimit === "number" && data.coinExposureLimit > 30) {
       logger.warn(
-        `[SETTINGS-REJECTED] coinExposureLimit=${data.coinExposureLimit} exceeds limit`,
+        JSON.stringify({
+          event: "unauthorized_config_change",
+          field: "coinExposureLimit",
+          value: data.coinExposureLimit,
+          status: "rejected",
+          ts: new Date().toISOString(),
+        })
       );
       reply.code(400);
       return { error: "coinExposureLimit exceeds limit" };
@@ -76,7 +94,13 @@ export default async function settingsRoutes(app, opts) {
       const modes = ["Realistic", "Aggressive", "Auto"];
       if (!modes.includes(data.personality_mode)) {
         logger.warn(
-          `[SETTINGS-REJECTED] personality_mode=${data.personality_mode} invalid`,
+          JSON.stringify({
+            event: "unauthorized_config_change",
+            field: "personality_mode",
+            value: data.personality_mode,
+            status: "rejected",
+            ts: new Date().toISOString(),
+          })
         );
         reply.code(400);
         return { error: "invalid personality_mode" };
@@ -87,7 +111,13 @@ export default async function settingsRoutes(app, opts) {
       const allowed = ["Daily", "Monthly", "None"];
       if (!allowed.includes(data.sweep_cadence)) {
         logger.warn(
-          `[SETTINGS-REJECTED] sweep_cadence=${data.sweep_cadence} invalid`,
+          JSON.stringify({
+            event: "unauthorized_config_change",
+            field: "sweep_cadence",
+            value: data.sweep_cadence,
+            status: "rejected",
+            ts: new Date().toISOString(),
+          })
         );
         reply.code(400);
         return { error: "invalid sweep_cadence" };

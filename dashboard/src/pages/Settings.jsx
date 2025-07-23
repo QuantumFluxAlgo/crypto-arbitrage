@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 
 // PATCH selected settings to API
-async function patchSettings(values) {
+async function patchSettings(values, setToast) {
   try {
     const res = await fetch('/api/settings', {
       method: 'PATCH',
@@ -10,10 +10,14 @@ async function patchSettings(values) {
       body: JSON.stringify(values),
     });
     if (!res.ok) {
-      throw new Error('Failed to save');
+      const data = await res.json().catch(() => ({}));
+      setToast({ type: 'error', msg: data.error || 'Save failed' });
+      return;
     }
+    setToast({ type: 'success', msg: 'Settings saved' });
   } catch (err) {
     console.error('Error saving settings', err);
+    setToast({ type: 'error', msg: 'Save failed' });
   }
 }
 
@@ -21,6 +25,13 @@ export default function Settings() {
   const [mode, setMode] = useState('auto');
   const [lossCapPct, setLossCapPct] = useState(0);
   const [latencyMaxMs, setLatencyMaxMs] = useState(250);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -86,22 +97,34 @@ export default function Settings() {
           onChange={async (e) => {
             const val = Number(e.target.value);
             setLatencyMaxMs(val);
-            await patchSettings({ latency_max_ms: val });
+            await patchSettings({ latency_max_ms: val }, setToast);
           }}
         />
       </div>
       <button
         className="bg-blue-600 text-white px-3 py-1 rounded"
         onClick={() =>
-          patchSettings({
-            personality_mode: mode,
-            loss_cap_pct: lossCapPct,
-            latency_max_ms: latencyMaxMs,
-          })
+          patchSettings(
+            {
+              personality_mode: mode,
+              loss_cap_pct: lossCapPct,
+              latency_max_ms: latencyMaxMs,
+            },
+            setToast
+          )
         }
       >
         Save
       </button>
+      {toast && (
+        <div
+          className={`absolute right-4 top-4 px-4 py-2 text-white rounded ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }

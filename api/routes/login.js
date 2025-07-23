@@ -1,6 +1,7 @@
 // Login endpoint handling sandbox demo credentials
 import bcrypt from 'bcryptjs';
 import { findByEmail } from './userStore.js';
+import logger from '../services/logger.js';
 
 const SANDBOX_EMAIL = 'demo@prismarbitrage.ai';
 const SANDBOX_PASS = 'demo1234';
@@ -12,6 +13,7 @@ export default async function loginRoutes(app) {
 
   app.post('/login', async (req, reply) => {
     const { email, password } = req.body;
+    const ts = new Date().toISOString();
 
     const cookieOpts = { httpOnly: true };
     if (process.env.NODE_ENV === 'production') {
@@ -20,6 +22,9 @@ export default async function loginRoutes(app) {
 
     if (sandboxMode && email === SANDBOX_EMAIL && password === SANDBOX_PASS) {
       reply.setCookie('token', HARD_CODED_JWT, cookieOpts);
+      logger.info(
+        JSON.stringify({ event: 'login_attempt', status: 'success', user: email, ts })
+      );
       return { token: HARD_CODED_JWT };
     }
 
@@ -34,9 +39,15 @@ export default async function loginRoutes(app) {
       };
       const token = app.jwt.sign(payload, { algorithm: 'HS256' });
       reply.setCookie('token', token, cookieOpts);
+      logger.info(
+        JSON.stringify({ event: 'login_attempt', status: 'success', user: email, ts })
+      );
       return { token };
     }
 
+    logger.warn(
+      JSON.stringify({ event: 'login_attempt', status: 'failure', user: email, reason: 'bad_password', ts })
+    );
     reply.code(401).send({ error: 'invalid credentials' });
   });
 }

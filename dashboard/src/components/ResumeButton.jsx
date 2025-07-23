@@ -6,12 +6,20 @@ export default function ResumeButton() {
   const [blocked, setBlocked] = useState(false);
   const [confirmOverride, setConfirmOverride] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showFailed, setShowFailed] = useState(false);
 
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!resumeFailed) return;
+    setShowFailed(true);
+    const t = setTimeout(() => setShowFailed(false), 10000);
+    return () => clearTimeout(t);
+  }, [resumeFailed]);
 
   async function handleResume(confirmed = false) {
     setBlocked(false);
@@ -49,8 +57,14 @@ export default function ResumeButton() {
 
   return (
     <div className="relative inline-block">
-      {resumeFailed && (
-        <div data-testid="resume-failed" className="text-red-600 mb-2">Resume failed</div>
+      {showFailed && (
+        <div
+          data-testid="resume-failed"
+          className="absolute left-1/2 -translate-x-1/2 -top-12 bg-red-600 text-white px-4 py-2 rounded flex items-center"
+        >
+          <span>Resume failed: Executor not responding</span>
+          <button className="ml-2" onClick={() => setShowFailed(false)}>×</button>
+        </div>
       )}
       {toast && (
         <div className="absolute right-0 -top-10 px-3 py-1 text-white bg-green-600 rounded">
