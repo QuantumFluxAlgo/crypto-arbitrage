@@ -17,6 +17,7 @@ import metricsRoutes from './routes/metrics.js';
 import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
+import panicRoutes from './routes/panic.js';
 import configRoutes from './routes/config.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
@@ -25,6 +26,7 @@ import { sendAlert } from '../alerts/alertAgent.js';
 import { sendEmail } from '../alerts/emailAlert.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
+import { getPauseState, setPauseState } from './services/pauseState.js';
 
 const { Pool } = pg;
 // Hard stop if credentials or mode are misconfigured
@@ -48,7 +50,7 @@ if (process.env.NODE_ENV === 'production') {
 // Test mode disables external side effects
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
-const testState = { paused: false, panicReason: null };
+const panicState = { reason: null };
 
 let redis;
 let pool;
@@ -71,9 +73,11 @@ function buildApp() {
     });
 
     if (isTest) {
+      const store = { 'arb:paused_state': 'false' };
       redis = {
         publish: async () => 1,
-        get: async () => '[]'
+        get: async key => store[key],
+        set: async (key, val) => { store[key] = val; return 'OK'; }
       };
     } else {
       // Redis connection parameters via env vars
@@ -83,7 +87,7 @@ function buildApp() {
       });
     }
 
-    app.register(apiRoutes, { prefix: '/api', testState, redis, pool });
+    app.register(apiRoutes, { prefix: '/api', redis, pool, panicState });
 
     // Ensure external connections close gracefully when the server shuts down
     app.addHook('onClose', async () => {
@@ -110,7 +114,7 @@ const alertSettings = {
   webhook_url: '',
 };
 
-async function apiRoutes(api, { testState, redis, pool }) {
+async function apiRoutes(api, { redis, pool, panicState }) {
   api.register(loginRoute);
   api.register(authRoute);
   api.register(settingsRoutes, { redis });
@@ -211,34 +215,26 @@ async function apiRoutes(api, { testState, redis, pool }) {
 
 
   api.get('/system/status', async () => ({
-    paused: testState.paused,
-    panic_reason: testState.panicReason,
+    paused: await getPauseState(redis),
+    panic_reason: panicState.reason,
   }));
 
     if (isTest) {
-      api.post('/test/panic', async (req, reply) => {
-        if (process.env.SANDBOX_MODE !== 'true') {
-          return reply.code(403).send();
-        }
-        testState.paused = true;
-        testState.panicReason = req.body?.type || null;
-        await redis.publish(getControlChannel(), 'halt');
-        await sendAlert('email', 'Panic brake triggered (test mode)');
-        return { triggered: true };
-      });
-
+      api.register(panicRoutes, { redis, panicState });
       api.post('/test/resume', async (_req, reply) => {
         if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
         }
-        if (!testState.paused) {
+        const paused = await getPauseState(redis);
+        if (!paused) {
           reply.code(400);
           return { error: 'not paused' };
         }
-        testState.paused = false;
-        testState.panicReason = null;
+        await setPauseState(redis, false);
+        panicState.reason = null;
         await redis.publish(getControlChannel(), 'resume');
-        return { resumed: true };
+        logger.info('[RESUME] Trading re-enabled by operator');
+        return { paused: false, source: 'manual' };
       });
 
       api.post('/test/sweep', async (_req, reply) => {
@@ -255,8 +251,8 @@ async function apiRoutes(api, { testState, redis, pool }) {
   api.register(infraRoutes, { redis, pool });
   api.register(modelRoutes, { pool });
   api.register(configRoutes);
-  api.register(resumeRoutes, { redis, testState });
-  api.register(metricsRoutes, { testState });
+  api.register(resumeRoutes, { redis, panicState });
+  api.register(metricsRoutes, { redis });
   api.register(analyticsRoutes, { pool });
   api.register(cgtRoutes, { pool });
 }
@@ -273,4 +269,4 @@ if (!isTest) {
 }
 
 export default app;
-export { buildApp, logReplayCLI, testState };
+export { buildApp, logReplayCLI };

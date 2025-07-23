@@ -6,11 +6,10 @@ process.env.ADMIN_TOKEN = 'testadmintoken';
 process.env.JWT_SECRET = 'testsecret';
 process.env.SANDBOX_MODE = 'true';
 let buildApp;
-let testState;
 let app;
 
 beforeAll(async () => {
-  ({ buildApp, testState } = await import('../index.js'));
+  ({ buildApp } = await import('../index.js'));
   app = buildApp();
   await app.listen({ port: 8080 });
 });
@@ -66,7 +65,7 @@ describeLocal('API authentication', () => {
       .post('/api/login')
       .send({ email: 'user', password: 'pass' });
     const cookie = login.headers['set-cookie'][0].split(';')[0];
-    testState.paused = true;
+    await request(app.server).post('/api/test/panic');
     const authRes = await request(app.server)
       .post('/api/resume')
       .set('Cookie', cookie);

@@ -10,16 +10,16 @@ export function requireFields(fields) {
   };
 }
 
-export function ensurePaused(testState) {
-  return async function(_req, reply) {
-    if (testState && !testState.paused) {
+import { getPauseState, setPauseState } from '../services/pauseState.js';
+
+export function ensurePaused(redis) {
+  return async function (_req, reply) {
+    const paused = await getPauseState(redis);
+    if (!paused) {
       reply.code(400);
       reply.send({ error: 'not paused' });
       return;
     }
-    if (testState) {
-      testState.paused = false;
-      testState.panicReason = null;
-    }
+    await setPauseState(redis, false);
   };
 }

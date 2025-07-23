@@ -6,7 +6,9 @@ import { getExecutionMode } from '../config/settings.js';
 const PROM_LIVE_URL = process.env.PROM_LIVE_URL || process.env.PROM_URL || 'http://prometheus:9090';
 const PROM_SANDBOX_URL = process.env.PROM_SANDBOX_URL || 'http://prometheus-sandbox:9090';
 
-export default async function metricsRoutes(app, { testState } = {}) {
+import { getPauseState } from '../services/pauseState.js';
+
+export default async function metricsRoutes(app, { redis } = {}) {
   const seeded = {
     equityCurve: Array.from({ length: 20 }, (_, i) => i * 5),
     latency: Array.from({ length: 20 }, () => 30 + Math.random() * 10),
@@ -19,7 +21,8 @@ export default async function metricsRoutes(app, { testState } = {}) {
   const fetchMetrics = async (req, mode) => {
     const execMode = mode || getExecutionMode(req);
     if (execMode === 'sandbox' || process.env.NODE_ENV === 'test') {
-      return { ...seeded, panicActive: testState?.paused ?? false };
+      const paused = await getPauseState(redis);
+      return { ...seeded, panicActive: paused };
     }
 
     const promUrl = execMode === 'live' ? PROM_LIVE_URL : PROM_SANDBOX_URL;
