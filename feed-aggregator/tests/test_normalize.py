@@ -5,9 +5,6 @@ import pytest
 
 pytestmark = pytest.mark.env("local")
 
-if not subprocess.run(['which', 'node'], capture_output=True).stdout.strip():
-    pytest.skip('node not installed', allow_module_level=True)
-
 def test_normalize_function():
     repo_root = Path(__file__).resolve().parents[1]
     script = (

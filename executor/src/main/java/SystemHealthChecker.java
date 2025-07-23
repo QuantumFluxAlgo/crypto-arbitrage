@@ -50,7 +50,9 @@ public class SystemHealthChecker {
 
     /** Check that the cold sweeper is not actively running. */
     public boolean isColdSweeperIdle() {
-        return sweeper == null || !sweeper.isBusy();
+        if (sweeper == null) return true;
+        if (sweeper.isBusy()) return false;
+        return !sweeper.isCooldownActive();
     }
 
     /** Check that panic flag has been cleared. */

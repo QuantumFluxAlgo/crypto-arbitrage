@@ -2,6 +2,19 @@
 
 set -e
 
+# Start a local Kubernetes cluster if none is running
+if ! kubectl cluster-info > /dev/null 2>&1; then
+  if ! command -v kind >/dev/null 2>&1; then
+    echo "Installing kind..."
+    curl -Lo kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64
+    chmod +x kind
+    sudo mv kind /usr/local/bin/
+  fi
+  echo "Starting kind cluster for tests..."
+  kind create cluster --name prism-ci >/dev/null
+  trap 'kind delete cluster --name prism-ci' EXIT
+fi
+
 # Ensure kubectl is available before running tests
 if ! command -v kubectl &> /dev/null; then
   echo "kubectl is required. Please install it."

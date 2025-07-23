@@ -28,6 +28,7 @@ dependencies {
 
     // ✅ Unit testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testImplementation 'it.ozimov:embedded-redis:0.7.3'
 }
 
 test {

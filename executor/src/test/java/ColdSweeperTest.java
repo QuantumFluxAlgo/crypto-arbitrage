@@ -68,5 +68,41 @@ public class ColdSweeperTest {
         sweeper.sweepToColdWallet(10.0);
         assertTrue(wallet.called);
     }
+
+    static class CountingWallet implements WalletClient {
+        int count = 0;
+        @Override
+        public void withdraw(String address, double amountUsd) {
+            count++;
+            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        }
+    }
+
+    @Test
+    void busyFlagPreventsConcurrentSweeps() throws Exception {
+        CountingWallet wallet = new CountingWallet();
+        ColdSweeper sweeper = new ColdSweeper(0,0,wallet,new ColdSweeperConfig(),null,new Config(ExecutionMode.LIVE),0);
+        Thread t1 = new Thread(() -> sweeper.sweepToColdWallet(5.0));
+        Thread t2 = new Thread(() -> sweeper.sweepToColdWallet(5.0));
+        t1.start();
+        Thread.sleep(10);
+        t2.start();
+        t1.join();
+        t2.join();
+        assertEquals(1, wallet.count);
+        assertFalse(sweeper.isBusy());
+    }
+
+    @Test
+    void cooldownBlocksSweeps() throws Exception {
+        CountingWallet wallet = new CountingWallet();
+        ColdSweeper sweeper = new ColdSweeper(0,0,wallet,new ColdSweeperConfig(),null,new Config(ExecutionMode.LIVE),500);
+        sweeper.sweepToColdWallet(5.0);
+        sweeper.sweepToColdWallet(5.0);
+        assertEquals(1, wallet.count);
+        Thread.sleep(600);
+        sweeper.sweepToColdWallet(5.0);
+        assertEquals(2, wallet.count);
+    }
 }
 

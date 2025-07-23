@@ -20,6 +20,8 @@ public class ColdSweeper {
     private final Config config;
     private final boolean isDryRun;
     private final java.util.concurrent.atomic.AtomicBoolean busy = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private final long cooldownMs;
+    private volatile long lastSweepTime = 0L;
 
     private void logDryRunSweep(String trigger, double amountUsd) {
         String log = String.format(
@@ -69,6 +71,14 @@ public class ColdSweeper {
     }
 
     public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient, ColdSweeperConfig sweeperConfig, SweepLogger logger, Config configObj) {
+        this(minAmountUsd, minCapitalRatio, walletClient, sweeperConfig, logger, configObj,
+            Long.parseLong(System.getProperty("SWEEP_COOLDOWN_MS",
+                System.getenv().getOrDefault("SWEEP_COOLDOWN_MS", "60000"))));
+    }
+
+    public ColdSweeper(double minAmountUsd, double minCapitalRatio, WalletClient walletClient,
+                       ColdSweeperConfig sweeperConfig, SweepLogger logger, Config configObj,
+                       long cooldownMs) {
         this.minAmountUsd = minAmountUsd;
         this.minCapitalRatio = minCapitalRatio;
         this.walletClient = walletClient;
@@ -76,11 +86,17 @@ public class ColdSweeper {
         this.sweepLogger = logger;
         this.config = configObj;
         this.isDryRun = configObj != null && configObj.isDryRun();
+        this.cooldownMs = cooldownMs;
     }
 
     /** @return true if a sweep is currently in progress */
     public boolean isBusy() {
         return busy.get();
+    }
+
+    /** @return true if cooldown window has not elapsed */
+    public boolean isCooldownActive() {
+        return System.currentTimeMillis() - lastSweepTime < cooldownMs;
     }
 
     private String maskAddress(String address) {
@@ -120,7 +136,15 @@ public class ColdSweeper {
      * Uses the address from {@link ColdSweeperConfig}.
      */
     public void sweepToColdWallet(double amountUsd) {
-        busy.set(true);
+        if (!busy.compareAndSet(false, true)) {
+            logger.warn("[SWEEP] already in progress");
+            return;
+        }
+        if (isCooldownActive()) {
+            logger.warn("[SWEEP] cooldown active");
+            busy.set(false);
+            return;
+        }
         try {
             String address = sweeperConfig.getTestColdWalletAddress();
             logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
@@ -131,6 +155,7 @@ public class ColdSweeper {
                 walletClient.withdraw(address, amountUsd);
             }
             ProfitTracker.resetCumulativeProfit();
+            lastSweepTime = System.currentTimeMillis();
             if (sweepLogger != null) {
                 sweepLogger.logSweep(amountUsd, address, "auto");
             }
@@ -148,7 +173,15 @@ public class ColdSweeper {
      * @param amountUsd amount to sweep
      */
     public void sweepToColdWallet(String address, double amountUsd) {
-        busy.set(true);
+        if (!busy.compareAndSet(false, true)) {
+            logger.warn("[SWEEP] already in progress");
+            return;
+        }
+        if (isCooldownActive()) {
+            logger.warn("[SWEEP] cooldown active");
+            busy.set(false);
+            return;
+        }
         try {
             logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
             if (isDryRun) {
@@ -158,6 +191,7 @@ public class ColdSweeper {
                 walletClient.withdraw(address, amountUsd);
             }
             ProfitTracker.resetCumulativeProfit();
+            lastSweepTime = System.currentTimeMillis();
             if (sweepLogger != null) {
                 sweepLogger.logSweep(amountUsd, address, "manual");
             }

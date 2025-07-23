@@ -3,16 +3,9 @@ import time
 import urllib.request
 import json
 import os
-import shutil
 import pytest
 
 pytestmark = pytest.mark.env("local")
-
-if not shutil.which("node"):
-    pytest.skip("node not installed", allow_module_level=True)
-
-if not os.path.exists(os.path.join(os.path.dirname(__file__), "..", "node_modules")):
-    pytest.skip("feed-aggregator dependencies not installed", allow_module_level=True)
 
 
 def test_health_endpoint():
