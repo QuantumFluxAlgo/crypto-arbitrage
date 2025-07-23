@@ -1,12 +1,16 @@
 import { getControlChannel } from '../config/settings.js';
 import { sendAlert } from '../../alerts/alertAgent.js';
 import logger from '../services/logger.js';
-import { setPauseState } from '../services/pauseState.js';
+import { setPauseState, getPauseState } from '../services/pauseState.js';
 
 export default async function panicRoutes(app, { redis, panicState }) {
   app.post('/test/panic', async (req, reply) => {
     if (process.env.SANDBOX_MODE !== 'true') {
       return reply.code(403).send();
+    }
+    const alreadyPaused = await getPauseState(redis);
+    if (alreadyPaused) {
+      return { message: 'Already paused' };
     }
     const now = Date.now();
     if (now - (panicState.last || 0) < 30000) {
@@ -18,6 +22,7 @@ export default async function panicRoutes(app, { redis, panicState }) {
     panicState.last = now;
     await redis.set('panic_last_ts', String(now));
     await setPauseState(redis, true);
+    logger.warn('[PANIC TRIGGERED]');
     panicState.reason = req.body?.type || null;
     await redis.publish(getControlChannel(), 'halt');
     logger.warn(

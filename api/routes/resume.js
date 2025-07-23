@@ -3,9 +3,8 @@ import { sendAlert } from '../../alerts/alertAgent.js';
 import { getControlChannel } from '../config/settings.js';
 import fs from 'fs';
 import path from 'path';
-import { ensurePaused } from '../middleware/validate.js';
 import logger from '../services/logger.js';
-import { setPauseState, RESUME_ACK_KEY, RESUME_FAILED_KEY } from '../services/pauseState.js';
+import { getPauseState, setPauseState, RESUME_ACK_KEY, RESUME_FAILED_KEY } from '../services/pauseState.js';
 import { resumeCounter } from './metrics.js';
 
 export default async function resumeRoutes(app, opts) {
@@ -28,9 +27,16 @@ export default async function resumeRoutes(app, opts) {
 
   app.post(
     '/resume',
-    { preHandler: [requireAdmin, ensurePaused(redis)] },
+    { preHandler: requireAdmin },
     async (req, reply) => {
     const user = req.user?.email || 'unknown';
+
+    const paused = await getPauseState(redis);
+    if (!paused) {
+      logAttempt('resume_not_paused', user);
+      reply.code(409);
+      return { error: 'System is not paused' };
+    }
 
     const health = await app.inject({ method: 'GET', url: '/api/system/health' });
     let healthy = false;
@@ -59,6 +65,7 @@ export default async function resumeRoutes(app, opts) {
     await redis.set(RESUME_FAILED_KEY, 'false');
     await redis.publish(channel, 'resume');
     await setPauseState(redis, false);
+    logger.info('[RESUME SIGNAL RECEIVED]');
     panicState.reason = null;
 
     let ack = false;
