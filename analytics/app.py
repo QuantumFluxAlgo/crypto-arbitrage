@@ -2,10 +2,10 @@
 import os
 import sys
 import time
-from .logger import logger
-from collections import deque
-import threading
 import subprocess
+from collections import deque
+from .logger import logger
+from . import pnl
 
 import numpy as np
 from flask import Flask, g, request, jsonify, Response
@@ -85,6 +85,9 @@ def detect_gpu() -> bool:
 
 
 GPU_AVAILABLE = detect_gpu()
+if not GPU_AVAILABLE:
+    logger.warning("[WARN] GPU not detected. Switching to CPU-only analytics mode.")
+
 
 def get_gpu_memory() -> tuple[int, int]:
     """Return total and used GPU memory in bytes."""
@@ -104,6 +107,7 @@ def get_gpu_memory() -> tuple[int, int]:
     total_str, used_str = [x.strip() for x in line.split(",")]
     return int(total_str) * 1024 * 1024, int(used_str) * 1024 * 1024
 
+
 # Configure Flask
 app = Flask(__name__)
 
@@ -114,38 +118,63 @@ registry = CollectorRegistry()
 ProcessCollector(registry=registry)
 GCCollector(registry=registry)
 
-request_count_total = Counter('request_count_total', 'Total HTTP requests', registry=registry)
+request_latencies = deque(maxlen=100)
+METRICS_MAX_AGE = int(os.getenv("METRICS_MAX_AGE", "60"))
+last_metrics_update = 0.0
+ml_prediction_mode = "normal"
+
+request_count_total = Counter(
+    "request_count_total", "Total HTTP requests", registry=registry
+)
 request_latency_ms = Histogram(
-    'request_latency_ms',
-    'Request latency in milliseconds',
+    "request_latency_ms",
+    "Request latency in milliseconds",
     registry=registry,
 )
 inference_latency_ms = Histogram(
-    'inference_latency_ms',
-    'Model inference latency in milliseconds',
+    "inference_latency_ms",
+    "Model inference latency in milliseconds",
     registry=registry,
+)
+latency_avg_ms = Gauge(
+    "latency_avg_ms", "Average HTTP request latency", registry=registry
 )
 
 # Panic/resume state and daily loss percentage
-panic_triggered = Gauge('panic_triggered', '1 if panic activated', registry=registry)
-resume_signal = Gauge('resume_signal', '1 when resume issued', registry=registry)
-daily_loss_pct = Gauge('daily_loss_pct', 'Daily loss percentage', registry=registry)
+panic_triggered = Gauge("panic_triggered", "1 if panic activated", registry=registry)
+resume_signal = Gauge("resume_signal", "1 when resume issued", registry=registry)
+daily_loss_pct = Gauge("daily_loss_pct", "Daily loss percentage", registry=registry)
+panic_triggered_total = Counter(
+    "panic_triggered_total", "Times panic mode activated", registry=registry
+)
 panic_triggered.set(0)
 resume_signal.set(0)
 daily_loss_pct.set(0)
 
-pnl_gauge = Gauge('total_pnl', 'Total profit and loss', registry=registry)
-sharpe_gauge = Gauge('sharpe_ratio', 'Strategy Sharpe ratio', registry=registry)
-hit_rate_gauge = Gauge('hit_rate', 'Overall trade hit rate', registry=registry)
-win_rate_pct_gauge = Gauge('win_rate_pct', 'Strategy win rate percentage', registry=registry)
-gpu_status_gauge = Gauge('gpu_available', '1 if Tesla P4 GPU detected', registry=registry)
-lstm_status_gauge = Gauge('lstm_enabled', '1 if LSTM model enabled', registry=registry)
+pnl_gauge = Gauge("total_pnl", "Total profit and loss", registry=registry)
+pnl_total_gauge = Gauge(
+    "pnl_total", "Total profit and loss verified from ledger", registry=registry
+)
+sharpe_gauge = Gauge("sharpe_ratio", "Strategy Sharpe ratio", registry=registry)
+hit_rate_gauge = Gauge("hit_rate", "Overall trade hit rate", registry=registry)
+win_rate_pct_gauge = Gauge(
+    "win_rate_pct", "Strategy win rate percentage", registry=registry
+)
+gpu_status_gauge = Gauge(
+    "gpu_available", "1 if Tesla P4 GPU detected", registry=registry
+)
+lstm_status_gauge = Gauge("lstm_enabled", "1 if LSTM model enabled", registry=registry)
 
 if GPU_AVAILABLE:
-    gpu_mem_total_gauge = Gauge('gpu_memory_total_bytes', 'Total GPU memory in bytes', registry=registry)
-    gpu_mem_used_gauge = Gauge('gpu_memory_used_bytes', 'Used GPU memory in bytes', registry=registry)
+    gpu_mem_total_gauge = Gauge(
+        "gpu_memory_total_bytes", "Total GPU memory in bytes", registry=registry
+    )
+    gpu_mem_used_gauge = Gauge(
+        "gpu_memory_used_bytes", "Used GPU memory in bytes", registry=registry
+    )
 
 pnl_gauge.set(0)
+pnl_total_gauge.set(0)
 sharpe_gauge.set(0)
 hit_rate_gauge.set(0)
 win_rate_pct_gauge.set(0)
@@ -155,79 +184,20 @@ if GPU_AVAILABLE:
     gpu_mem_total_gauge.set(0)
     gpu_mem_used_gauge.set(0)
 
-# In-memory trade store
-MAX_TRADES = 1000
-trades = deque(maxlen=MAX_TRADES)
-trades_lock = threading.Lock()
-
-
-def record_trade(pnl: float, timestamp: float | None = None) -> None:
-    """Record a trade's PnL in memory using a fixed-size deque."""
-    if timestamp is None:
-        timestamp = time.time()
-    with trades_lock:
-        trades.append({"pnl": pnl, "time": timestamp})
-
-
-def compute_stats():
-    """Compute aggregate PnL and Sharpe ratio for all stored trades."""
-    with trades_lock:
-        if not trades:
-            return {"pnl": 0, "sharpe": 0}
-
-        pnl_array = np.array([t["pnl"] for t in trades], dtype=np.float32)
-    pnl = pnl_array.sum()
-    if len(pnl_array) < 2:
-        sharpe = 0.0
-    else:
-        std = pnl_array.std(ddof=1)
-        if std == 0:
-            sharpe = 0.0
-        else:
-            sharpe = pnl_array.mean() / std
-
-    return {"pnl": float(pnl), "sharpe": float(sharpe)}
-
-
-def rolling_pnl(window: int = 50) -> float:
-    """Return the rolling P&L for the last `window` trades."""
-    with trades_lock:
-        recent = list(trades)[-window:]
-    return float(sum(t["pnl"] for t in recent))
-
-
-def sharpe_ratio(window: int = 50) -> float:
-    """Compute the Sharpe ratio for the last `window` trades."""
-    with trades_lock:
-        recent = list(trades)[-window:]
-    if len(recent) < 2:
-        return 0.0
-    returns = np.array([t['pnl'] for t in recent], dtype=np.float32)
-    mean = returns.mean()
-    std = returns.std(ddof=1)
-    if std == 0:
-        return 0.0
-    return float(mean / std * np.sqrt(len(returns)))
-
-
-def recent_performance(days: int = 7) -> dict:
-    """Return volatility and win rate for trades within the last `days`."""
-    cutoff = time.time() - days * 86400
-    with trades_lock:
-        recent = [t for t in trades if t["time"] >= cutoff]
-    if not recent:
-        return {"volatility": 0.0, "win_rate": 0.0}
-
-    pnls = np.array([t["pnl"] for t in recent], dtype=np.float32)
-    vol = float(pnls.std(ddof=1)) if len(pnls) > 1 else 0.0
-    win_rate = float((pnls > 0).mean())
-    return {"volatility": vol, "win_rate": win_rate}
+# PnL utilities imported from analytics.pnl
+trades = pnl.trades
+record_trade = pnl.record_trade
+compute_stats = pnl.compute_stats
+rolling_pnl = pnl.rolling_pnl
+sharpe_ratio = pnl.sharpe_ratio
+recent_performance = pnl.recent_performance
 
 # Load model
 # MODEL_PATH env allows swapping models without rebuilds
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
 SHADOW_MODEL_PATH = os.getenv("MODEL_SHADOW_PATH", "model_shadow.h5")
 LSTM_CONFIG_ENABLED = os.getenv("LSTM_ENABLED", "1").lower() not in {"0", "false", "no"}
+
 
 def load_model(path: str):
     logger.info("Attempting to load model from %s", path)
@@ -244,6 +214,7 @@ def load_model(path: str):
         logger.exception("Model loading failed: %s", e)
         return None
 
+
 try:
     model = load_model(MODEL_PATH)
 except Exception as e:
@@ -257,47 +228,63 @@ except Exception as e:
     shadow_model = None
 
 LSTM_ENABLED = LSTM_CONFIG_ENABLED and model is not None
-logger.info("[METRICS] GPU detected: %s | LSTM enabled: %s", GPU_AVAILABLE, LSTM_ENABLED)
+logger.info(
+    "[METRICS] GPU detected: %s | LSTM enabled: %s", GPU_AVAILABLE, LSTM_ENABLED
+)
 lstm_status_gauge.set(1 if LSTM_ENABLED else 0)
+
 
 class IdentityModel:
     def predict(self, features):
         return np.array(features)
+
 
 if model is None:
     model = IdentityModel()
 if shadow_model is None:
     shadow_model = IdentityModel()
 
+
 @app.before_request
 def before_request():
     g.start_time = time.time()
     logger.info(f"{request.method} {request.path}")
+
 
 @app.after_request
 def after_request(response):
     latency_ms = (time.time() - g.start_time) * 1000
     request_count_total.inc()
     request_latency_ms.observe(latency_ms)
+    request_latencies.append(latency_ms)
+    latency_avg_ms.set(sum(request_latencies) / len(request_latencies))
     return response
 
-@app.route('/')
-def index():
-    return 'Hello, World!'
 
-@app.route('/ping')
+@app.route("/")
+def index():
+    return "Hello, World!"
+
+
+@app.route("/ping")
 def ping():
     return jsonify(pong=True)
 
-@app.route('/metrics')
+
+@app.route("/metrics")
 def metrics():
+    global last_metrics_update
+    now = time.time()
     try:
-        stats = compute_stats()
-        pnl_gauge.set(stats["pnl"])
-        sharpe_gauge.set(stats["sharpe"])
-        perf = recent_performance()
-        hit_rate_gauge.set(perf["win_rate"])
-        win_rate_pct_gauge.set(perf["win_rate"] * 100)
+        if now - last_metrics_update > METRICS_MAX_AGE:
+            stats = compute_stats()
+            pnl_gauge.set(stats["pnl"])
+            pnl_total_gauge.set(stats["pnl"])
+            sharpe_gauge.set(stats["sharpe"])
+            perf = recent_performance()
+            hit_rate_gauge.set(perf["win_rate"])
+            win_rate_pct_gauge.set(perf["win_rate"] * 100)
+            last_metrics_update = now
     except Exception as exc:
         logger.exception("[METRICS] Stat calculation failed: %s", exc)
 
@@ -312,13 +299,23 @@ def metrics():
         except Exception as exc:
             logger.warning("[METRICS] GPU memory query failed: %s", exc)
 
-    data = generate_latest(registry)
-    return Response(data, mimetype=CONTENT_TYPE_LATEST)
+    try:
+        data = generate_latest(registry)
+        return Response(data, mimetype=CONTENT_TYPE_LATEST)
+    except Exception as exc:
+        logger.exception("[METRICS] Export failed: %s", exc)
+        fallback = {
+            "pnl_total": pnl_total_gauge._value.get(),
+            "sharpe_ratio": sharpe_gauge._value.get(),
+            "ml_prediction_mode": ml_prediction_mode,
+        }
+        return jsonify(fallback), 200
 
-@app.route('/predict', methods=['POST'])
+
+@app.route("/predict", methods=["POST"])
 def predict():
     if model is None:
-        return jsonify({'error': 'model not loaded'}), 500
+        return jsonify({"error": "model not loaded"}), 500
 
     logger.info("Prediction started")
     try:
@@ -333,12 +330,27 @@ def predict():
         elif hasattr(model, "n_features_in_"):
             expected_shape = (int(model.n_features_in_),)
         if expected_shape and tuple(features.shape[1:]) != expected_shape:
-            logger.warning("Invalid input shape: expected %s, got %s", expected_shape, features.shape)
-            return jsonify({'error': 'invalid input shape'}), 400
+            logger.warning(
+                "Invalid input shape: expected %s, got %s",
+                expected_shape,
+                features.shape,
+            )
+            return jsonify({"error": "invalid input shape"}), 400
 
         logger.info("Input shape: %s", features.shape)
         start_inf = time.time()
-        preds = model.predict(features)
+        try:
+            preds = model.predict(features)
+        except Exception as exc:
+            logger.exception("[PREDICT] GPU inference failed: %s", exc)
+            global ml_prediction_mode
+            ml_prediction_mode = "fallback"
+            try:
+                with tf.device("/CPU:0"):
+                    preds = model.predict(features)
+            except Exception as e2:
+                logger.exception("[PREDICT] CPU fallback failed: %s", e2)
+                return jsonify({"error": "prediction failed"}), 500
         duration_ms = (time.time() - start_inf) * 1000
         inference_latency_ms.observe(duration_ms)
         logger.info("Output shape: %s", np.array(preds).shape)
@@ -348,44 +360,45 @@ def predict():
         if shadow_model is not None:
             shadow_preds = shadow_model.predict(features)
 
-        response = {'prediction': preds.tolist()}
+        response = {"prediction": preds.tolist()}
         if shadow_preds is not None:
-            response['shadow_prediction'] = shadow_preds.tolist()
+            response["shadow_prediction"] = shadow_preds.tolist()
 
         logger.info("Prediction finished")
         return jsonify(response)
     except Exception as e:
         logger.exception("Prediction error: %s", e)
-        return jsonify({'error': str(e)}), 400
+        return jsonify({"error": str(e)}), 400
 
 
-@app.route('/trade', methods=['POST'])
+@app.route("/trade", methods=["POST"])
 def trade():
     """Endpoint used by the executor to record executed trades."""
     data = request.get_json(force=True)
-    pnl = data.get('pnl')
+    pnl = data.get("pnl")
     if pnl is None:
-        return jsonify({'error': 'pnl required'}), 400
+        return jsonify({"error": "pnl required"}), 400
     record_trade(float(pnl))
-    return jsonify({'status': 'ok'})
+    return jsonify({"status": "ok"})
 
 
-@app.route('/performance')
+@app.route("/performance")
 def performance():
     """Return 7-day volatility and win rate."""
-    days = int(request.args.get('days', 7))
+    days = int(request.args.get("days", 7))
     return jsonify(recent_performance(days))
 
 
-@app.route('/stats')
+@app.route("/stats")
 def stats():
     """Return aggregate PnL and Sharpe ratio for recorded trades."""
     return jsonify(compute_stats())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if model is None:
-        logger.error('Failed to load model from %s. Exiting.', MODEL_PATH)
+        logger.error("Failed to load model from %s. Exiting.", MODEL_PATH)
         sys.exit(1)
 
-    debug = os.getenv('FLASK_ENV') != 'production'
-    app.run(host='0.0.0.0', port=5000, debug=debug)
+    debug = os.getenv("FLASK_ENV") != "production"
+    app.run(host="0.0.0.0", port=5000, debug=debug)
