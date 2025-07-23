@@ -124,6 +124,7 @@ public class ColdSweeper {
         String address = sweeperConfig.getTestColdWalletAddress();
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
+            logger.info("[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
             logDryRunSweep("auto", amountUsd);
         } else {
             walletClient.withdraw(address, amountUsd);
@@ -145,6 +146,7 @@ public class ColdSweeper {
         busy.set(true);
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
+            logger.info("[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
             logDryRunSweep("manual", amountUsd);
         } else {
             walletClient.withdraw(address, amountUsd);
