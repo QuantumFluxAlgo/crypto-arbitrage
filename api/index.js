@@ -5,6 +5,7 @@ import fastifyCookie from '@fastify/cookie';
 import logger from './services/logger.js';
 import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
+import { URL } from 'url';
 import pg from 'pg';
 
 import loginRoute from './routes/login.js';
@@ -81,11 +82,14 @@ function buildApp() {
         set: async (key, val) => { store[key] = val; return 'OK'; }
       };
     } else {
-      // Redis connection parameters via env vars
-      redis = new Redis({
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: process.env.REDIS_PORT || 6379,
-      });
+      const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+      try {
+        const { hostname, port } = new URL(redisUrl);
+        redis = new Redis(redisUrl);
+        logger.info(`[REDIS] Connected to ${hostname}:${port} via REDIS_URL`);
+      } catch (err) {
+        logger.error(`[REDIS] Invalid REDIS_URL: ${err.message}`);
+      }
     }
 
     app.register(apiRoutes, { prefix: '/api', redis, pool, panicState });

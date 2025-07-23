@@ -7,8 +7,8 @@ const normalize = require('./lib/normalize');
 
 const FEED_URL = process.env.FEED_URL || 'wss://example.com/feed';
 const CHANNEL = process.env.ORDERBOOK_CHANNEL || 'orderbook';
-const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const { URL } = require('url');
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const HEALTH_PORT = process.env.HEALTH_PORT || 8090;
 const MAX_RECONNECT_ATTEMPTS = parseInt(process.env.MAX_RECONNECT_ATTEMPTS || '5', 10);
 const MAX_RECONNECT_DELAY = 30000;
@@ -16,9 +16,19 @@ const MAX_RECONNECT_DELAY = 30000;
 let reconnectAttempts = 0;
 let ws;
 
-const redis = process.env.MOCK_REDIS
-  ? { publish: () => Promise.resolve() }
-  : new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+let redis;
+if (process.env.MOCK_REDIS) {
+  redis = { publish: () => Promise.resolve() };
+} else {
+  try {
+    const { hostname, port } = new URL(REDIS_URL);
+    redis = new Redis(REDIS_URL);
+    logger.info(`[REDIS] Connected to ${hostname}:${port} via REDIS_URL`);
+  } catch (err) {
+    logger.error(`[REDIS] Invalid REDIS_URL: ${err.message}`);
+    redis = new Redis();
+  }
+}
 
 function handleReconnect() {
   reconnectAttempts += 1;

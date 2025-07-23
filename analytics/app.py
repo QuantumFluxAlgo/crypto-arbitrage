@@ -23,9 +23,22 @@ from prometheus_client import (
 from tensorflow.keras.models import load_model as load_keras_model
 import tensorflow as tf
 import joblib
+import redis
 
 # Load .env variables
 load_dotenv()
+
+# Redis connection setup
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+try:
+    redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+    info = redis_client.connection_pool.connection_kwargs
+    host = info.get("host", "localhost")
+    port = info.get("port", 6379)
+    logger.info("[REDIS] Connected to %s:%s via REDIS_URL", host, port)
+except Exception as exc:
+    redis_client = None
+    logger.error("[REDIS] Invalid REDIS_URL: %s", exc)
 
 # Detect GPU for optional acceleration
 logger.info("Analytics app starting")

@@ -31,8 +31,21 @@ public class Main {
      * @param args unused
      */
     public static void main(String[] args) {
-        String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
-        int redisPort = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
+        String redisUrl = System.getenv().getOrDefault("REDIS_URL", "redis://localhost:6379");
+        String redisHost = "localhost";
+        int redisPort = 6379;
+        try {
+            java.net.URI uri = new java.net.URI(redisUrl);
+            if (uri.getHost() != null) {
+                redisHost = uri.getHost();
+            }
+            if (uri.getPort() != -1) {
+                redisPort = uri.getPort();
+            }
+            System.out.println("[REDIS] Connected to " + redisHost + ":" + redisPort + " via REDIS_URL");
+        } catch (Exception e) {
+            System.err.println("[REDIS] Invalid REDIS_URL: " + e.getMessage());
+        }
         String redisChannel = System.getenv().getOrDefault("REDIS_CHANNEL", "spreads");
         
         double startingBalance = Double.parseDouble(System.getenv().getOrDefault("STARTING_BALANCE", "10000"));

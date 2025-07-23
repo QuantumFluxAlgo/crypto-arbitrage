@@ -22,8 +22,17 @@ public class AlertManager {
         String payload = String.format("[%s][executor][%s] %s", ts, type, message);
 
         // Redis publish
-        String redisHost = System.getenv().getOrDefault("REDIS_HOST", "localhost");
-        int redisPort = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
+        String redisUrl = System.getenv().getOrDefault("REDIS_URL", "redis://localhost:6379");
+        String redisHost = "localhost";
+        int redisPort = 6379;
+        try {
+            java.net.URI uri = new java.net.URI(redisUrl);
+            if (uri.getHost() != null) redisHost = uri.getHost();
+            if (uri.getPort() != -1) redisPort = uri.getPort();
+            System.out.println("[REDIS] Connected to " + redisHost + ":" + redisPort + " via REDIS_URL");
+        } catch (Exception e) {
+            System.err.println("[REDIS] Invalid REDIS_URL: " + e.getMessage());
+        }
         try (redis.clients.jedis.Jedis jedis = new redis.clients.jedis.Jedis(redisHost, redisPort)) {
             jedis.publish("alerts", payload);
         } catch (Exception e) {
