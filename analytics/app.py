@@ -5,6 +5,7 @@ import time
 from .logger import logger
 from collections import deque
 import threading
+import subprocess
 
 import numpy as np
 from flask import Flask, g, request, jsonify, Response
@@ -42,12 +43,66 @@ except Exception as exc:
 
 # Detect GPU for optional acceleration
 logger.info("Analytics app starting")
-gpus = tf.config.list_physical_devices('GPU')
-if gpus:
-    gpu_names = ', '.join(gpu.name for gpu in gpus)
-    logger.info("GPU available: %s", gpu_names)
-else:
-    logger.info("No GPU detected; using CPU")
+
+
+def detect_gpu() -> bool:
+    """Return True if a Tesla P4 GPU is detected."""
+    # Try torch.cuda first if torch is installed
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            try:
+                name = torch.cuda.get_device_name(0)
+            except Exception:  # pragma: no cover - unexpected torch failure
+                name = ""
+            if name and "Tesla P4" in name:
+                return True
+            # torch sees a GPU but not Tesla P4
+            return False
+    except Exception:
+        pass
+
+    # Fallback to nvidia-smi
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=name",
+                "--format=csv,noheader",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            for line in proc.stdout.splitlines():
+                if "Tesla P4" in line:
+                    return True
+    except Exception:
+        pass
+    return False
+
+
+GPU_AVAILABLE = detect_gpu()
+
+def get_gpu_memory() -> tuple[int, int]:
+    """Return total and used GPU memory in bytes."""
+    proc = subprocess.run(
+        [
+            "nvidia-smi",
+            "--query-gpu=memory.total,memory.used",
+            "--format=csv,noheader,nounits",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError("nvidia-smi failed")
+    line = proc.stdout.strip().splitlines()[0]
+    total_str, used_str = [x.strip() for x in line.split(",")]
+    return int(total_str) * 1024 * 1024, int(used_str) * 1024 * 1024
 
 # Configure Flask
 app = Flask(__name__)
@@ -78,6 +133,25 @@ daily_loss_pct = Gauge('daily_loss_pct', 'Daily loss percentage', registry=regis
 panic_triggered.set(0)
 resume_signal.set(0)
 daily_loss_pct.set(0)
+
+pnl_gauge = Gauge('total_pnl', 'Total profit and loss', registry=registry)
+sharpe_gauge = Gauge('sharpe_ratio', 'Strategy Sharpe ratio', registry=registry)
+hit_rate_gauge = Gauge('hit_rate', 'Overall trade hit rate', registry=registry)
+gpu_status_gauge = Gauge('gpu_available', '1 if Tesla P4 GPU detected', registry=registry)
+lstm_status_gauge = Gauge('lstm_enabled', '1 if LSTM model enabled', registry=registry)
+
+if GPU_AVAILABLE:
+    gpu_mem_total_gauge = Gauge('gpu_memory_total_bytes', 'Total GPU memory in bytes', registry=registry)
+    gpu_mem_used_gauge = Gauge('gpu_memory_used_bytes', 'Used GPU memory in bytes', registry=registry)
+
+pnl_gauge.set(0)
+sharpe_gauge.set(0)
+hit_rate_gauge.set(0)
+gpu_status_gauge.set(1 if GPU_AVAILABLE else 0)
+lstm_status_gauge.set(0)
+if GPU_AVAILABLE:
+    gpu_mem_total_gauge.set(0)
+    gpu_mem_used_gauge.set(0)
 
 # In-memory trade store
 MAX_TRADES = 1000
@@ -151,6 +225,7 @@ def recent_performance(days: int = 7) -> dict:
 # MODEL_PATH env allows swapping models without rebuilds
 MODEL_PATH = os.getenv("MODEL_PATH", "model.h5")
 SHADOW_MODEL_PATH = os.getenv("MODEL_SHADOW_PATH", "model_shadow.h5")
+LSTM_CONFIG_ENABLED = os.getenv("LSTM_ENABLED", "1").lower() not in {"0", "false", "no"}
 
 def load_model(path: str):
     logger.info("Attempting to load model from %s", path)
@@ -178,6 +253,10 @@ try:
 except Exception as e:
     logger.error("Failed to load shadow model from %s: %s", SHADOW_MODEL_PATH, e)
     shadow_model = None
+
+LSTM_ENABLED = LSTM_CONFIG_ENABLED and model is not None
+logger.info("[METRICS] GPU detected: %s | LSTM enabled: %s", GPU_AVAILABLE, LSTM_ENABLED)
+lstm_status_gauge.set(1 if LSTM_ENABLED else 0)
 
 class IdentityModel:
     def predict(self, features):
@@ -210,6 +289,26 @@ def ping():
 
 @app.route('/metrics')
 def metrics():
+    try:
+        stats = compute_stats()
+        pnl_gauge.set(stats["pnl"])
+        sharpe_gauge.set(stats["sharpe"])
+        perf = recent_performance()
+        hit_rate_gauge.set(perf["win_rate"])
+    except Exception as exc:
+        logger.exception("[METRICS] Stat calculation failed: %s", exc)
+
+    gpu_status_gauge.set(1 if GPU_AVAILABLE else 0)
+    lstm_status_gauge.set(1 if LSTM_ENABLED else 0)
+
+    if GPU_AVAILABLE:
+        try:
+            total, used = get_gpu_memory()
+            gpu_mem_total_gauge.set(total)
+            gpu_mem_used_gauge.set(used)
+        except Exception as exc:
+            logger.warning("[METRICS] GPU memory query failed: %s", exc)
+
     data = generate_latest(registry)
     return Response(data, mimetype=CONTENT_TYPE_LATEST)
 
