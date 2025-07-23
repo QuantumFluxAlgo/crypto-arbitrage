@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Fix panic resume and Redis signal behavior in Executor and PanicBrake
 - Added async fill confirmation system with cancel-on-partial fallback for safer trade execution
 - Live config reloads now enforce risk validation (loss %, latency, coin exposure)
+- Executor metrics now updated using atomic structures for thread safety
 - Remove plaintext .env.sandbox file and enforce secret hygiene in CI and gitignore
 - Cancel all legs on partial fill to prevent orphaned exposure in SpreadOpportunity
 - CVE scanning with Trivy

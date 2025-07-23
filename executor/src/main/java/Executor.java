@@ -54,11 +54,11 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     private final java.util.Deque<Double> midPrices = new java.util.ArrayDeque<>();
 
     private double dailyLossPct;
-    private double avgLatencyMs;
-    private double winRate;
-    private int totalTrades;
-    private int winTrades;
-    private long cumulativeLatencyMs;
+    private volatile double averageLatencyMs;
+    private volatile double winRate;
+    private final java.util.concurrent.atomic.AtomicInteger tradeCount = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.concurrent.atomic.AtomicInteger winCount = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.concurrent.atomic.AtomicLong totalLatencyMs = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicBoolean isPanic = new java.util.concurrent.atomic.AtomicBoolean(false);
     private boolean canaryMode;
     private boolean ghostMode;
@@ -251,7 +251,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
         recordMetrics(opp, result);
 
-        if (!sandboxMode && PanicBrake.shouldHalt(redisClient, config, dailyLossPct, avgLatencyMs, winRate)) {
+        if (!sandboxMode && PanicBrake.shouldHalt(redisClient, config, dailyLossPct, averageLatencyMs, winRate)) {
             if (isPanic.compareAndSet(false, true)) {
                 logger.error("PANIC BRAKE TRIGGERED - trading paused");
                 AlertManager.sendAlert("PANIC", "BRAKE TRIGGERED");
@@ -433,16 +433,16 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     }
 
     private void updatePerformanceMetrics(TradeResult result) {
-        totalTrades++;
-        cumulativeLatencyMs += result.latencyMs;
-        avgLatencyMs = cumulativeLatencyMs / (double) totalTrades;
+        tradeCount.incrementAndGet();
+        totalLatencyMs.addAndGet(result.latencyMs);
+        averageLatencyMs = totalLatencyMs.get() / (double) tradeCount.get();
 
         if (result.success) {
-            winTrades++;
+            winCount.incrementAndGet();
         }
-        winRate = winTrades / (double) totalTrades;
+        winRate = winCount.get() / (double) tradeCount.get();
 
-        logger.debug("Metrics: latency={}ms, winRate={}, totalTrades={}", result.latencyMs, winRate, totalTrades);
+        logger.debug("Metrics: latency={}ms, winRate={}, totalTrades={}", result.latencyMs, winRate, tradeCount.get());
     }
 
     /**
@@ -611,7 +611,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
 
     /** Current average latency in milliseconds. */
     public double getCurrentLatencyMs() {
-        return avgLatencyMs;
+        return averageLatencyMs;
+    }
+
+    /** Immutable snapshot of current performance metrics. */
+    public MetricsSnapshot getMetrics() {
+        return new MetricsSnapshot(
+                tradeCount.get(),
+                winCount.get(),
+                totalLatencyMs.get(),
+                averageLatencyMs,
+                winRate);
     }
 
     /** Execution configuration. */
