@@ -111,6 +111,12 @@ public class SpreadOpportunity {
       String msg = "Trade skipped due to slippage breach: " + e.getMessage();
       logger.warn(msg);
       logSlippage(msg);
+      TradeLogger.logAudit(
+          pair,
+          TradeLogger.STATUS_REJECTED,
+          "slippage > threshold",
+          grossEdge - netEdge,
+          0);
       return new TradeResult(false, 0.0, 0, "SLIPPAGE_BREACH");
     }
 
@@ -151,6 +157,9 @@ public class SpreadOpportunity {
     double pnl = netEdge - buyFee - sellFee - buyCancel - sellCancel;
     boolean success = !partial && buyOk && sellOk;
     String status = partial ? "PARTIAL_ABORTED" : (success ? "FILLED" : "FAILED");
+    String outcome = success ? TradeLogger.STATUS_SUCCESS : TradeLogger.STATUS_FAILED;
+    String reason = success ? "" : (partial ? "partial fill" : "order failure");
+    TradeLogger.logAudit(pair, outcome, reason, grossEdge - netEdge, latencyMs);
 
     return new TradeResult(success, success ? pnl : 0.0, latencyMs, status);
   }

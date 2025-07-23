@@ -12,7 +12,7 @@ let warnSpy;
 
 beforeAll(async () => {
   ({ buildApp } = await import('../index.js'));
-  app = buildApp();
+  app = await buildApp();
   await app.listen({ port: 0 });
 });
 

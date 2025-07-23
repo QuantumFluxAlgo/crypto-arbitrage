@@ -12,7 +12,7 @@ let cookie;
 
 beforeAll(async () => {
   ({ buildApp } = await import('../index.js'));
-  app = buildApp();
+  app = await buildApp();
   await app.listen({ port: 0 });
   const login = await request(app.server)
     .post('/api/login')

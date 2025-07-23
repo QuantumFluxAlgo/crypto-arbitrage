@@ -16,8 +16,9 @@ export const settings = {
   ghost_mode: false,
   personality_mode: "Realistic",
   sweep_cadence: "None",
-  maxLossPct: 0,
-  latencyMaxMs: 250,
+  maxLossPct: parseFloat(process.env.LOSS_CAP_PCT || "0"),
+  latencyMaxMs: parseFloat(process.env.LATENCY_MAX_MS || "250"),
+  coinExposureLimit: parseFloat(process.env.COIN_CAP_PCT || "10"),
 };
 
 // Returns ExecutionMode for the current request.

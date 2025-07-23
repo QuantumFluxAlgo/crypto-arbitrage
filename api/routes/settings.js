@@ -2,6 +2,7 @@ import { z } from "zod";
 import logger from "../services/logger.js";
 import { setMode as setRiskFilterMode } from "../services/riskFilter.js";
 import { getControlChannel } from "../config/settings.js";
+import { getConfigSource, loadSettingsFromRedis } from "../services/configManager.js";
 
 export let settings = {
   schema_version: 1,
@@ -15,11 +16,12 @@ export let settings = {
   maxLoss: 0,
   maxLossPct: 0,
   latencyMaxMs: 250,
+  coinExposureLimit: 10,
 };
 
 export default async function settingsRoutes(app, opts) {
   const { redis } = opts;
-  app.get("/settings", async () => settings);
+  app.get("/settings", async () => ({ ...settings, source: getConfigSource() }));
 
   const schema = z
     .object({
@@ -34,6 +36,7 @@ export default async function settingsRoutes(app, opts) {
       maxLoss: z.number().optional(),
       maxLossPct: z.number().optional(),
       latencyMaxMs: z.number().optional(),
+      coinExposureLimit: z.number().optional(),
     })
     .strict();
 
@@ -59,6 +62,14 @@ export default async function settingsRoutes(app, opts) {
       );
       reply.code(400);
       return { error: "latencyMaxMs exceeds limit" };
+    }
+
+    if (typeof data.coinExposureLimit === "number" && data.coinExposureLimit > 30) {
+      logger.warn(
+        `[SETTINGS-REJECTED] coinExposureLimit=${data.coinExposureLimit} exceeds limit`,
+      );
+      reply.code(400);
+      return { error: "coinExposureLimit exceeds limit" };
     }
 
     if (typeof data.personality_mode === "string") {
@@ -148,6 +159,22 @@ export default async function settingsRoutes(app, opts) {
         logger.error('Failed to publish latency update', err);
       }
     }
+    if (typeof req.body.coinExposureLimit === "number") {
+      settings.coinExposureLimit = req.body.coinExposureLimit;
+    }
+
+    const now = new Date().toISOString();
+    try {
+      await Promise.all([
+        redis.set('config:maxLossPct', JSON.stringify({ value: settings.maxLossPct, updatedAt: now })),
+        redis.set('config:latencyMaxMs', JSON.stringify({ value: settings.latencyMaxMs, updatedAt: now })),
+        redis.set('config:coinExposureLimit', JSON.stringify({ value: settings.coinExposureLimit, updatedAt: now })),
+      ]);
+    } catch (err) {
+      logger.error('Failed to persist settings to Redis', err);
+    }
+
+    await loadSettingsFromRedis(redis);
     return { saved: true };
   };
 
