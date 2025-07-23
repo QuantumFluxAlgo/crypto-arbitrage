@@ -5,6 +5,7 @@ import executor.Executor;
 import executor.RedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 /**
  * Listens for "resume" commands on a Redis channel and notifies the
@@ -49,7 +50,15 @@ public class ResumeHandler {
                             @Override
                             public void onMessage(String channel, String message) {
                                 if ("resume".equalsIgnoreCase(message)) {
-                                    logger.info("Received 'resume' command from Redis");
+                                    logger.info(
+                                            com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                                                    .createObjectNode()
+                                                    .put("timestamp", java.time.Instant.now().toString())
+                                                    .put("event", "resume_triggered")
+                                                    .put("component", "executor")
+                                                    .put("source", "redis")
+                                                    .put("operator", "system")
+                                                    .toString());
                                     executor.resumeFromPanic();
                                 }
                             }
@@ -59,7 +68,15 @@ public class ResumeHandler {
                             @Override
                             public void onMessage(String channel, String message) {
                                 if ("resume".equalsIgnoreCase(message)) {
-                                    logger.info("Received 'resume' command from Redis");
+                                    logger.info(
+                                            com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                                                    .createObjectNode()
+                                                    .put("timestamp", java.time.Instant.now().toString())
+                                                    .put("event", "resume_triggered")
+                                                    .put("component", "executor")
+                                                    .put("source", "redis")
+                                                    .put("operator", "system")
+                                                    .toString());
                                     executor.resumeFromPanic();
                                 }
                             }

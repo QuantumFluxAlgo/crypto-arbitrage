@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import executor.ProfitTracker;
 import executor.RedisClient;
 import executor.Config;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 public class PanicBrake {
     private static final Logger logger = LoggerFactory.getLogger(PanicBrake.class);
@@ -97,7 +98,16 @@ public class PanicBrake {
         }
 
         if (reason != null) {
-            logger.error("[PANIC TRIGGERED] reason={} ts={}", reason, System.currentTimeMillis());
+            logger.error(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("timestamp", java.time.Instant.now().toString())
+                            .put("event", "panic_triggered")
+                            .put("component", "executor")
+                            .put("source", "internal")
+                            .put("operator", "system")
+                            .put("reason", reason)
+                            .toString());
             triggered = true;
         }
 

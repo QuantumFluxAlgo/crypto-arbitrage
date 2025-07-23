@@ -3,6 +3,7 @@ package executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 /**
  * Global circuit breaker monitoring win rate and account drawdown.
@@ -30,7 +31,16 @@ public class CircuitBreaker {
     public void check(double winRate, double drawdownPct) {
         if (!tripped.get() && (winRate < minWinRate || drawdownPct > maxDrawdownPct)) {
             tripped.set(true);
-            logger.error("CIRCUIT BREAKER TRIPPED winRate={} drawdownPct={}", winRate, drawdownPct);
+            logger.error(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("timestamp", java.time.Instant.now().toString())
+                            .put("event", "panic_triggered")
+                            .put("component", "executor")
+                            .put("source", "internal")
+                            .put("operator", "system")
+                            .put("reason", "CIRCUIT_BREAKER")
+                            .toString());
             AlertManager.sendAlert("CIRCUIT", "CIRCUIT BREAKER TRIPPED");
             redisClient.publish("alerts", "CIRCUIT BREAKER TRIPPED");
             redisClient.publish(RedisClient.getControlChannel(), "halt");

@@ -14,6 +14,7 @@ import executor.ExecutionMode;
 import executor.RedisClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -455,7 +456,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
-            logger.info("[RESUME SIGNAL RECEIVED] reason=manual ts={}", ts);
+            logger.info(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("timestamp", java.time.Instant.now().toString())
+                            .put("event", "resume_triggered")
+                            .put("component", "executor")
+                            .put("source", "dashboard")
+                            .put("operator", "system")
+                            .toString());
             AlertManager.send("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
             redisClient.publish(controlChannel, "resume:" + ts);
@@ -475,7 +484,15 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         if (isPanic.compareAndSet(true, false)) {
             circuitBreaker.reset();
             long ts = System.currentTimeMillis();
-            logger.info("[RESUME SIGNAL RECEIVED] reason=control ts={}", ts);
+            logger.info(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("timestamp", java.time.Instant.now().toString())
+                            .put("event", "resume_triggered")
+                            .put("component", "executor")
+                            .put("source", "redis")
+                            .put("operator", "system")
+                            .toString());
             AlertManager.send("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
             redisClient.publish(controlChannel, "resume:" + ts);

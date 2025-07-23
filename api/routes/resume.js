@@ -28,7 +28,15 @@ export default async function resumeRoutes(app, opts) {
     } else {
       req.log.info(`[DRY-RUN] Resume alert: ${msg}`);
     }
-    logger.info('[RESUME] Trading re-enabled by operator');
+    logger.info(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        event: 'resume_triggered',
+        component: 'api',
+        source: 'dashboard',
+        operator: user,
+      }),
+    );
     return { resumed: true };
   }
   );

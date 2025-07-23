@@ -14,7 +14,15 @@ export default async function alertRoutes(app, { redis }) {
         await redis.set(PAUSE_KEY, 'true');
         await redis.publish(getControlChannel(), 'halt');
       }
-      logger.warn(`[ALERT] Panic triggered via /alert/panic by ${source} at ${timestamp}`);
+      logger.warn(
+        JSON.stringify({
+          timestamp,
+          event: 'panic_triggered',
+          component: 'api',
+          source: 'alert_api',
+          operator: source,
+        }),
+      );
       return { paused: true, triggeredBy: source, timestamp };
     } catch (err) {
       logger.error('[REDIS ERROR] Could not set pause state from alert trigger');
