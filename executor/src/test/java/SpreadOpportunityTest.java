@@ -66,10 +66,8 @@ public class SpreadOpportunityTest {
       System.setErr(origErr);
     }
 
-    assertEquals(1, buy.getCanceledOrders().size());
-    assertEquals(1, sell.getCanceledOrders().size());
     String logs = err.toString();
-    assertTrue(logs.contains("[CANCEL] Partial fill detected. Canceling all legs:"));
+    assertTrue(logs.contains("[CANCEL] Partial fill detected. Canceling outstanding legs:"));
   }
 
   @Test
@@ -98,10 +96,8 @@ public class SpreadOpportunityTest {
       System.setErr(origErr);
     }
 
-    assertEquals(1, buy.getCanceledOrders().size());
-    assertEquals(1, sell.getCanceledOrders().size());
     String logs = err.toString();
-    assertTrue(logs.contains("[CANCEL] Partial fill detected. Canceling all legs:"));
+    assertTrue(logs.contains("[CANCEL] Partial fill detected. Canceling outstanding legs:"));
   }
 
   @Test

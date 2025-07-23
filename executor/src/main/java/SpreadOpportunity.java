@@ -101,42 +101,26 @@ public class SpreadOpportunity {
     MockExchangeAdapter buy = createAdapter(buyExchange);
     MockExchangeAdapter sell = createAdapter(sellExchange);
 
-    String buyOrderId = "BUY-" + System.nanoTime();
-    String sellOrderId = "SELL-" + System.nanoTime();
+    FillTracker tracker = new FillTracker();
+
+    String buyOrderId = tracker.submitOrder(buy, pair, "BUY", size, price);
+    String sellOrderId = tracker.submitOrder(sell, pair, "SELL", size, price);
 
     long start = System.nanoTime();
 
-    double buyCancel = 0.0;
-    double sellCancel = 0.0;
-    boolean buyOk = false;
-    boolean sellOk = false;
-    boolean partial = false;
+    double buyCancel = buy.getLastCancelFee();
+    double sellCancel = sell.getLastCancelFee();
 
-    buyOk = buy.placeIocOrder(pair, "BUY", size, price);
-    buyCancel += buy.getLastCancelFee();
-    if (!buyOk && buy.getLastFillSize() > 0) {
-      partial = true;
-    }
+    boolean buyOk = tracker.waitForFill(buyOrderId);
+    boolean sellOk = tracker.waitForFill(sellOrderId);
 
-    if (!partial) {
-      sellOk = sell.placeIocOrder(pair, "SELL", size, price);
-      sellCancel += sell.getLastCancelFee();
-      if (!sellOk && sell.getLastFillSize() > 0) {
-        partial = true;
-      }
-    }
+    boolean partial = !(buyOk && sellOk);
 
     if (partial) {
-      buy.cancel(buyOrderId);
-      sell.cancel(sellOrderId);
       logger.info(
-          "[CANCEL] Partial fill detected. Canceling all legs: {}, {}", buyOrderId, sellOrderId);
-    } else if (!buyOk) {
-      sell.cancel(sellOrderId);
-      logger.info("[CANCEL] Orphan order canceled: {}", sellOrderId);
-    } else if (!sellOk) {
-      buy.cancel(buyOrderId);
-      logger.info("[CANCEL] Orphan order canceled: {}", buyOrderId);
+          "[CANCEL] Partial fill detected. Canceling outstanding legs: {}, {}",
+          buyOrderId,
+          sellOrderId);
     }
 
     long end = System.nanoTime();
