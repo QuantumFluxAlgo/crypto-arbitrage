@@ -1,5 +1,6 @@
 import { getControlChannel, getExecutionMode, ExecutionMode } from '../config/settings.js';
-import { sendAlert } from '../../alerts/alertAgent.js';
+import alertAgent from '../../alerts/alertAgent.js';
+const { sendAlert } = alertAgent;
 import logger from '../services/logger.js';
 import { setPauseState, getPauseState } from '../services/pauseState.js';
 

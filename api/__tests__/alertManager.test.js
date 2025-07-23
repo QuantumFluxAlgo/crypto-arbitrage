@@ -6,7 +6,8 @@ jest.mock('../../alerts/emailAlert.js', () => ({
   })
 }));
 
-import { sendAlert } from '../../alerts/alertAgent.js';
+import alertAgent from '../../alerts/alertAgent.js';
+const { sendAlert } = alertAgent;
 
 describe('sendAlert error handling', () => {
   beforeEach(() => {

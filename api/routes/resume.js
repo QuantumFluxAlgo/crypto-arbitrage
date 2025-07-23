@@ -1,5 +1,6 @@
 import { requireAdmin } from '../middleware/auth.js';
-import { sendAlert } from '../../alerts/alertAgent.js';
+import alertAgent from '../../alerts/alertAgent.js';
+const { sendAlert } = alertAgent;
 import { getControlChannel } from '../config/settings.js';
 import fs from 'fs';
 import path from 'path';
