@@ -186,7 +186,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
                             .put("ts", java.time.Instant.now().toString())
                             .toString());
             if ("resume".equalsIgnoreCase(msg)) {
-                logger.info("Resume signal received on {}", controlChannel);
+                logger.info("[RESUME SIGNAL RECEIVED] Resuming trade evaluation");
                 resumeFromPanic();
             } else if ("halt".equalsIgnoreCase(msg) || "pause".equalsIgnoreCase(msg)) {
                 logger.warn("Panic signal received on {}", controlChannel);
@@ -235,13 +235,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      */
     public void handleMessage(String message) {
         if (redisClient.isPaused()) {
-            logger.info(
-                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
-                            .createObjectNode()
-                            .put("event", "panic_active")
-                            .put("action", "evaluation_skipped")
-                            .put("ts", java.time.Instant.now().toString())
-                            .toString());
+            logger.info("[EXECUTOR PAUSED] Skipping trade evaluation");
             return;
         }
 
@@ -473,6 +467,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeTrading() {
         if (sandboxMode) {
             logger.info("[DRY-RUN] resume ignored");
+            redisClient.setResumeAck();
             return;
         }
         if (isPanic.compareAndSet(true, false)) {
