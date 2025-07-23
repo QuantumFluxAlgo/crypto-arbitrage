@@ -4,7 +4,7 @@
   "description": "Crypto arbitrage tool",
   "main": "index.js",
   "scripts": {
-    "test": "echo 'no root tests'",
+    "test": "jest",
     "mock:ghost": "node scripts/mock-ghost-feed.js"
   },
   "keywords": [],
@@ -13,10 +13,17 @@
   "type": "commonjs",
   "dependencies": {
     "axios": "1.10.0",
-    "minimist": "1.2.8",
-    "pg": "8.16.3",
     "ioredis": "5.6.1",
+    "minimist": "1.2.8",
     "nodemailer": "7.0.5",
+    "pg": "8.16.3",
     "winston": "3.17.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2"
   }
 }
