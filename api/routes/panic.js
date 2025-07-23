@@ -24,7 +24,12 @@ export default async function panicRoutes(app, { redis, panicState }) {
     await setPauseState(redis, true);
     logger.warn('[PANIC TRIGGERED]');
     panicState.reason = req.body?.type || null;
-    await redis.publish(getControlChannel(), 'halt');
+    try {
+      await redis.publish(getControlChannel(), 'halt');
+      logger.info('Published panic halt to control-feed');
+    } catch (err) {
+      logger.error('Failed to publish panic halt', err);
+    }
     logger.warn(
       JSON.stringify({
         event: 'panic',
@@ -35,8 +40,9 @@ export default async function panicRoutes(app, { redis, panicState }) {
     );
     try {
       await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
+      logger.info('Panic email alert sent');
     } catch (err) {
-      logger.error('[ALERT FAILURE] Panic alert email failed to send: missing SMTP config');
+      logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
     }
     return { paused: true, source: 'manual' };
   });

@@ -86,11 +86,18 @@ export default async function resumeRoutes(app, opts) {
     }
     const msg = `Trading resumed by ${user} at ${new Date().toISOString()}`;
     await redis.publish('alerts', msg);
+    try {
+      await redis.publish(channel, msg);
+      logger.info('Published resume notice to control-feed');
+    } catch (err) {
+      logger.warn('Failed to publish resume notice', err);
+    }
     if (process.env.SANDBOX_MODE !== 'true') {
       try {
         await sendAlert('email', msg, 'resume');
+        req.log.info('Resume email alert sent');
       } catch (err) {
-        req.log.error('Resume alert failed', err);
+        req.log.warn('Resume alert failed', err);
       }
     } else {
       req.log.info(`[DRY-RUN] Resume alert: ${msg}`);
