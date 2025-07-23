@@ -30,8 +30,9 @@ describeLocal('mode specific metrics endpoints', () => {
     expect(res.body).toHaveProperty('latency');
   });
 
-  test('deprecated metrics endpoint returns 404', async () => {
+  test('/metrics exposes prometheus text', async () => {
     const res = await request(app.server).get('/api/metrics');
-    expect(res.statusCode).toBe(404);
+    expect(res.statusCode).toBe(200);
+    expect(res.text).toMatch(/panic_state/);
   });
 });

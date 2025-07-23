@@ -18,6 +18,7 @@ import executor.TriangularArbDetector;
 import executor.DailyResetScheduler;
 import executor.MockWalletClient;
 import executor.ColdSweeperConfig;
+import executor.MetricsServer;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -83,6 +84,14 @@ public class Main {
         holder[0] = new Executor(redisClient, redisHost, redisPort, riskFilter, nearMissLogger, configObj);
         holder[0].start();
 
+        int metricsPort = Integer.parseInt(System.getenv().getOrDefault("METRICS_PORT", "9100"));
+        MetricsServer metrics = new MetricsServer(holder[0]);
+        try {
+            metrics.start(metricsPort);
+        } catch (Exception e) {
+            System.err.println("Metrics server failed: " + e.getMessage());
+        }
+
         TriangularArbDetector arbDetector = new TriangularArbDetector(holder[0]);
         String bookChannel = System.getenv().getOrDefault("ORDERBOOK_CHANNEL", "orderbook");
         RedisClient bookClient = new RedisClient(redisHost, redisPort, bookChannel, (ch, msg) -> {
@@ -101,6 +110,7 @@ public class Main {
             arbDetector.stop();
             bookClient.shutdown();
             ProfitTracker.shutdown();
+            metrics.stop();
         }));
 
         // Initialize background schedulers

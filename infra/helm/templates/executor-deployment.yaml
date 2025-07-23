@@ -19,6 +19,8 @@ spec:
       containers:
         - name: executor
           image: {{ .Values.executor.image }}
+          ports:
+            - containerPort: {{ .Values.executor.metricsPort }}
           resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           envFrom:
             - secretRef:

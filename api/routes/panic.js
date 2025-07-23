@@ -29,7 +29,7 @@ export default async function panicRoutes(app, { redis, panicState }) {
       })
     );
     try {
-      await sendAlert('email', 'Panic brake triggered (test mode)');
+      await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
     } catch (err) {
       logger.error('[ALERT FAILURE] Panic alert email failed to send: missing SMTP config');
     }
