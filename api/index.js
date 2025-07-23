@@ -29,6 +29,7 @@ import { sendEmail } from '../alerts/emailAlert.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 import { getPauseState, setPauseState } from './services/pauseState.js';
+import { redisReachable, fetchBalances } from './services/balances.js';
 
 const { Pool } = pg;
 // Hard stop if credentials or mode are misconfigured
@@ -248,9 +249,27 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
         }
-        logger.info('[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.');
+
+        const timestamp = new Date().toISOString();
+
+        const redisOk = await redisReachable(redis);
+        if (!redisOk) {
+          logger.error('[SWEEP] Redis unavailable – aborting sweep for safety');
+          return { sweepInitiated: false, reason: 'Redis unavailable', timestamp };
+        }
+
+        const { balances, complete } = await fetchBalances(pool, redis);
+        const assetCount = balances.length;
+        const total = balances.reduce((sum, b) => sum + (b.usd_value || 0), 0);
+        const totalStr = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        logger.info(`[SWEEP] Simulated sweep of ${assetCount} assets totaling $${totalStr} (dry-run only)`);
+        if (!complete) {
+          logger.warn('[SWEEP WARNING] Balance source incomplete – operator review recommended');
+        }
+
         await redis.publish(getControlChannel(), 'sweep');
-        return { swept: true };
+        return { sweepInitiated: true, timestamp };
       });
     }
 
