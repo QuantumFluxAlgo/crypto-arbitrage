@@ -5,7 +5,11 @@ import { setPauseState, getPauseState } from '../services/pauseState.js';
 
 export default async function panicRoutes(app, { redis, panicState }) {
   app.post('/test/panic', async (req, reply) => {
-    if (process.env.SANDBOX_MODE !== 'true') {
+    const mode =
+      process.env.EXECUTION_MODE ||
+      (process.env.SANDBOX_MODE === 'true' ? 'dry-run-sandbox' : 'live');
+    const allowed = ['dry-run-sandbox', 'dry-run-server'];
+    if (!allowed.includes(mode)) {
       return reply.code(403).send();
     }
     const alreadyPaused = await getPauseState(redis);
@@ -19,13 +23,15 @@ export default async function panicRoutes(app, { redis, panicState }) {
       );
       return { paused: true, ignored: true };
     }
-    const user = req.user?.email || 'unknown';
+    const user = req.user?.email || req.user?.id || req.ip || 'unknown';
     panicState.last = now;
     await redis.set('panic_last_ts', String(now));
     await setPauseState(redis, true);
-    logger.warn('[PANIC TRIGGERED]');
+    const reason = req.body?.type || 'manual override';
+    const source = req.body?.source || 'api';
+    logger.warn(`[PANIC TRIGGERED] mode=${mode} source=${source}`);
     logger.audit(
-      `[PANIC] ts=${new Date().toISOString()} user=${user} reason=${req.body?.type || 'manual'}`
+      `[PANIC] ts=${new Date().toISOString()} mode=${mode} user=${user} source=${source} reason=${reason}`
     );
     panicState.reason = req.body?.type || null;
     try {
@@ -37,8 +43,10 @@ export default async function panicRoutes(app, { redis, panicState }) {
     logger.warn(
       JSON.stringify({
         event: 'panic',
-        reason: panicState.reason || 'manual',
+        reason: panicState.reason || 'manual override',
         value: req.body?.value || 0,
+        mode,
+        source,
         ts: new Date().toISOString(),
       })
     );
@@ -48,6 +56,6 @@ export default async function panicRoutes(app, { redis, panicState }) {
     } catch (err) {
       logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
     }
-    return { paused: true, source: 'manual' };
+    return { status: 'panic_triggered', mode, reason };
   });
 }

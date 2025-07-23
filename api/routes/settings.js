@@ -47,16 +47,14 @@ export default async function settingsRoutes(app, opts) {
       return { error: "invalid settings" };
     }
     const data = result.data;
+    const operator = req.user?.email || req.user?.id || req.ip;
+    const mode =
+      process.env.EXECUTION_MODE ||
+      (process.env.SANDBOX_MODE === "true" ? "dry-run-sandbox" : "live");
 
     if (typeof data.maxLossPct === "number" && data.maxLossPct > 20) {
       logger.warn(
-        JSON.stringify({
-          event: "unauthorized_config_change",
-          field: "maxLossPct",
-          value: data.maxLossPct,
-          status: "rejected",
-          ts: new Date().toISOString(),
-        })
+        `[SETTINGS-REJECTED] maxLossPct=${data.maxLossPct} exceeds limit mode=${mode} operator=${operator}`
       );
       reply.code(400);
       return { error: "maxLossPct exceeds limit" };
@@ -64,13 +62,7 @@ export default async function settingsRoutes(app, opts) {
 
     if (typeof data.latencyMaxMs === "number" && data.latencyMaxMs > 1000) {
       logger.warn(
-        JSON.stringify({
-          event: "unauthorized_config_change",
-          field: "latencyMaxMs",
-          value: data.latencyMaxMs,
-          status: "rejected",
-          ts: new Date().toISOString(),
-        })
+        `[SETTINGS-REJECTED] latencyMaxMs=${data.latencyMaxMs} exceeds limit mode=${mode} operator=${operator}`
       );
       reply.code(400);
       return { error: "latencyMaxMs exceeds limit" };
@@ -78,13 +70,7 @@ export default async function settingsRoutes(app, opts) {
 
     if (typeof data.coinExposureLimit === "number" && data.coinExposureLimit > 30) {
       logger.warn(
-        JSON.stringify({
-          event: "unauthorized_config_change",
-          field: "coinExposureLimit",
-          value: data.coinExposureLimit,
-          status: "rejected",
-          ts: new Date().toISOString(),
-        })
+        `[SETTINGS-REJECTED] coinExposureLimit=${data.coinExposureLimit} exceeds limit mode=${mode} operator=${operator}`
       );
       reply.code(400);
       return { error: "coinExposureLimit exceeds limit" };
@@ -94,13 +80,7 @@ export default async function settingsRoutes(app, opts) {
       const modes = ["Realistic", "Aggressive", "Auto"];
       if (!modes.includes(data.personality_mode)) {
         logger.warn(
-          JSON.stringify({
-            event: "unauthorized_config_change",
-            field: "personality_mode",
-            value: data.personality_mode,
-            status: "rejected",
-            ts: new Date().toISOString(),
-          })
+          `[SETTINGS-REJECTED] personality_mode=${data.personality_mode} invalid mode=${mode} operator=${operator}`
         );
         reply.code(400);
         return { error: "invalid personality_mode" };
@@ -111,13 +91,7 @@ export default async function settingsRoutes(app, opts) {
       const allowed = ["Daily", "Monthly", "None"];
       if (!allowed.includes(data.sweep_cadence)) {
         logger.warn(
-          JSON.stringify({
-            event: "unauthorized_config_change",
-            field: "sweep_cadence",
-            value: data.sweep_cadence,
-            status: "rejected",
-            ts: new Date().toISOString(),
-          })
+          `[SETTINGS-REJECTED] sweep_cadence=${data.sweep_cadence} invalid mode=${mode} operator=${operator}`
         );
         reply.code(400);
         return { error: "invalid sweep_cadence" };
@@ -128,6 +102,19 @@ export default async function settingsRoutes(app, opts) {
   };
 
   const saveSettings = async (req) => {
+    const operator = req.user?.email || req.user?.id || req.ip;
+    const mode =
+      process.env.EXECUTION_MODE ||
+      (process.env.SANDBOX_MODE === "true" ? "dry-run-sandbox" : "live");
+    logger.audit(
+      JSON.stringify({
+        event: 'settings_update_request',
+        operator,
+        mode,
+        changes: req.body,
+        ts: new Date().toISOString(),
+      })
+    );
     if (typeof req.body.schema_version === "number") {
       settings.schema_version = req.body.schema_version;
     }
@@ -205,6 +192,14 @@ export default async function settingsRoutes(app, opts) {
     }
 
     await loadSettingsFromRedis(redis);
+    logger.audit(
+      JSON.stringify({
+        event: 'settings_updated',
+        operator,
+        mode,
+        ts: new Date().toISOString(),
+      })
+    );
     return { saved: true };
   };
 

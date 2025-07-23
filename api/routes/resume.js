@@ -16,15 +16,18 @@ export default async function resumeRoutes(app, opts) {
     fs.mkdirSync(logDir, { recursive: true });
   }
 
-  function logAttempt(event, operator, extra = {}) {
+  function logAttempt(event, operator, mode, extra = {}) {
     const entry = {
       timestamp: new Date().toISOString(),
       event,
       operator,
+      mode,
       ...extra,
     };
     fs.appendFile(resumeLog, JSON.stringify(entry) + '\n', () => {});
-    logger.audit(`[RESUME] ${event} user=${operator} ${JSON.stringify(extra)}`);
+    logger.audit(
+      `[RESUME] ${event} mode=${mode} user=${operator} ${JSON.stringify(extra)}`
+    );
   }
 
   app.post(
@@ -32,10 +35,15 @@ export default async function resumeRoutes(app, opts) {
     { preHandler: requireAdmin },
     async (req, reply) => {
     const user = req.user?.email || 'unknown';
+    const mode =
+      process.env.EXECUTION_MODE ||
+      (process.env.SANDBOX_MODE === 'true' ? 'dry-run-sandbox' : 'live');
+    const source = req.body?.source || 'api';
+    logAttempt('resume_attempt', user, mode, { source });
 
     const paused = await getPauseState(redis);
     if (!paused) {
-      logAttempt('resume_not_paused', user);
+      logAttempt('resume_not_paused', user, mode);
       reply.code(409);
       return { error: 'System is not paused' };
     }
@@ -47,20 +55,25 @@ export default async function resumeRoutes(app, opts) {
       healthy = body.healthy === true;
     } catch {}
     if (health.statusCode !== 200 || !healthy) {
-      logAttempt('resume_blocked_health', user);
+      logAttempt('resume_blocked_health', user, mode);
       reply.code(403);
       return { error: 'System not healthy \u2014 resume denied' };
     }
 
-    const confirm = req.query.confirm === 'true';
+    const confirm = req.body?.confirm === true;
+    if (mode === 'live' && !confirm) {
+      logAttempt('resume_missing_confirm', user, mode);
+      reply.code(400);
+      return { error: 'confirmation_required' };
+    }
     if (!confirm && (panicState.reason === 'loss' || panicState.reason === 'latency')) {
-      logAttempt('resume_needs_override', user, { reason: panicState.reason });
+      logAttempt('resume_needs_override', user, mode, { reason: panicState.reason });
       reply.code(403);
       return { override_required: true };
     }
 
     if (confirm) {
-      logAttempt('resume_override_attempt', user, { reason: panicState.reason });
+      logAttempt('resume_override_attempt', user, mode, { reason: panicState.reason });
       await redis.set('resume_confirmed', 'true', 'EX', 60);
     }
 
@@ -105,12 +118,12 @@ export default async function resumeRoutes(app, opts) {
     } else {
       req.log.info(`[DRY-RUN] Resume alert: ${msg}`);
     }
-    logAttempt('resume_success', user);
+    logAttempt('resume_success', user, mode, { confirmed: confirm, source });
     resumeCounter.inc();
     logger.info(
       JSON.stringify({ event: 'resume', ts: new Date().toISOString() })
     );
-    return { resumed: true };
+    return { status: 'resumed', confirmed: confirm, mode };
   }
   );
 }
