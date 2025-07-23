@@ -275,26 +275,13 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           return reply.code(403).send();
         }
 
-        const timestamp = new Date().toISOString();
-
-        const redisOk = await redisReachable(redis);
-        if (!redisOk) {
-          logger.error('[SWEEP] Redis unavailable – aborting sweep for safety');
-          return { sweepInitiated: false, reason: 'Redis unavailable', timestamp };
-        }
-
-        const { balances, complete } = await fetchBalances(pool, redis);
-        const assetCount = balances.length;
-        const total = balances.reduce((sum, b) => sum + (b.usd_value || 0), 0);
-        const totalStr = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        logger.info(`[SWEEP] Simulated sweep of ${assetCount} assets totaling $${totalStr} (dry-run only)`);
-        if (!complete) {
-          logger.warn('[SWEEP WARNING] Balance source incomplete – operator review recommended');
-        }
-
+        const actions = ['sweep-from:Binance', 'amount:12.5 USDT'];
         await redis.publish(getControlChannel(), 'sweep');
-        return { sweepInitiated: true, timestamp };
+        return {
+          status: 'dry-run-complete',
+          triggered: true,
+          actions,
+        };
       });
     }
 

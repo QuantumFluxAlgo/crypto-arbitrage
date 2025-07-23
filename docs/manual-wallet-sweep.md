@@ -10,7 +10,14 @@ Explains how to manually initiate a cold wallet sweep when automated transfers a
    ```bash
    curl -X POST http://localhost:8080/api/test/sweep
    ```
-   This endpoint performs a dry-run sweep and logs the action.
+   The endpoint returns JSON:
+   ```json
+   {
+     "status": "dry-run-complete",
+     "triggered": true,
+     "actions": ["sweep-from:Binance", "amount:12.5 USDT"]
+   }
+   ```
 3. Check the executor logs for `Cold wallet sweep` messages. The wallet address is partially masked for security.
 4. Verify on a blockchain explorer once funds settle.
 5. Resume trading from the dashboard when complete.

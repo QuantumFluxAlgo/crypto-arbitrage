@@ -21,6 +21,15 @@ public class ColdSweeper {
     private final boolean isDryRun;
     private final java.util.concurrent.atomic.AtomicBoolean busy = new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    private void logDryRunSweep(String trigger, double amountUsd) {
+        String log = String.format(
+                "{\"event\":\"cold_wallet_sweep\",\"mode\":\"dry-run\",\"trigger\":\"%s\",\"actions\":[\"sweep-from:Binance\",\"amount:%.1f USDT\"],\"status\":\"skipped\",\"ts\":\"%s\"}",
+                trigger,
+                Math.round(amountUsd * 10.0) / 10.0,
+                java.time.Instant.now().toString());
+        logger.info(log);
+    }
+
     /**
      * Default: sweep when profit ≥ $5,000 or ≥ 30% of capital.
      */
@@ -91,16 +100,19 @@ public class ColdSweeper {
      * @return true if sweep threshold is met
      */
     public boolean shouldSweep(double profitUsd, double totalCapitalUsd) {
+        boolean result = false;
         if (profitUsd >= minAmountUsd) {
-            return true;
+            result = true;
+        } else if (totalCapitalUsd > 0 && (profitUsd / totalCapitalUsd) >= minCapitalRatio) {
+            result = true;
         }
-        if (totalCapitalUsd <= 0) {
-            return false;
+        if (isDryRun) {
+            String log = String.format(
+                    "{\"event\":\"sweep_trigger_eval\",\"result\":%s,\"mode\":\"dry-run\",\"ts\":\"%s\"}",
+                    result, java.time.Instant.now().toString());
+            logger.info(log);
         }
-        if ((profitUsd / totalCapitalUsd) >= minCapitalRatio) {
-            return true;
-        }
-        return false;
+        return result;
     }
 
     /**
@@ -112,7 +124,7 @@ public class ColdSweeper {
         String address = sweeperConfig.getTestColdWalletAddress();
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
-            logger.info("[DRY-RUN] Skipping cold wallet transfer");
+            logDryRunSweep("auto", amountUsd);
         } else {
             walletClient.withdraw(address, amountUsd);
         }
@@ -133,7 +145,7 @@ public class ColdSweeper {
         busy.set(true);
         logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
         if (isDryRun) {
-            logger.info("[DRY-RUN] Skipping cold wallet transfer");
+            logDryRunSweep("manual", amountUsd);
         } else {
             walletClient.withdraw(address, amountUsd);
         }

@@ -40,10 +40,14 @@ This document outlines the operational procedures for runtime control, safety ac
    ```bash
    curl -X POST http://localhost:8080/api/test/sweep
    ```
-2. Verify in logs:
+2. Expected output:
 
-   ```
-   [DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.
+   ```json
+   {
+     "status": "dry-run-complete",
+     "triggered": true,
+     "actions": ["sweep-from:Binance", "amount:12.5 USDT"]
+   }
    ```
 
 ---
