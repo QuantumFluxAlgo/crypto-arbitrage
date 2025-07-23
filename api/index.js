@@ -1,5 +1,6 @@
 // API service entrypoint for Fastify server and route wiring
 import Fastify from 'fastify';
+import { randomUUID } from 'crypto';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import logger from './services/logger.js';
@@ -64,6 +65,7 @@ const panicState = { reason: null, last: 0 };
 
 let redis;
 let pool;
+let lastSweepTime = 0;
 
 async function buildApp() {
   const app = Fastify();
@@ -306,12 +308,28 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           return reply.code(403).send();
         }
 
+        const now = Date.now();
+        const since = now - lastSweepTime;
+        if (since < 60000) {
+          const elapsed = Math.floor(since / 1000);
+          const remaining = Math.ceil((60000 - since) / 1000);
+          reply.code(429);
+          return {
+            status: 'duplicate',
+            message: `Last sweep occurred ${elapsed}s ago. Try again in ${remaining}s.`,
+          };
+        }
+
+        logger.info('[SWEEP] Manual sweep triggered by operator');
+
         const actions = ['sweep-from:Binance', 'amount:12.5 USDT'];
         await redis.publish(getControlChannel(), 'sweep');
+        lastSweepTime = now;
         return {
           status: 'dry-run-complete',
           triggered: true,
           actions,
+          sweepId: randomUUID(),
         };
       });
 
