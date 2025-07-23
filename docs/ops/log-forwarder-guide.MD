@@ -13,7 +13,7 @@ logForwarder:
 
 1. Deploy the log forwarder:
    ```bash
-   helm upgrade --install arb infra/helm -f infra/helm/values.yaml
+   helm upgrade --install prism-prod infra/helm -f infra/helm/values.yaml --namespace default
    ```
 2. Access Loki through Grafana to search logs across all services.
 

@@ -67,5 +67,5 @@ log "Applying NVIDIA GPU plugin"
 kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.12.3/nvidia-device-plugin.yml
 
 log "Deploying Helm chart"
-helm upgrade --install --atomic prism "$ROOT_DIR/infra/helm" \
-  --namespace arbitrage --create-namespace
+helm upgrade --install --atomic prism-prod "$ROOT_DIR/infra/helm" \
+  --namespace default

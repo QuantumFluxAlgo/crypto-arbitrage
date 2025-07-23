@@ -62,6 +62,9 @@ fi
 
 echo "Environment verified"
 
+echo "Helm release history:"
+helm history prism-prod || echo "No release history found."
+
 curl -sf http://localhost:8080/api/metrics/live >/dev/null
 curl -sf http://localhost:8080/api/metrics/sandbox >/dev/null
 if [ "${PANIC:-}" = "true" ] && [ "${HEARTBEAT:-}" = "dead" ]; then
