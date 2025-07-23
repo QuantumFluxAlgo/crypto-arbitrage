@@ -6,7 +6,11 @@ import socket
 import subprocess
 import time
 
-DRY_RUN = os.getenv("DRY_RUN", "True").lower() == "true"
+_dry_run_env = os.getenv("DRY_RUN")
+if _dry_run_env is None:
+    DRY_RUN = os.getenv("EXECUTION_MODE", "").upper() == "DRY_RUN"
+else:
+    DRY_RUN = _dry_run_env.lower() == "true"
 from .logger import logger
 
 from .model_tracker import insert_metadata, send_event

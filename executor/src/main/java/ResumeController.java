@@ -49,7 +49,7 @@ public class ResumeController {
         this.checker = checker == null ? new SystemHealthChecker() : checker;
         this.redis = redis;
         String dir = System.getenv().getOrDefault("LOG_DIR", "/var/log/prism");
-        // TODO: add log rotation policy for this directory
+        // Log rotation for this file is handled by external policy
         this.resumeLog = java.nio.file.Paths.get(dir, "resume.log");
     }
 

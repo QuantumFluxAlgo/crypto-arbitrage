@@ -20,7 +20,7 @@ POST /api/login
 
 The banner component polls `/api/system/status` every 30 seconds to update the UI. It reflects:
 
-- **Execution Mode** – `live`, `dry-run-server` or `dry-run-sandbox`.
+ - **Execution Mode** – `LIVE`, `SANDBOX` or `DRY_RUN`.
 - **Panic State** – paused or active.
 - **Win rate, NAV, latency and cold wallet ratio** from the metrics feed.
 
