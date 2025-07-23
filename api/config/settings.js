@@ -8,8 +8,8 @@ export const ExecutionMode = Object.freeze({
 
 export const settings = {
   schema_version: 1,
-  // SANDBOX_MODE forces dry-run when true
-  sandbox_mode: process.env.SANDBOX_MODE === "true",
+  // SANDBOX_MODE forces sandbox trading when true
+  sandbox_mode: process.env.SANDBOX_MODE === 'true',
   canary_mode: false,
   useEnsemble: true,
   shadowOnly: false,
@@ -25,10 +25,26 @@ export const settings = {
 // Used by logging such as `[DRY-RUN] Skipping cold wallet transfer`.
 export function getExecutionMode(req) {
   const sessionMode = req?.session?.mode;
-  if (sessionMode === ExecutionMode.LIVE || sessionMode === ExecutionMode.SANDBOX) {
+  if (
+    sessionMode === ExecutionMode.LIVE ||
+    sessionMode === ExecutionMode.SANDBOX ||
+    sessionMode === ExecutionMode.DRY_RUN
+  ) {
     return sessionMode;
   }
-  return settings.sandbox_mode ? ExecutionMode.SANDBOX : ExecutionMode.LIVE;
+  const envMode = String(process.env.EXECUTION_MODE || '')
+    .toLowerCase()
+    .replace('_', '-');
+  if (envMode === 'dry-run') {
+    return ExecutionMode.DRY_RUN;
+  }
+  if (envMode === 'sandbox') {
+    return ExecutionMode.SANDBOX;
+  }
+  if (envMode === 'live') {
+    return ExecutionMode.LIVE;
+  }
+  return settings.sandbox_mode ? ExecutionMode.DRY_RUN : ExecutionMode.LIVE;
 }
 
 export function getControlChannel() {
