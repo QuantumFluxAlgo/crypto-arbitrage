@@ -16,7 +16,7 @@ let warnSpy;
 
 beforeAll(async () => {
   ({ buildApp } = await import("../index.js"));
-  app = buildApp();
+  app = await buildApp();
   await app.listen({ port: 0 });
   const login = await request(app.server)
     .post("/api/login")
@@ -96,6 +96,17 @@ describeLocal("settings validation", () => {
     );
   });
 
+  test("rejects unsafe coinExposureLimit", async () => {
+    const res = await request(app.server)
+      .patch("/api/settings")
+      .set("Cookie", cookie)
+      .send({ coinExposureLimit: 50 });
+    expect(res.statusCode).toBe(400);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[SETTINGS-REJECTED] coinExposureLimit=50 exceeds limit",
+    );
+  });
+
   test("rejects malformed sweep_cadence", async () => {
     const res = await request(app.server)
       .patch("/api/settings")
@@ -111,6 +122,7 @@ describeLocal("settings validation", () => {
       .send({
         maxLossPct: 10,
         latencyMaxMs: 500,
+        coinExposureLimit: 20,
         personality_mode: "Aggressive",
         sweep_cadence: "Daily",
       });
