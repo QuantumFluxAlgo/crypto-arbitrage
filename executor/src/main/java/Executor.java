@@ -177,9 +177,20 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     /** Subscribe to control channel for resume signals. */
     protected void setupControlSubscription() {
         redisClient.subscribeControl(config, msg -> {
+            logger.info(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("event", "redis_received")
+                            .put("channel", controlChannel)
+                            .put("message", msg)
+                            .put("ts", java.time.Instant.now().toString())
+                            .toString());
             if ("resume".equalsIgnoreCase(msg)) {
                 logger.info("Resume signal received on {}", controlChannel);
                 resumeFromPanic();
+            } else if ("halt".equalsIgnoreCase(msg) || "pause".equalsIgnoreCase(msg)) {
+                logger.warn("Panic signal received on {}", controlChannel);
+                isPanic.set(true);
             } else if (msg != null && msg.startsWith("mode:")) {
                 String newMode = msg.substring(5).trim();
                 logger.info("[MODE-UPDATE] source=control value={}", newMode);

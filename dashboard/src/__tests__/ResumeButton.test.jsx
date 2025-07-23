@@ -39,7 +39,9 @@ test('shows resume failed message', async () => {
     );
   });
 
-  expect(screen.getByTestId('resume-failed')).toBeInTheDocument();
+  expect(screen.getByTestId('resume-failed')).toHaveTextContent(
+    'Resume failed: Executor not responding'
+  );
 });
 
 test('shows confirmation modal and confirms resume', async () => {
