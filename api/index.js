@@ -27,8 +27,10 @@ import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
 import { loadSettingsFromRedis } from './services/configManager.js';
 import { baseOpenPaths } from './lib/constants.js';
-import { sendAlert } from '../alerts/alertAgent.js';
-import { sendEmail } from '../alerts/emailAlert.js';
+import alertAgent from '../alerts/alertAgent.js';
+const { sendAlert } = alertAgent;
+import emailAlertPkg from '../alerts/emailAlert.js';
+const { sendEmail } = emailAlertPkg;
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 import {
