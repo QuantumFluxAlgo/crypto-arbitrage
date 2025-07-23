@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ##Released
+- PR 19 – Fix Sandbox Resume Auth Bypass
+  - Enforced JWT auth on `/resume` for all modes including sandbox
+  - Split out optional `/demo/resume` for UI-only testing (guarded by EXECUTION_MODE)
+  - Prevents unauthorized resume in test/demo environments
+  - Logs resume actions only after auth verification
 - Add real-time panic brake and execution mode banner to operator dashboard
 - Enforce system health validation before allowing panic resume actions
 - Enforced system health check and confirmation step for resume logic (API + executor)

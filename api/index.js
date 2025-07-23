@@ -158,12 +158,15 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
       ...baseOpenPaths,
-      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/demo/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
       await req.jwtVerify();
+      if (req.url === '/api/resume') {
+        req.log.info('[RESUME] Resume command received by authorized user');
+      }
     } catch {
       reply.code(401).send({ error: 'unauthorized' });
     }
@@ -174,7 +177,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return;
     const openPaths = [
       ...baseOpenPaths,
-      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/demo/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
@@ -268,11 +271,11 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     api.register(panicRoutes, { redis, panicState });
   }
 
-    if (isTest) {
-      api.post('/test/resume', async (_req, reply) => {
-        if (process.env.SANDBOX_MODE !== 'true') {
-          return reply.code(403).send();
-        }
+  if (isTest) {
+    api.post('/test/resume', async (_req, reply) => {
+      if (process.env.SANDBOX_MODE !== 'true') {
+        return reply.code(403).send();
+      }
         const paused = await getPauseState(redis);
         if (!paused) {
           reply.code(409);
@@ -324,8 +327,15 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           await sendAlert('email', 'Test panic alert', 'test');
         } catch {}
         return { status: 'sent', type: 'test', ts };
-      });
-    }
+    });
+  }
+
+  if (process.env.EXECUTION_MODE === 'sandbox') {
+    api.post('/demo/resume', async () => {
+      logger.info('[RESUME] Demo resume endpoint hit');
+      return { status: 'demo-only', mode: 'sandbox' };
+    });
+  }
 
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
