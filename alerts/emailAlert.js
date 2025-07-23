@@ -6,6 +6,12 @@ const pass = process.env.SMTP_PASS;
 const recipient = process.env.ALERT_RECIPIENT;
 const host = process.env.SMTP_HOST || 'smtp.gmail.com';
 
+if (user && pass) {
+  logger.info('[SMTP] credentials loaded from environment');
+} else {
+  logger.warn('[SMTP] credentials missing');
+}
+
 logger.info(`Using SMTP host: ${host}`);
 
 const transporter = nodemailer.createTransport({

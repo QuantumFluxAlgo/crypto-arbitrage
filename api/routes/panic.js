@@ -1,5 +1,5 @@
 import { getControlChannel } from '../config/settings.js';
-import { sendAlert } from '../../alerts/alertAgent.js';
+import { sendEmail } from '../../alerts/emailAlert.js';
 import logger from '../services/logger.js';
 import { setPauseState } from '../services/pauseState.js';
 
@@ -29,10 +29,12 @@ export default async function panicRoutes(app, { redis, panicState }) {
       })
     );
     try {
-      await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
+      await sendEmail('Panic brake triggered (test mode)', 'Trading halted due to panic');
+      logger.info('Panic alert email sent');
     } catch (err) {
-      logger.error('[ALERT FAILURE] Panic alert email failed to send: missing SMTP config');
+      logger.warn(`Panic alert email failed: ${err.message}`);
     }
+    await redis.publish('control-feed', 'panic');
     return { paused: true, source: 'manual' };
   });
 }

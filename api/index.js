@@ -273,6 +273,13 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         await setPauseState(redis, false);
         panicState.reason = null;
         await redis.publish(getControlChannel(), 'resume');
+        try {
+          await sendEmail('Resumed trading', 'Trading resumed after panic');
+          logger.info('Resume alert email sent');
+        } catch (err) {
+          logger.warn(`Resume alert email failed: ${err.message}`);
+        }
+        await redis.publish('control-feed', 'resume');
 
         let ack = false;
         const start = Date.now();
