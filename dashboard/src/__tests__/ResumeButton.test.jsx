@@ -26,3 +26,37 @@ test('button disabled with tooltip when resume blocked', async () => {
   expect(btn).toBeDisabled();
   expect(btn).toHaveAttribute('title', 'System not ready to resume \u2014 check logs');
 });
+
+test('confirmation modal flow', async () => {
+  const refresh = jest.fn();
+  global.fetch = jest
+    .fn()
+    .mockResolvedValueOnce({
+      status: 403,
+      ok: false,
+      json: () => Promise.resolve({ override_required: true }),
+    })
+    .mockResolvedValueOnce({ status: 200, ok: true, json: () => Promise.resolve({ resumed: true }) });
+
+  await act(async () => {
+    render(
+      <SystemStatusContext.Provider value={{ panic: true, reason: 'loss', refreshStatus: refresh }}>
+        <ResumeButton />
+      </SystemStatusContext.Provider>
+    );
+  });
+
+  const btn = screen.getByRole('button', { name: /resume trading/i });
+  await act(async () => {
+    fireEvent.click(btn);
+  });
+
+  expect(await screen.findByText(/risk thresholds/i)).toBeInTheDocument();
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+  });
+
+  expect(refresh).toHaveBeenCalled();
+  expect(screen.queryByText(/risk thresholds/i)).not.toBeInTheDocument();
+});

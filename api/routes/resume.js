@@ -1,17 +1,33 @@
 import { requireAdmin } from '../middleware/auth.js';
 import { sendAlert } from '../../alerts/alertAgent.js';
 import { getControlChannel } from '../config/settings.js';
-import { ensurePaused } from '../middleware/validate.js';
 import logger from '../services/logger.js';
-import { setPauseState } from '../services/pauseState.js';
+import { setPauseState, getPauseState } from '../services/pauseState.js';
+import { setResumeConfirmation } from '../../RedisPublisher.js';
 
 export default async function resumeRoutes(app, opts) {
   const { redis, panicState } = opts;
 
-  app.post(
-    '/resume',
-    { preHandler: [requireAdmin, ensurePaused(redis)] },
-    async (req, reply) => {
+  app.post('/resume', { preHandler: [requireAdmin] }, async (req, reply) => {
+    const paused = await getPauseState(redis);
+    if (!paused) {
+      reply.code(400);
+      return { error: 'not paused' };
+    }
+
+    const confirm = req.query.confirm === 'true';
+    const lossBreach = await redis.get('loss_breached');
+    const latencyBreach = await redis.get('latency_breached');
+
+    if (!confirm && (lossBreach === 'true' || latencyBreach === 'true')) {
+      reply.code(403);
+      return { override_required: true };
+    }
+
+    if (confirm) {
+      await setResumeConfirmation(redis);
+    }
+
     const channel = getControlChannel();
     await redis.publish(channel, 'resume');
     await setPauseState(redis, false);
@@ -38,6 +54,5 @@ export default async function resumeRoutes(app, opts) {
       }),
     );
     return { resumed: true };
-  }
-  );
+  });
 }
