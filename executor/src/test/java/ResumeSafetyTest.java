@@ -11,11 +11,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("local")
 public class ResumeSafetyTest {
 
+    static class DummyRedisClient extends RedisClient {
+        boolean confirmed = false;
+        DummyRedisClient() { super("localhost", 6379, "chan", (c,m)->{}); }
+        @Override
+        public boolean isResumeConfirmed() { return confirmed; }
+    }
+
     static class DummyExecutor extends Executor {
         boolean resumed = false;
-        DummyExecutor() {
-            super(new RedisClient("localhost", 6379, "chan", (c,m)->{}),
-                  "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.LIVE));
+        DummyExecutor(DummyRedisClient client) {
+            super(client, "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.LIVE));
         }
         @Override
         public void resumeFromPanic() { resumed = true; }
@@ -30,14 +36,15 @@ public class ResumeSafetyTest {
         @Override public boolean isPanicStateCleared() { return panic; }
     }
 
-    private ResumeController.Response call(DummyExecutor exec, StubChecker chk) {
-        ResumeController controller = new ResumeController(exec, chk);
+    private ResumeController.Response call(DummyExecutor exec, StubChecker chk, DummyRedisClient redis) {
+        ResumeController controller = new ResumeController(exec, chk, redis);
         return controller.resume();
     }
 
     @Test
     void blocksWhenHeartbeatDead() {
-        DummyExecutor exec = new DummyExecutor();
+        DummyRedisClient redis = new DummyRedisClient();
+        DummyExecutor exec = new DummyExecutor(redis);
         StubChecker chk = new StubChecker();
         chk.heartbeat = false;
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -45,7 +52,7 @@ public class ResumeSafetyTest {
         System.setErr(new PrintStream(err));
         ResumeController.Response res;
         try {
-            res = call(exec, chk);
+            res = call(exec, chk, redis);
         } finally {
             System.setErr(orig);
         }
@@ -57,10 +64,11 @@ public class ResumeSafetyTest {
 
     @Test
     void blocksWhenSweeperBusy() {
-        DummyExecutor exec = new DummyExecutor();
+        DummyRedisClient redis = new DummyRedisClient();
+        DummyExecutor exec = new DummyExecutor(redis);
         StubChecker chk = new StubChecker();
         chk.sweeper = false;
-        ResumeController.Response res = call(exec, chk);
+        ResumeController.Response res = call(exec, chk, redis);
         assertEquals(503, res.status);
         assertTrue(res.body.contains("sweeper"));
         assertFalse(exec.resumed);
@@ -68,10 +76,11 @@ public class ResumeSafetyTest {
 
     @Test
     void blocksWhenPanicFlagSet() {
-        DummyExecutor exec = new DummyExecutor();
+        DummyRedisClient redis = new DummyRedisClient();
+        DummyExecutor exec = new DummyExecutor(redis);
         StubChecker chk = new StubChecker();
         chk.panic = false;
-        ResumeController.Response res = call(exec, chk);
+        ResumeController.Response res = call(exec, chk, redis);
         assertEquals(503, res.status);
         assertTrue(res.body.contains("panicFlag"));
         assertFalse(exec.resumed);

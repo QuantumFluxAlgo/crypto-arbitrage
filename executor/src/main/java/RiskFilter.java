@@ -15,7 +15,7 @@ public class RiskFilter {
     private double minEdge;
     private long maxLatencyMs;
     private double maxSlippagePct = Double.parseDouble(
-        System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "1.0"));
+        System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "0.2"));
     private double lossCapPct = Double.parseDouble(
         System.getenv().getOrDefault("LOSS_CAP_PCT", "5.0"));
     private int latencyMax = Integer.parseInt(

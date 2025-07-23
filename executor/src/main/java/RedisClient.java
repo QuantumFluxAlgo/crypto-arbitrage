@@ -194,6 +194,19 @@ public class RedisClient extends Thread {
         }
     }
 
+    /**
+     * Check if resume has been confirmed in Redis.
+     */
+    public boolean isResumeConfirmed() {
+        try (Jedis jedis = new Jedis(host, port)) {
+            String val = jedis.get("resume_confirmed");
+            return val != null && val.equalsIgnoreCase("true");
+        } catch (Exception e) {
+            logger.error("Redis read failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void run() {

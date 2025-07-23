@@ -20,6 +20,5 @@ export function ensurePaused(redis) {
       reply.send({ error: 'not paused' });
       return;
     }
-    await setPauseState(redis, false);
   };
 }

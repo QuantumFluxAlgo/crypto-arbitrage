@@ -38,7 +38,14 @@ public class ConfigValidatorTest {
     public void testSlippageTooHighFails() {
         ConfigValidator validator = new ConfigValidator(5.0, 300.0, 0.5, 10.0, 0.0);
         RuntimeException e = assertThrows(RuntimeException.class, validator::validate);
-        assertTrue(e.getMessage().contains("MAX_SLIPPAGE_PCT exceeds safe limit"));
+        assertTrue(e.getMessage().contains("MAX_SLIPPAGE_PCT"));
+    }
+
+    @Test
+    public void testSlippageNegativeFails() {
+        ConfigValidator validator = new ConfigValidator(5.0, 300.0, 0.5, -1.0, 0.0);
+        RuntimeException e = assertThrows(RuntimeException.class, validator::validate);
+        assertTrue(e.getMessage().contains("MAX_SLIPPAGE_PCT"));
     }
 
     @Test

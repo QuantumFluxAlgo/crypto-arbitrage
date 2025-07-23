@@ -17,4 +17,20 @@ public class SlippageChecker {
         double allowed = Math.abs(expected) * maxSlipPercent / 100.0;
         return difference <= allowed;
     }
+
+    /**
+     * Validate the slippage between expected and actual values.
+     * Throws an {@link IllegalArgumentException} if the difference exceeds
+     * the provided percentage threshold.
+     *
+     * @param expected       expected price or edge
+     * @param actual         actual price or edge
+     * @param maxSlipPercent maximum allowed slippage in percent
+     */
+    public static void validate(double expected, double actual, double maxSlipPercent) {
+        if (!check(expected, actual, maxSlipPercent)) {
+            double diffPct = Math.abs(actual - expected) / Math.abs(expected) * 100.0;
+            throw new IllegalArgumentException("slippage " + diffPct + "% > " + maxSlipPercent + "%");
+        }
+    }
 }

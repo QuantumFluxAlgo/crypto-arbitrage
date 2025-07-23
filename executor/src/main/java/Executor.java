@@ -603,4 +603,19 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return Math.sqrt(var);
         }
     }
+
+    /** Current daily loss percentage. */
+    public double getCurrentLossPct() {
+        return dailyLossPct;
+    }
+
+    /** Current average latency in milliseconds. */
+    public double getCurrentLatencyMs() {
+        return avgLatencyMs;
+    }
+
+    /** Execution configuration. */
+    public Config getConfig() {
+        return config;
+    }
 }
