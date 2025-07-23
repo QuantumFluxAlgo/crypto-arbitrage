@@ -30,7 +30,7 @@ import java.sql.SQLException;
  * Executor agent responsible for executing arbitrage opportunities.
  * Implements {@link ResumeHandler.ResumeCapable} to handle resume signals.
  */
-public class Executor implements ResumeHandler.ResumeCapable, java.util.concurrent.Executor {
+public class Executor implements ResumeHandler.ResumeCapable {
     private static final Logger logger = LoggerFactory.getLogger(Executor.class);
 
     private final RedisClient redisClient;
@@ -220,8 +220,6 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         });
     }
 
-    /** {@inheritDoc} */
-    @Override
     public void execute(Runnable command) {
         if (command != null) {
             command.run();
