@@ -71,3 +71,13 @@ if [ "${PANIC:-}" = "true" ] && [ "${HEARTBEAT:-}" = "dead" ]; then
     exit 1
   fi
 fi
+
+tmpfile=$(mktemp)
+code=$(curl -s -o "$tmpfile" -w '%{http_code}' -X POST http://localhost:8080/api/test/sweep)
+if [ "$code" -ne 200 ] || [ "$(jq -r '.status' "$tmpfile")" != "dry-run-complete" ]; then
+  echo "Error: dry-run sweep endpoint failed" >&2
+  cat "$tmpfile" >&2
+  rm "$tmpfile"
+  exit 1
+fi
+rm "$tmpfile"

@@ -57,7 +57,8 @@ public class ColdSweeperTest {
             System.setErr(orig);
         }
         assertFalse(wallet.called);
-        assertTrue(err.toString().contains("[DRY-RUN]"));
+        String out = err.toString();
+        assertTrue(out.contains("\"event\":\"cold_wallet_sweep\""));
     }
 
     @Test

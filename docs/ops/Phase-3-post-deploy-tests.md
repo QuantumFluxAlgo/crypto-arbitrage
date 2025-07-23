@@ -157,7 +157,11 @@ curl -X POST http://localhost:8080/api/test/sweep
 Expected:
 
 ```
-[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.
+{
+  "status": "dry-run-complete",
+  "triggered": true,
+  "actions": ["sweep-from:Binance", "amount:12.5 USDT"]
+}
 ```
 
 ---
