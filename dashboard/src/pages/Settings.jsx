@@ -1,5 +1,6 @@
 // UI for adjusting trading personality mode
 import React, { useEffect, useState } from 'react';
+import { useSystemStatus } from '../context/SystemStatusContext.jsx';
 
 // PATCH selected settings to API
 async function patchSettings(values, setToast) {
@@ -26,6 +27,7 @@ export default function Settings() {
   const [lossCapPct, setLossCapPct] = useState(0);
   const [latencyMaxMs, setLatencyMaxMs] = useState(250);
   const [toast, setToast] = useState(null);
+  const { panic } = useSystemStatus();
 
   useEffect(() => {
     if (!toast) return;
@@ -59,18 +61,23 @@ export default function Settings() {
   return (
     <div className="p-4 space-y-4 text-text">
       <h1 className="text-xl font-bold">Trading Modes</h1>
-      <div className="space-x-2">
-        {['auto', 'aggressive', 'realistic'].map((m) => (
-          <button
-            key={m}
-            data-testid={`mode-${m}`}
-            className={`px-3 py-1 rounded ${mode === m ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            onClick={() => setMode(m)}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
+      {panic && (
+        <p className="text-sm text-red-600">Controls disabled while trading is paused</p>
+      )}
+      <fieldset disabled={panic} className="space-y-4">
+        <div className="space-x-2">
+          {['auto', 'aggressive', 'realistic'].map((m) => (
+            <button
+              key={m}
+              data-testid={`mode-${m}`}
+              className={`px-3 py-1 rounded ${mode === m ? 'bg-blue-600 text-white' : 'bg-gray-200'} disabled:bg-gray-300 disabled:text-gray-500`}
+              onClick={() => setMode(m)}
+              disabled={panic}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
       <div>
         <label className="block">
           Loss Cap %: <span data-testid="loss-cap">{lossCapPct}</span>
@@ -82,6 +89,7 @@ export default function Settings() {
           step="0.5"
           value={lossCapPct}
           onChange={(e) => setLossCapPct(Number(e.target.value))}
+          disabled={panic}
         />
       </div>
       <div>
@@ -99,10 +107,11 @@ export default function Settings() {
             setLatencyMaxMs(val);
             await patchSettings({ latency_max_ms: val }, setToast);
           }}
+          disabled={panic}
         />
       </div>
       <button
-        className="bg-blue-600 text-white px-3 py-1 rounded"
+        className="bg-blue-600 text-white px-3 py-1 rounded disabled:bg-gray-300 disabled:text-gray-500"
         onClick={() =>
           patchSettings(
             {
@@ -113,9 +122,11 @@ export default function Settings() {
             setToast
           )
         }
+        disabled={panic}
       >
         Save
       </button>
+      </fieldset>
       {toast && (
         <div
           className={`absolute right-4 top-4 px-4 py-2 text-white rounded ${
