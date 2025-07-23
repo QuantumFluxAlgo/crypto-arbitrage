@@ -34,5 +34,6 @@ describeLocal('mode specific metrics endpoints', () => {
     const res = await request(app.server).get('/api/metrics');
     expect(res.statusCode).toBe(200);
     expect(res.text).toMatch(/panic_state/);
+    expect(res.text).toMatch(/system_paused\{source="api"\}/);
   });
 });

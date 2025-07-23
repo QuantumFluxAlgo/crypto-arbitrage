@@ -18,8 +18,14 @@ public class MetricsServer {
     public void start(int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/metrics", exchange -> {
-            String resp = "spread_evaluation_latency_ms " + executor.getCurrentLatencyMs() + "\n";
-            byte[] data = resp.getBytes(StandardCharsets.UTF_8);
+            StringBuilder resp = new StringBuilder();
+            resp.append("spread_evaluation_latency_ms ")
+                .append(executor.getCurrentLatencyMs())
+                .append("\n");
+            resp.append("system_paused{source=\"executor\"} ")
+                .append(executor.isPanicActive() ? 1 : 0)
+                .append("\n");
+            byte[] data = resp.toString().getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, data.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(data);
