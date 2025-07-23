@@ -42,7 +42,7 @@ public class RebalancerTest {
         PrintStream orig = System.err;
         System.setErr(new PrintStream(err));
         try {
-            Rebalancer r = new Rebalancer(250.0, adapters, new Config(ExecutionMode.SANDBOX));
+            Rebalancer r = new Rebalancer(250.0, adapters, new Config(ExecutionMode.DRY_RUN));
             r.scan(balances, 5000.0);
         } finally {
             System.setErr(orig);

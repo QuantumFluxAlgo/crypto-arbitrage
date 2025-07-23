@@ -70,8 +70,14 @@ public class Main {
         String mode = System.getenv().getOrDefault("PERSONALITY_MODE", "REALISTIC");
         RiskFilter riskFilter = new RiskFilter(mode);
         String execMode = System.getenv().getOrDefault("EXECUTION_MODE", "live");
-        ExecutionMode executionMode = execMode.equalsIgnoreCase("sandbox") || execMode.equalsIgnoreCase("dry-run")
-                ? ExecutionMode.SANDBOX : ExecutionMode.LIVE;
+        ExecutionMode executionMode;
+        if (execMode.equalsIgnoreCase("sandbox")) {
+            executionMode = ExecutionMode.SANDBOX;
+        } else if (execMode.equalsIgnoreCase("dry-run")) {
+            executionMode = ExecutionMode.DRY_RUN;
+        } else {
+            executionMode = ExecutionMode.LIVE;
+        }
         Config configObj = new Config(executionMode);
         NearMissLogger nearMissLogger = new NearMissLogger(conn);
         TradeLogger tradeLogger = new TradeLogger(conn);

@@ -53,7 +53,7 @@ public class FillTracker {
         if (ctx == null) {
             return false;
         }
-        // TODO: integrate async exchange ACK once available
+        // Cancel fallback enforces IOC semantics if async ACK fails
         CompletableFuture<Boolean> fut = CompletableFuture.supplyAsync(() -> {
             double filled = 0.0;
             if (ctx.adapter instanceof MockExchangeAdapter) {

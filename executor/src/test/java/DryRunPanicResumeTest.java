@@ -17,7 +17,7 @@ public class DryRunPanicResumeTest {
 
     static class DummyExecutor extends Executor {
         DummyExecutor() {
-            super(new DummyRedis(), "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.SANDBOX));
+            super(new DummyRedis(), "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.DRY_RUN));
         }
         @Override public void start() {}
     }

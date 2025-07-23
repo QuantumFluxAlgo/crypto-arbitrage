@@ -75,7 +75,7 @@ public class ExecutorTest {
         PrintStream orig = System.err;
         System.setErr(new PrintStream(err));
         try {
-            ColdSweeper sweeper = new ColdSweeper(0, 0, wallet, new ColdSweeperConfig(), null, new Config(ExecutionMode.SANDBOX));
+            ColdSweeper sweeper = new ColdSweeper(0, 0, wallet, new ColdSweeperConfig(), null, new Config(ExecutionMode.DRY_RUN));
             sweeper.sweepToColdWallet(10.0);
         } finally {
             System.setErr(orig);

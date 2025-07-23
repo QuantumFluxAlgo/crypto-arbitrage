@@ -41,9 +41,9 @@ public class Config {
     }
 
     /**
-     * @return true when running in sandbox/dry-run mode
+     * @return true when running in dry-run modes (sandbox or server)
      */
     public boolean isDryRun() {
-        return executionMode == ExecutionMode.SANDBOX;
+        return executionMode == ExecutionMode.SANDBOX || executionMode == ExecutionMode.DRY_RUN;
     }
 }
