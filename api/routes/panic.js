@@ -19,10 +19,14 @@ export default async function panicRoutes(app, { redis, panicState }) {
       );
       return { paused: true, ignored: true };
     }
+    const user = req.user?.email || 'unknown';
     panicState.last = now;
     await redis.set('panic_last_ts', String(now));
     await setPauseState(redis, true);
     logger.warn('[PANIC TRIGGERED]');
+    logger.audit(
+      `[PANIC] ts=${new Date().toISOString()} user=${user} reason=${req.body?.type || 'manual'}`
+    );
     panicState.reason = req.body?.type || null;
     await redis.publish(getControlChannel(), 'halt');
     logger.warn(

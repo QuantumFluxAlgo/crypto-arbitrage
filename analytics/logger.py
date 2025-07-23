@@ -4,7 +4,8 @@ import os
 import urllib.parse
 
 level = os.getenv("LOG_LEVEL", "INFO").upper()
-log_dir = os.getenv("LOG_DIR", "/var/log/prism-arbitrage")
+log_dir = os.getenv("LOG_DIR", "/var/log/prism")
+# NOTE: logs in this directory may be rotated via logrotate in the future
 os.makedirs(log_dir, exist_ok=True)
 handlers = [
     logging.StreamHandler(),

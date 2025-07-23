@@ -27,7 +27,7 @@ spec:
                 name: prod-secrets
           volumeMounts:
             - name: prism-logs
-              mountPath: /var/log/prism-arbitrage
+              mountPath: /var/log/prism
           readinessProbe:
             httpGet:
               path: /health
@@ -43,7 +43,7 @@ spec:
       volumes:
         - name: prism-logs
           hostPath:
-            path: /var/log/prism-arbitrage
+            path: /var/log/prism
             type: DirectoryOrCreate
 ---
 apiVersion: v1

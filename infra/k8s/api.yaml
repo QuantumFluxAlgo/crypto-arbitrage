@@ -22,7 +22,7 @@ spec:
             - containerPort: 8080
           volumeMounts:
             - name: prism-logs
-              mountPath: /var/log/prism-arbitrage
+              mountPath: /var/log/prism
           livenessProbe:
             httpGet:
               path: /api/metrics
@@ -50,7 +50,7 @@ spec:
       volumes:
         - name: prism-logs
           hostPath:
-            path: /var/log/prism-arbitrage
+            path: /var/log/prism
             type: DirectoryOrCreate
 ---
 apiVersion: v1

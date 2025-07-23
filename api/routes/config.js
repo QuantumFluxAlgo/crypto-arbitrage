@@ -33,7 +33,7 @@ export default async function configRoutes(app) {
 
     if (!result.success || Object.keys(result.data).length === 0) {
       for (const [k, v] of Object.entries(req.body || {})) {
-        logger.warn(
+        logger.audit(
           `[CONFIG OVERRIDE] ts=${ts} user=${user} key=${k} value=${v} outcome=rejected`
         );
       }
@@ -42,7 +42,7 @@ export default async function configRoutes(app) {
     }
 
     for (const [k, v] of Object.entries(result.data)) {
-      logger.info(
+      logger.audit(
         `[CONFIG OVERRIDE] ts=${ts} user=${user} key=${k} value=${v} outcome=accepted`
       );
     }

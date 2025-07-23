@@ -9,7 +9,8 @@ import { resumeCounter } from './metrics.js';
 
 export default async function resumeRoutes(app, opts) {
   const { redis, panicState } = opts;
-  const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+  const logDir = process.env.LOG_DIR || '/var/log/prism';
+  // log rotation will be managed externally
   const resumeLog = path.join(logDir, 'resume.log');
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
@@ -23,6 +24,7 @@ export default async function resumeRoutes(app, opts) {
       ...extra,
     };
     fs.appendFile(resumeLog, JSON.stringify(entry) + '\n', () => {});
+    logger.audit(`[RESUME] ${event} user=${operator} ${JSON.stringify(extra)}`);
   }
 
   app.post(
@@ -58,6 +60,7 @@ export default async function resumeRoutes(app, opts) {
     }
 
     if (confirm) {
+      logAttempt('resume_override_attempt', user, { reason: panicState.reason });
       await redis.set('resume_confirmed', 'true', 'EX', 60);
     }
 
