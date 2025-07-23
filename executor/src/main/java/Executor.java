@@ -591,13 +591,6 @@ public class Executor implements ResumeHandler.ResumeCapable {
     }
 
     /**
-     * @return whether sandbox mode is active
-     */
-    public boolean isSandboxMode() {
-        return sandboxMode;
-    }
-
-    /**
      * Cleanly shutdown all resources and connections.
      */
     public void shutdown() {

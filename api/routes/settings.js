@@ -1,7 +1,7 @@
 import { z } from "zod";
 import logger from "../services/logger.js";
 import { setMode as setRiskFilterMode } from "../services/riskFilter.js";
-import { getControlChannel } from "../config/settings.js";
+import { getControlChannel, getExecutionMode } from "../config/settings.js";
 import { getConfigSource, loadSettingsFromRedis } from "../services/configManager.js";
 
 export let settings = {
@@ -21,7 +21,11 @@ export let settings = {
 
 export default async function settingsRoutes(app, opts) {
   const { redis } = opts;
-  app.get("/settings", async () => ({ ...settings, source: getConfigSource() }));
+  app.get("/settings", async (req) => ({
+    ...settings,
+    mode: getExecutionMode(req),
+    source: getConfigSource(),
+  }));
 
   const schema = z
     .object({
@@ -48,9 +52,7 @@ export default async function settingsRoutes(app, opts) {
     }
     const data = result.data;
     const operator = req.user?.email || req.user?.id || req.ip;
-    const mode =
-      process.env.EXECUTION_MODE ||
-      (process.env.SANDBOX_MODE === "true" ? "dry-run-sandbox" : "live");
+    const mode = getExecutionMode(req);
 
     if (typeof data.maxLossPct === "number" && data.maxLossPct > 20) {
       logger.warn(
@@ -103,9 +105,7 @@ export default async function settingsRoutes(app, opts) {
 
   const saveSettings = async (req) => {
     const operator = req.user?.email || req.user?.id || req.ip;
-    const mode =
-      process.env.EXECUTION_MODE ||
-      (process.env.SANDBOX_MODE === "true" ? "dry-run-sandbox" : "live");
+    const mode = getExecutionMode(req);
     logger.audit(
       JSON.stringify({
         event: 'settings_update_request',

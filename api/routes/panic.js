@@ -1,14 +1,12 @@
-import { getControlChannel } from '../config/settings.js';
+import { getControlChannel, getExecutionMode, ExecutionMode } from '../config/settings.js';
 import { sendAlert } from '../../alerts/alertAgent.js';
 import logger from '../services/logger.js';
 import { setPauseState, getPauseState } from '../services/pauseState.js';
 
 export default async function panicRoutes(app, { redis, panicState }) {
   app.post('/test/panic', async (req, reply) => {
-    const mode =
-      process.env.EXECUTION_MODE ||
-      (process.env.SANDBOX_MODE === 'true' ? 'dry-run-sandbox' : 'live');
-    const allowed = ['dry-run-sandbox', 'dry-run-server'];
+    const mode = getExecutionMode(req);
+    const allowed = [ExecutionMode.DRY_RUN, ExecutionMode.SANDBOX];
     if (!allowed.includes(mode)) {
       return reply.code(403).send();
     }
