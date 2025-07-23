@@ -258,8 +258,17 @@ async function apiRoutes(api, { redis, pool, panicState }) {
 
   api.register(alertRoutes, { redis });
 
+  const panicTestAllowed =
+    isTest ||
+    ['dry-run-sandbox', 'dry-run-server'].includes(
+      process.env.EXECUTION_MODE ||
+        (process.env.SANDBOX_MODE === 'true' ? 'dry-run-sandbox' : 'live')
+    );
+  if (panicTestAllowed) {
+    api.register(panicRoutes, { redis, panicState });
+  }
+
     if (isTest) {
-      api.register(panicRoutes, { redis, panicState });
       api.post('/test/resume', async (_req, reply) => {
         if (process.env.SANDBOX_MODE !== 'true') {
           return reply.code(403).send();
