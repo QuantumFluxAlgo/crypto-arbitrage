@@ -266,12 +266,13 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         }
         const paused = await getPauseState(redis);
         if (!paused) {
-          reply.code(400);
-          return { error: 'not paused' };
+          reply.code(409);
+          return { error: 'System is not paused' };
         }
         await redis.set(RESUME_FAILED_KEY, 'false');
         await setPauseState(redis, false);
         panicState.reason = null;
+        logger.info('[RESUME SIGNAL RECEIVED]');
         await redis.publish(getControlChannel(), 'resume');
 
         let ack = false;
