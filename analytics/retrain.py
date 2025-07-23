@@ -3,7 +3,11 @@ import hashlib
 from .logger import logger
 import os
 
-DRY_RUN = os.getenv("DRY_RUN", "True").lower() == "true"
+_dry_run_env = os.getenv("DRY_RUN")
+if _dry_run_env is None:
+    DRY_RUN = os.getenv("EXECUTION_MODE", "").upper() == "DRY_RUN"
+else:
+    DRY_RUN = _dry_run_env.lower() == "true"
 import socket
 import subprocess
 import shutil

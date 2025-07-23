@@ -4,7 +4,7 @@ const winston = require('winston');
 const createLogger = require('../lib/logger.js');
 
 const logDir = process.env.LOG_DIR || '/var/log/prism';
-// TODO: handle log rotation with logrotate
+// Log rotation is handled externally via logrotate
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }

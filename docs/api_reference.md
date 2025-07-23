@@ -97,12 +97,12 @@ Returns live (or simulated) spread opportunities from Redis.
 ```json
 {
   "opportunities": [],
-  "executionMode": "dry-run-sandbox",
+  "executionMode": "DRY_RUN",
   "lastUpdated": "2025-07-23T10:22:11Z"
 }
 ```
 
-Data is simulated when running in dry‑run modes.
+Data is simulated when running in `DRY_RUN` or `SANDBOX` modes.
 
 ---
 
@@ -117,11 +117,11 @@ Triggers the panic brake for testing.
 { "type": "loss", "value": 9 }
 ```
 
-Only available in `dry-run-sandbox` or `dry-run-server` modes. Logs include timestamp, trigger type and request source.
+Only available in `DRY_RUN` or `SANDBOX` modes. Logs include timestamp, trigger type and request source.
 
 **Success Response**
 ```json
-{ "status": "panic_triggered", "mode": "dry-run-sandbox", "reason": "loss" }
+{ "status": "panic_triggered", "mode": "DRY_RUN", "reason": "loss" }
 ```
 
 ---

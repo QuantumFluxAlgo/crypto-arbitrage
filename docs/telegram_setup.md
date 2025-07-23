@@ -41,7 +41,7 @@ Telegram notifications fire on these events:
 - `loss_cap_breached`
 - `latency_ceiling_exceeded`
 
-Each message includes the current mode (`dry-run-sandbox`, `dry-run-server`, or `live`), a timestamp, and the reason for the alert.
+Each message includes the current mode (`DRY_RUN`, `SANDBOX`, or `LIVE`), a timestamp, and the reason for the alert.
 
 ## 5. Testing Alerts
 
@@ -53,7 +53,7 @@ curl -X POST http://localhost:8080/api/test/panic
 Expected Telegram message:
 ```yaml
 🚨 PANIC TRIGGERED
-Mode: dry-run-server
+Mode: SANDBOX
 Reason: Simulated 9% loss
 Timestamp: 2025-07-23T17:41:12Z
 ```
@@ -65,7 +65,7 @@ curl -X POST http://localhost:8080/api/test/resume -H "Content-Type: application
 Expected message:
 ```pgsql
 ✅ RESUME COMMAND ISSUED
-Mode: dry-run-server
+Mode: SANDBOX
 Operator: dashboard-admin
 System status: resumed
 ```

@@ -158,7 +158,7 @@ public class RedisClient extends Thread {
                     if (isControl && attempt >= 5) {
                         logger.warn("[REDIS WARNING] control-feed unreachable after {} retries. Retrying in {} seconds...",
                                 attempt, delay / 1000);
-                        // TODO: hook for operator alert (metric or webhook)
+                        // Placeholder for operator alert hook (metric or webhook)
                     }
                     try {
                         Thread.sleep(delay);

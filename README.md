@@ -35,11 +35,11 @@
 
 ## Execution Modes
 
-- **dry-run-sandbox** – Local mock mode using ghost trades and fake wallets.
-- **dry-run-server** – Kubernetes deploy with sealed secrets but no live orders.
-- **live** – Real trades; startup aborts if any required secrets are missing.
+- **DRY_RUN** – Local mock mode using ghost trades and fake wallets.
+- **SANDBOX** – Kubernetes deploy with sealed secrets but no live orders.
+- **LIVE** – Real trades; startup aborts if any required secrets are missing.
 
-`EXECUTION_MODE` or `SANDBOX_MODE` controls the mode for every service.
+`EXECUTION_MODE` controls the mode for every service.
 
 ---
 
@@ -84,8 +84,8 @@ Profit is swept to a cold wallet when either of the following is met:
 - Profit ≥ £5,000
 - Profit ≥ 30% of total capital
 
-In dry-run modes the sweeper logs the action without moving funds:
-`{"event":"cold_wallet_sweep","mode":"dry-run",...}`.
+In DRY_RUN or SANDBOX mode the sweeper logs the action without moving funds:
+`{"event":"cold_wallet_sweep","mode":"DRY_RUN",...}`.
 
 ---
 
