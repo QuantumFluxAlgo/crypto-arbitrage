@@ -8,17 +8,25 @@ export default async function panicRoutes(app, { redis, panicState }) {
     if (process.env.SANDBOX_MODE !== 'true') {
       return reply.code(403).send();
     }
+    const now = Date.now();
+    if (now - (panicState.last || 0) < 30000) {
+      logger.info(
+        JSON.stringify({ event: 'panic_ignored', ts: new Date().toISOString() })
+      );
+      return { paused: true, ignored: true };
+    }
+    panicState.last = now;
+    await redis.set('panic_last_ts', String(now));
     await setPauseState(redis, true);
     panicState.reason = req.body?.type || null;
     await redis.publish(getControlChannel(), 'halt');
     logger.warn(
       JSON.stringify({
-        timestamp: new Date().toISOString(),
-        event: 'panic_triggered',
-        component: 'api',
-        source: 'dashboard',
-        operator: req.user?.email || 'unknown',
-      }),
+        event: 'panic',
+        reason: panicState.reason || 'manual',
+        value: req.body?.value || 0,
+        ts: new Date().toISOString(),
+      })
     );
     try {
       await sendAlert('email', 'Panic brake triggered (test mode)');

@@ -30,7 +30,12 @@ import { sendAlert } from '../alerts/alertAgent.js';
 import { sendEmail } from '../alerts/emailAlert.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
-import { getPauseState, setPauseState } from './services/pauseState.js';
+import {
+  getPauseState,
+  setPauseState,
+  RESUME_FAILED_KEY,
+  RESUME_ACK_KEY,
+} from './services/pauseState.js';
 import { redisReachable, fetchBalances } from './services/balances.js';
 
 const { Pool } = pg;
@@ -55,7 +60,7 @@ if (process.env.NODE_ENV === 'production') {
 // Test mode disables external side effects
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
-const panicState = { reason: null };
+const panicState = { reason: null, last: 0 };
 
 let redis;
 let pool;
@@ -246,6 +251,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   api.get('/system/status', async () => ({
     paused: await getPauseState(redis),
     panic_reason: panicState.reason,
+    resume_failed: (await redis.get(RESUME_FAILED_KEY)) === 'true',
   }));
 
   api.register(systemHealthRoutes, { redis, pool });
@@ -263,9 +269,24 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           reply.code(400);
           return { error: 'not paused' };
         }
+        await redis.set(RESUME_FAILED_KEY, 'false');
         await setPauseState(redis, false);
         panicState.reason = null;
         await redis.publish(getControlChannel(), 'resume');
+
+        let ack = false;
+        const start = Date.now();
+        while (Date.now() - start < 5000) {
+          const val = await redis.get(RESUME_ACK_KEY);
+          if (val === 'true') { ack = true; break; }
+          await new Promise(r => setTimeout(r, 500));
+        }
+        if (!ack) {
+          await redis.publish(getControlChannel(), 'resume');
+          await redis.set(RESUME_FAILED_KEY, 'true');
+        } else {
+          await redis.del(RESUME_FAILED_KEY);
+        }
         logger.info('[RESUME] Trading re-enabled by operator');
         return { paused: false, source: 'manual' };
       });

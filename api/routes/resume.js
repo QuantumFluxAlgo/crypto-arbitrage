@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { ensurePaused } from '../middleware/validate.js';
 import logger from '../services/logger.js';
-import { setPauseState } from '../services/pauseState.js';
+import { setPauseState, RESUME_ACK_KEY, RESUME_FAILED_KEY } from '../services/pauseState.js';
 
 export default async function resumeRoutes(app, opts) {
   const { redis, panicState } = opts;
@@ -55,9 +55,27 @@ export default async function resumeRoutes(app, opts) {
     }
 
     const channel = getControlChannel();
+    await redis.set(RESUME_FAILED_KEY, 'false');
     await redis.publish(channel, 'resume');
     await setPauseState(redis, false);
     panicState.reason = null;
+
+    let ack = false;
+    const start = Date.now();
+    while (Date.now() - start < 5000) {
+      const val = await redis.get(RESUME_ACK_KEY);
+      if (val === 'true') {
+        ack = true;
+        break;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+    if (!ack) {
+      await redis.publish(channel, 'resume');
+      await redis.set(RESUME_FAILED_KEY, 'true');
+    } else {
+      await redis.del(RESUME_FAILED_KEY);
+    }
     const msg = `Trading resumed by ${user} at ${new Date().toISOString()}`;
     await redis.publish('alerts', msg);
     if (process.env.SANDBOX_MODE !== 'true') {
@@ -71,13 +89,7 @@ export default async function resumeRoutes(app, opts) {
     }
     logAttempt('resume_success', user);
     logger.info(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        event: 'resume_triggered',
-        component: 'api',
-        source: 'dashboard',
-        operator: user,
-      }),
+      JSON.stringify({ event: 'resume', ts: new Date().toISOString() })
     );
     return { resumed: true };
   }

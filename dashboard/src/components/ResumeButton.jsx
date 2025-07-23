@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSystemStatus } from '../context/SystemStatusContext.jsx';
 
 export default function ResumeButton() {
-  const { panic, reason, refreshStatus } = useSystemStatus();
+  const { panic, reason, resumeFailed, refreshStatus } = useSystemStatus();
   const [blocked, setBlocked] = useState(false);
   const [confirmOverride, setConfirmOverride] = useState(false);
   const [toast, setToast] = useState(null);
@@ -49,6 +49,9 @@ export default function ResumeButton() {
 
   return (
     <div className="relative inline-block">
+      {resumeFailed && (
+        <div data-testid="resume-failed" className="text-red-600 mb-2">Resume failed</div>
+      )}
       {toast && (
         <div className="absolute right-0 -top-10 px-3 py-1 text-white bg-green-600 rounded">
           {toast}

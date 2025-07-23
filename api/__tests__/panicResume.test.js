@@ -46,5 +46,11 @@ describeLocal('panic resume cycle', () => {
     const metrics2 = await request(app.server).get('/api/metrics/sandbox');
     expect(metrics2.body.panicActive).toBe(false);
   });
+
+  test('panic trigger debounced', async () => {
+    await request(app.server).post('/api/test/panic').send({ type: 'loss' });
+    const res = await request(app.server).post('/api/test/panic').send({ type: 'loss' });
+    expect(res.body.ignored).toBe(true);
+  });
 });
 

@@ -223,6 +223,17 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      * @param message JSON encoded opportunity
      */
     public void handleMessage(String message) {
+        if (redisClient.isPaused()) {
+            logger.info(
+                    com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                            .createObjectNode()
+                            .put("event", "panic_active")
+                            .put("action", "evaluation_skipped")
+                            .put("ts", java.time.Instant.now().toString())
+                            .toString());
+            return;
+        }
+
         SpreadOpportunity opp = validateMessage(message);
         if (opp == null) {
             return;
@@ -487,12 +498,10 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             logger.info(
                     com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
                             .createObjectNode()
-                            .put("timestamp", java.time.Instant.now().toString())
-                            .put("event", "resume_triggered")
-                            .put("component", "executor")
-                            .put("source", "redis")
-                            .put("operator", "system")
+                            .put("event", "resume")
+                            .put("ts", java.time.Instant.now().toString())
                             .toString());
+            redisClient.setResumeAck();
             AlertManager.send("RESUME", "Trading resumed at " + ts);
             redisClient.publish("alerts", "Trading resumed at " + ts);
             redisClient.publish(controlChannel, "resume:" + ts);
