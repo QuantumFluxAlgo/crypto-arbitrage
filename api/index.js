@@ -18,6 +18,7 @@ import analyticsRoutes from './routes/analytics.js';
 import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import panicRoutes from './routes/panic.js';
+import alertRoutes from './routes/alert.js';
 import configRoutes from './routes/config.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
@@ -218,6 +219,8 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     paused: await getPauseState(redis),
     panic_reason: panicState.reason,
   }));
+
+  api.register(alertRoutes, { redis });
 
     if (isTest) {
       api.register(panicRoutes, { redis, panicState });
