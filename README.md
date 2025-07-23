@@ -1,4 +1,4 @@
-# 🪙 Crypto Arbitrage
+# 🪙 Prism Arbitrage Platform
 
 ![CI](https://github.com/QuantumFluxAlgo/crypto-arbitrage/actions/workflows/ci.yml/badge.svg)
 ![Release](https://github.com/QuantumFluxAlgo/crypto-arbitrage/actions/workflows/release.yml/badge.svg)
@@ -9,179 +9,106 @@
 
 ## Overview
 
-**Crypto Arbitrage** is an audited multi-agent platform that scans multiple exchanges and executes trades automatically. A feed aggregator publishes order books to Redis, a Java executor reacts to spreads, and supporting services expose APIs, analytics, and a responsive operator dashboard. Running in `sandbox` mode performs every action except fund movement so strategies can be tested safely.
+**Prism** is a Kubernetes based multi-agent platform for high frequency crypto arbitrage. A Node.js API and React dashboard drive operation while a Java executor performs trades and Python analytics expose performance metrics. Ten plus CEXs and four DEXs are supported via a Redis feed aggregator.
 
 ---
 
-## Features
+## Quick Setup
 
-- WebSocket feed aggregation across 14 venues
-- Sub‑60µs Java trade executor
-- REST API secured by JWTs and an admin token
-- React dashboard with mode toggle, loss cap control, and panic resume
-- Predictive analytics with optional GPU acceleration
-- SealedSecrets for production credentials
-- Dry‑run logs marked with `[DRY-RUN]`
-
----
-
-## Architecture
-
-```mermaid
-graph TD
-  FeedAggregator[Feed Aggregator] --> Redis[(Redis)]
-  Redis --> Executor[Executor]
-  Executor --> API[API Gateway]
-  API --> Dashboard
-  Executor --> Analytics
-  Analytics --> Prometheus[(Prometheus)]
-  Executor --> Postgres[(PostgreSQL)]
-```
-
-Redis and Postgres deployments are configured with ephemeral `emptyDir` volumes.
-All data will be lost if the pods restart. Configure an external database if
-persistent storage is required.
-
----
-
-## Required Tools
-
-- **Node.js 20** and `npm`
-- **Python 3.10** and `pytest`
-- **Java 17** and `gradle`
-- **Podman** with **Colima** on macOS
-- **Helm** and `kubectl` for Kubernetes
-
-Enable git hooks once by running:
-```bash
-git config core.hooksPath githooks
-```
-This installs the `githooks/pre-push` script so pushes are blocked when tests fail.
-Branch protection rules require the CI checks to succeed before merging.
-
----
-
-## Deployment Phases
-
-### Phase 1 – Local Dry‑Run (Colima)
-
-1. Start Colima with Kubernetes support:
-   ```bash
-   colima start --with-kubernetes --runtime containerd
-   ```
-2. Clone the repo and install dependencies:
+1. Clone the repository and install all tools:
    ```bash
    git clone https://github.com/prism-arbitrage/crypto-arbitrage.git
    cd crypto-arbitrage
-   npm install
-   npm install --prefix api
-   npm install --prefix dashboard
-   pip install -r requirements.txt
-   helm dependency update infra/helm
+   ./scripts/setup_env.sh
    ```
-3. Copy environment samples and edit for dry‑run:
+2. Run the full test suite:
    ```bash
-   cp api/.env.example api/.env
-   cp dashboard/.env.example dashboard/.env
-   cp executor/.env.example executor/.env
-   cp analytics/.env.example analytics/.env
+   ./test/run-local.sh
    ```
-   All defaults are safe for sandbox testing.
-4. Deploy the stack locally:
+3. Launch the local sandbox:
    ```bash
-   helm install prism ./infra/helm
+   ./scripts/start-sandbox.sh
    ```
-5. Verify pods and open the dashboard at <http://localhost:3000>.
-
-### Phase 2 – Proxmox Server Deploy
-
-1. Provision an Ubuntu 22.04 VM in Proxmox (10 cores, 32 GB RAM).
-2. Install Kubernetes, Helm and the SealedSecrets controller on the VM.
-3. Clone the repo on the VM and check out the production branch:
-   ```bash
-   git clone https://github.com/prism-arbitrage/crypto-arbitrage.git
-   cd crypto-arbitrage
-   git checkout main
-   ```
-   Create sealed secrets for all `.env` files.
-4. Deploy with Helm:
-   ```bash
-   helm install prism-prod ./infra/helm --namespace default
-   ```
-5. Expose the dashboard via ingress or port‑forward and confirm login works.
-
-### Phase 3 – Post‑Deploy Validation
-
-1. Confirm all pods show `Running`:
-   ```bash
-   kubectl get pods
-   ```
-2. Ensure the NVIDIA device plugin reports a GPU if one is present.
-3. Trigger a panic test to verify alerts:
-   ```bash
-   curl -X POST http://localhost:8080/api/test/panic
-   ```
-   ⚠️ **Test endpoints operate only when `SANDBOX_MODE=true` in the API `.env`.**
-4. Use the dashboard **Resume Trading** button to clear the panic state and check logs for `[RESUME SIGNAL RECEIVED]`.
-5. Validate Prometheus and Grafana dashboards if installed.
+   Open <http://localhost:5173> for the dashboard.
 
 ---
 
-## Environment & Secrets
+## Execution Modes
 
-Never commit plain `.env` files. Use [SealedSecrets](https://github.com/bitnami-labs/sealed-secrets) to encrypt credentials:
-```bash
-kubectl create secret generic api-secrets --from-env-file=api/.env \
-  --dry-run=client -o yaml > secret.yaml
-kubeseal < secret.yaml > sealed-api.yaml
-kubectl apply -f sealed-api.yaml
-```
+- **dry-run-sandbox** – Local mock mode using ghost trades and fake wallets.
+- **dry-run-server** – Kubernetes deploy with sealed secrets but no live orders.
+- **live** – Real trades; startup aborts if any required secrets are missing.
+
+`EXECUTION_MODE` or `SANDBOX_MODE` controls the mode for every service.
 
 ---
 
-## Testing
+## Feature Summary
 
-Run all mocked tests locally:
-```bash
-./test/run-local.sh
-```
-
-## Helm Release Rollback
-
-Check previous releases and revert if needed:
-
-```bash
-helm history prism-prod
-helm rollback prism-prod <revision>
-```
-
-On every successful deploy from the `main` branch, store a release snapshot:
-
-```
-mkdir -p /ops/snapshots/prism-prod-1.0.0
-helm get values prism-prod > /ops/snapshots/prism-prod-1.0.0/values.yaml
-git rev-parse HEAD > /ops/snapshots/prism-prod-1.0.0/commit.txt
-# add brief notes to /ops/snapshots/prism-prod-1.0.0/notes.md
-```
+- Real time spread detection across 10+ CEXs and 4 DEXs
+- React SPA dashboard with mobile layout
+- Python analytics service with optional GPU acceleration
+- Secrets stored via SealedSecrets
+- Optional Prometheus and Grafana monitoring
+- Automatic cold wallet sweeps
 
 ---
 
-## System Documentation
+## API Overview
 
-Additional guides are located in the [`docs/`](docs/) directory, including [dashboard instructions](docs/dashboard.md), [SMTP setup](docs/smtp_setup.md), and [Telegram setup](docs/telegram_setup.md).
+| Method | Path | Notes |
+|-------|------|------|
+| `GET` | `/opportunities` | Returns `{ opportunities: [...], executionMode: 'live', lastUpdated: 'ISO' }` |
+| `POST`/`PATCH` | `/settings` | Validated inputs update runtime config |
+| `POST` | `/panic` | Triggers a panic brake when allowed |
+| `POST` | `/resume` | Clears panic state. Live mode requires `confirm=true` |
+| `GET` | `/metrics` | Prometheus metrics including `pnl_total`, `sharpe_ratio` |
 
-## Monitoring Access
+The API denies unauthenticated writes except when sandbox mode explicitly exposes them. `/resume` and `/panic` are guarded by the current execution mode.
 
-To view platform metrics locally:
+---
 
-```bash
-kubectl port-forward svc/prometheus-server 9090:9090
-kubectl port-forward svc/grafana 3001:3000
-```
+## Panic and Resume
 
-- Prometheus scrape endpoint: <http://localhost:9090/metrics>
-- Grafana: <http://localhost:3001> (default `admin`/`admin`)
+- Panic can be issued from the dashboard or `/panic` endpoint.
+- The executor listens on a Redis pub/sub channel and halts when `halt` is published.
+- Resuming trading shows a confirmation modal in the dashboard. The UI polls until the backend replies with `{ status: 'resumed', confirmed: true, mode: 'live' }`.
+- In live mode, missing `confirm=true` results in `{ error: 'confirmation_required' }`.
 
-## License
+---
+
+## Cold Wallet Sweeps
+
+Profit is swept to a cold wallet when either of the following is met:
+
+- Profit ≥ £5,000
+- Profit ≥ 30% of total capital
+
+In dry-run modes the sweeper logs the action without moving funds:
+`{"event":"cold_wallet_sweep","mode":"dry-run",...}`.
+
+---
+
+## Metrics
+
+The analytics service exposes fresh Prometheus metrics at `/metrics`. Key series include:
+
+- `pnl_total` – cumulative realised PnL
+- `sharpe_ratio` – strategy sharpe ratio
+- `panic_triggered_total` – count of panic events
+
+Metrics are labelled by execution mode and scraped by Prometheus.
+
+---
+
+## Contribution Flow
+
+1. Create branches as `fix/pr-##-<area>` (replace `##` with the issue number).
+2. Commit messages follow the style `fix(api): panic route guards updated`.
+3. Run `./test/run-local.sh` before pushing and open a PR against `develop`.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for full guidelines.
+
+---
 
 Released under the [MIT](LICENSE) license.
