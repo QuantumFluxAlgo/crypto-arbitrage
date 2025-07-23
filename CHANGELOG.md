@@ -37,6 +37,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - ProfitTracker background thread now properly shut down to prevent leaks
 - Added audit logging for all trade attempts: success, fail, rejected, skipped
 
+## PR 21 – Cold Wallet Sweep Resilience Fix
+- Ensures cold sweeper `busy` flag is always cleared after sweep attempt
+- Prevents permanent lockout if an exception is thrown
+- Logs sweep failures for operator awareness
+- Fixes edge case where sweeps were silently disabled
+
 ## [Batch 1] - 2025-07-02
 ### Added
 - Local environment setup

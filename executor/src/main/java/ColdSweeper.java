@@ -122,18 +122,28 @@ public class ColdSweeper {
     public void sweepToColdWallet(double amountUsd) {
         busy.set(true);
         String address = sweeperConfig.getTestColdWalletAddress();
-        logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
-        if (isDryRun) {
-            logger.info("[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
-            logDryRunSweep("auto", amountUsd);
-        } else {
-            walletClient.withdraw(address, amountUsd);
+        try {
+            logger.info(
+                    "Cold wallet sweep triggered for: {} amount {}",
+                    maskAddress(address),
+                    amountUsd);
+            if (isDryRun) {
+                logger.info(
+                        "[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
+                logDryRunSweep("auto", amountUsd);
+            } else {
+                walletClient.withdraw(address, amountUsd);
+            }
+            ProfitTracker.resetCumulativeProfit();
+            if (sweepLogger != null) {
+                sweepLogger.logSweep(amountUsd, address, "auto");
+            }
+        } catch (Exception e) {
+            logger.error("[SWEEP ERROR] Sweep failed: {}", e.getMessage());
+            throw e;
+        } finally {
+            busy.set(false);
         }
-        ProfitTracker.resetCumulativeProfit();
-        if (sweepLogger != null) {
-            sweepLogger.logSweep(amountUsd, address, "auto");
-        }
-        busy.set(false);
     }
 
     /**
@@ -144,17 +154,27 @@ public class ColdSweeper {
      */
     public void sweepToColdWallet(String address, double amountUsd) {
         busy.set(true);
-        logger.info("Cold wallet sweep triggered for: {} amount {}", maskAddress(address), amountUsd);
-        if (isDryRun) {
-            logger.info("[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
-            logDryRunSweep("manual", amountUsd);
-        } else {
-            walletClient.withdraw(address, amountUsd);
+        try {
+            logger.info(
+                    "Cold wallet sweep triggered for: {} amount {}",
+                    maskAddress(address),
+                    amountUsd);
+            if (isDryRun) {
+                logger.info(
+                        "[DRY-RUN MODE] Cold wallet sweep logic verified. No assets moved.");
+                logDryRunSweep("manual", amountUsd);
+            } else {
+                walletClient.withdraw(address, amountUsd);
+            }
+            ProfitTracker.resetCumulativeProfit();
+            if (sweepLogger != null) {
+                sweepLogger.logSweep(amountUsd, address, "manual");
+            }
+        } catch (Exception e) {
+            logger.error("[SWEEP ERROR] Sweep failed: {}", e.getMessage());
+            throw e;
+        } finally {
+            busy.set(false);
         }
-        ProfitTracker.resetCumulativeProfit();
-        if (sweepLogger != null) {
-            sweepLogger.logSweep(amountUsd, address, "manual");
-        }
-        busy.set(false);
     }
 }
