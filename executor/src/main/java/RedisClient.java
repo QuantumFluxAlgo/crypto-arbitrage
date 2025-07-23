@@ -139,21 +139,27 @@ public class RedisClient extends Thread {
     public void subscribe(JedisPubSub listener, String... channels) {
         new Thread(() -> {
             int attempt = 0;
-            while (running && attempt < 10) {
+            boolean isControl = Arrays.asList(channels).contains(getControlChannel());
+            while (running) {
                 try (Jedis jedis = new Jedis(host, port)) {
                     if (attempt > 0) {
                         logger.info("Redis reconnected — subscriptions restored: {}", Arrays.toString(channels));
+                        if (isControl) {
+                            logger.info("[REDIS RECOVERED] control-feed reconnected after downtime.");
+                        }
                     }
                     jedis.subscribe(listener, channels);
                     attempt = 0;
                 } catch (Exception e) {
                     attempt++;
-                    if (attempt >= 10) {
-                        logger.error("Redis connection failed after 10 retries");
-                        break;
-                    }
-                    long delay = Math.min(maxDelayMs, (1L << (attempt - 1)) * baseDelayMs);
+                    long delay = Math.min(maxDelayMs,
+                            baseDelayMs * (1L << Math.min(attempt - 1, 6)));
                     logger.error("Redis subscribe failed: {}", e.getMessage());
+                    if (isControl && attempt >= 5) {
+                        logger.warn("[REDIS WARNING] control-feed unreachable after {} retries. Retrying in {} seconds...",
+                                attempt, delay / 1000);
+                        // TODO: hook for operator alert (metric or webhook)
+                    }
                     try {
                         Thread.sleep(delay);
                     } catch (InterruptedException ie) {
