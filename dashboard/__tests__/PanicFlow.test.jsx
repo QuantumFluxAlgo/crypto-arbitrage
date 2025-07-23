@@ -8,6 +8,7 @@ const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV 
 
 describeLocal('panic resume UI', () => {
   test('status label toggles', async () => {
+    jest.useFakeTimers();
     const state = { paused: false };
     global.fetch = jest.fn((url, opts) => {
       if (url === '/api/system/status') {
@@ -28,7 +29,7 @@ describeLocal('panic resume UI', () => {
       if (url === '/api/panic') {
         state.paused = true; return Promise.resolve({ ok: true });
       }
-      if (url.startsWith('/api/resume')) {
+      if (url.startsWith('/test/resume')) {
         state.paused = false; return Promise.resolve({ ok: true });
       }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
@@ -48,6 +49,7 @@ describeLocal('panic resume UI', () => {
     expect(await screen.findByTestId('system-status')).toHaveTextContent('paused');
 
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /resume trading/i })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /confirm/i })); jest.advanceTimersByTime(1500); await Promise.resolve(); jest.runOnlyPendingTimers(); });
     expect(await screen.findByTestId('system-status')).toHaveTextContent('active');
   });
 });
