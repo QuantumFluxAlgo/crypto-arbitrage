@@ -1,12 +1,18 @@
 // Exposes Prometheus metrics and seeded data in sandbox
 import axios from 'axios';
 import { getExecutionMode } from '../config/settings.js';
+import { Gauge, Counter, register } from 'prom-client';
 // PROM_* env variables choose Prometheus endpoint
 
 const PROM_LIVE_URL = process.env.PROM_LIVE_URL || process.env.PROM_URL || 'http://prometheus:9090';
 const PROM_SANDBOX_URL = process.env.PROM_SANDBOX_URL || 'http://prometheus-sandbox:9090';
 
 import { getPauseState } from '../services/pauseState.js';
+
+const panicGauge = new Gauge({ name: 'panic_state', help: '1 if paused, 0 otherwise' });
+const resumeCounter = new Counter({ name: 'resume_event_total', help: 'Total resume events' });
+
+export { panicGauge, resumeCounter };
 
 export default async function metricsRoutes(app, { redis } = {}) {
   const seeded = {
@@ -55,6 +61,9 @@ export default async function metricsRoutes(app, { redis } = {}) {
   app.get('/metrics/sandbox', async (req) => fetchMetrics(req, 'sandbox'));
 
   app.get('/metrics', async (_req, reply) => {
-    reply.code(404).send({ error: 'deprecated endpoint' });
+    const paused = await getPauseState(redis);
+    panicGauge.set(paused ? 1 : 0);
+    reply.header('Content-Type', register.contentType);
+    reply.send(await register.metrics());
   });
 }

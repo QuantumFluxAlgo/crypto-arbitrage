@@ -159,7 +159,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     const openPaths = [
       ...baseOpenPaths,
       ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
-      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
+      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
@@ -175,7 +175,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     const openPaths = [
       ...baseOpenPaths,
       ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
-      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep'] : []),
+      ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
 
@@ -303,6 +303,17 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           triggered: true,
           actions,
         };
+      });
+
+      api.post('/test/alert', async (_req) => {
+        if (process.env.SANDBOX_MODE !== 'true') {
+          return { status: 'forbidden' };
+        }
+        const ts = new Date().toISOString();
+        try {
+          await sendAlert('email', 'Test panic alert', 'test');
+        } catch {}
+        return { status: 'sent', type: 'test', ts };
       });
     }
 

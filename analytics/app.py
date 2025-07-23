@@ -137,6 +137,7 @@ daily_loss_pct.set(0)
 pnl_gauge = Gauge('total_pnl', 'Total profit and loss', registry=registry)
 sharpe_gauge = Gauge('sharpe_ratio', 'Strategy Sharpe ratio', registry=registry)
 hit_rate_gauge = Gauge('hit_rate', 'Overall trade hit rate', registry=registry)
+win_rate_pct_gauge = Gauge('win_rate_pct', 'Strategy win rate percentage', registry=registry)
 gpu_status_gauge = Gauge('gpu_available', '1 if Tesla P4 GPU detected', registry=registry)
 lstm_status_gauge = Gauge('lstm_enabled', '1 if LSTM model enabled', registry=registry)
 
@@ -147,6 +148,7 @@ if GPU_AVAILABLE:
 pnl_gauge.set(0)
 sharpe_gauge.set(0)
 hit_rate_gauge.set(0)
+win_rate_pct_gauge.set(0)
 gpu_status_gauge.set(1 if GPU_AVAILABLE else 0)
 lstm_status_gauge.set(0)
 if GPU_AVAILABLE:
@@ -295,6 +297,7 @@ def metrics():
         sharpe_gauge.set(stats["sharpe"])
         perf = recent_performance()
         hit_rate_gauge.set(perf["win_rate"])
+        win_rate_pct_gauge.set(perf["win_rate"] * 100)
     except Exception as exc:
         logger.exception("[METRICS] Stat calculation failed: %s", exc)
 

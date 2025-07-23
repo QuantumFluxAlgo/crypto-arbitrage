@@ -16,7 +16,7 @@ function hasWebhookConfig() {
   return process.env.WEBHOOK_URL;
 }
 
-async function sendAlert(type, message) {
+async function sendAlert(type, message, alertCategory = 'generic') {
   switch (type) {
     case 'email':
       if (!hasEmailConfig()) {
@@ -24,7 +24,7 @@ async function sendAlert(type, message) {
         return;
       }
       try {
-        await sendEmail('Crypto Alert', message);
+        await sendEmail('Crypto Alert', message, alertCategory);
         logger.info('Email alert sent');
       } catch (err) {
         logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);

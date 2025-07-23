@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendEmail(subject, body) {
+async function sendEmail(subject, body, alertType = 'generic') {
   if (!user || !pass || !recipient) {
     const reason = 'SMTP credentials not set';
     logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${reason}`);
@@ -32,9 +32,25 @@ async function sendEmail(subject, body) {
 
   try {
     await transporter.sendMail(mailOptions);
-    logger.info('Email alert sent');
+    logger.info(
+      JSON.stringify({
+        event: 'smtp_alert',
+        type: alertType,
+        status: 'sent',
+        to: recipient,
+        ts: new Date().toISOString(),
+      })
+    );
   } catch (error) {
-    logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${error.message}`);
+    logger.error(
+      JSON.stringify({
+        event: 'smtp_alert',
+        type: alertType,
+        status: 'failed',
+        error: error.message,
+        ts: new Date().toISOString(),
+      })
+    );
     throw error;
   }
 }

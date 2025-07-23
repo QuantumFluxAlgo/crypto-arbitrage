@@ -1,0 +1,32 @@
+{
+  "title": "Prism Arbitrage Overview",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Panic State",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "panic_state" }],
+      "options": {"steppedLine": true}
+    },
+    {
+      "type": "graph",
+      "title": "Resume Events",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "resume_event_total" }]
+    },
+    {
+      "type": "graph",
+      "title": "Strategy Latency",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "spread_evaluation_latency_ms" }]
+    },
+    {
+      "type": "graph",
+      "title": "Win Rate %",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "win_rate_pct" }]
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1
+}

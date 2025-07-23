@@ -6,6 +6,7 @@ import path from 'path';
 import { ensurePaused } from '../middleware/validate.js';
 import logger from '../services/logger.js';
 import { setPauseState, RESUME_ACK_KEY, RESUME_FAILED_KEY } from '../services/pauseState.js';
+import { resumeCounter } from './metrics.js';
 
 export default async function resumeRoutes(app, opts) {
   const { redis, panicState } = opts;
@@ -80,7 +81,7 @@ export default async function resumeRoutes(app, opts) {
     await redis.publish('alerts', msg);
     if (process.env.SANDBOX_MODE !== 'true') {
       try {
-        await sendAlert('email', msg);
+        await sendAlert('email', msg, 'resume');
       } catch (err) {
         req.log.error('Resume alert failed', err);
       }
@@ -88,6 +89,7 @@ export default async function resumeRoutes(app, opts) {
       req.log.info(`[DRY-RUN] Resume alert: ${msg}`);
     }
     logAttempt('resume_success', user);
+    resumeCounter.inc();
     logger.info(
       JSON.stringify({ event: 'resume', ts: new Date().toISOString() })
     );
