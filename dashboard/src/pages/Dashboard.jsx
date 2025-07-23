@@ -11,6 +11,18 @@ export default function Dashboard() {
   const [tradeStatus, setTradeStatus] = useState([]);
   const { panic, refreshStatus } = useSystemStatus();
 
+  async function fetchMetrics() {
+    try {
+      const res = await fetch('/api/metrics');
+      if (res.ok) {
+        const data = await res.json();
+        setMetrics(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch metrics', err);
+    }
+  }
+
   const renderTradeStatus = () => {
     if (!tradeStatus.length) return 'No open trades';
     const info = tradeStatus
@@ -37,19 +49,16 @@ export default function Dashboard() {
       } catch (err) {
         console.error('Failed to fetch status', err);
       }
-      try {
-        const res = await fetch('/api/metrics');
-        if (res.ok) {
-          const data = await res.json();
-          setMetrics(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch metrics', err);
-      }
+      await fetchMetrics();
       refreshStatus();
     }
     load();
   }, [refreshStatus]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchMetrics, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     async function fetchTradeStatus() {
