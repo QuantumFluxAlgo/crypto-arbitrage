@@ -9,7 +9,7 @@ This guide explains how to revert a deployment using **Helm**. Ensure any databa
 List existing revisions so you know which one to roll back to:
 
 ```bash
-helm history arb
+helm history prism-prod
 ```
 
 ---
@@ -19,7 +19,7 @@ helm history arb
 Specify the target revision from the previous command:
 
 ```bash
-helm rollback arb <revision>
+helm rollback prism-prod <revision>
 ```
 
 > **Warning**: Rolling back may fail if the target revision uses a different database schema. Confirm migrations are compatible before proceeding.
@@ -43,8 +43,8 @@ A `Running` status indicates the rollback succeeded.
 Before performing any rollback, capture the current deployment state for auditing:
 
 ```bash
-helm get values arb > snapshots/$(date +%Y%m%d)-values.yaml
-git rev-parse HEAD > snapshots/$(date +%Y%m%d)-commit.txt
+helm get values prism-prod > /ops/snapshots/prism-prod-$(date +%Y%m%d)/values.yaml
+git rev-parse HEAD > /ops/snapshots/prism-prod-$(date +%Y%m%d)/commit.txt
 ```
 
-Add any additional notes about the release to `snapshots/<date>-notes.txt`.
+Add any additional notes about the release to `/ops/snapshots/prism-prod-<date>/notes.md`.

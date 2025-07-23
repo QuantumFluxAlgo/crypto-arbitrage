@@ -656,7 +656,7 @@ Helm Local Deployment (Optional)
 
  bash
 CopyEdit
-helm install arb infra/helm/
+helm install prism-prod infra/helm/ --namespace default
 
 
 
@@ -886,17 +886,17 @@ Deploy the Entire App:
 bash
 CopyEdit
 cd infra/helm
-helm install prism-arbitrage . --namespace default
+helm install prism-prod . --namespace default
 
 Upgrade in Place:
 bash
 CopyEdit
-helm upgrade prism-arbitrage . --namespace default
+helm upgrade prism-prod . --namespace default
 
 Rollback If Needed:
 bash
 CopyEdit
-helm rollback prism-arbitrage <revision>
+helm rollback prism-prod <revision>
 
 Verify Pods and Services:
 bash
@@ -4746,7 +4746,7 @@ List All Release Revisions
 
  bash
 CopyEdit
-helm history prism-arbitrage
+helm history prism-prod
  Output Example:
 
  yaml
@@ -4760,7 +4760,7 @@ Rollback to Known Good Revision
 
  bash
 CopyEdit
-helm rollback prism-arbitrage 1
+helm rollback prism-prod 1
 
 
 Verify Rollback

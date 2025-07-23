@@ -97,10 +97,16 @@ Branch protection rules require the CI checks to succeed before merging.
 
 1. Provision an Ubuntu 22.04 VM in Proxmox (10 cores, 32 GB RAM).
 2. Install Kubernetes, Helm and the SealedSecrets controller on the VM.
-3. Clone the repo on the VM and create sealed secrets for all `.env` files.
+3. Clone the repo on the VM and check out the production branch:
+   ```bash
+   git clone https://github.com/prism-arbitrage/crypto-arbitrage.git
+   cd crypto-arbitrage
+   git checkout main
+   ```
+   Create sealed secrets for all `.env` files.
 4. Deploy with Helm:
    ```bash
-   helm install prism ./infra/helm
+   helm install prism-prod ./infra/helm --namespace default
    ```
 5. Expose the dashboard via ingress or port‑forward and confirm login works.
 
@@ -138,6 +144,24 @@ kubectl apply -f sealed-api.yaml
 Run all mocked tests locally:
 ```bash
 ./test/run-local.sh
+```
+
+## Helm Release Rollback
+
+Check previous releases and revert if needed:
+
+```bash
+helm history prism-prod
+helm rollback prism-prod <revision>
+```
+
+On every successful deploy from the `main` branch, store a release snapshot:
+
+```
+mkdir -p /ops/snapshots/prism-prod-1.0.0
+helm get values prism-prod > /ops/snapshots/prism-prod-1.0.0/values.yaml
+git rev-parse HEAD > /ops/snapshots/prism-prod-1.0.0/commit.txt
+# add brief notes to /ops/snapshots/prism-prod-1.0.0/notes.md
 ```
 
 ---

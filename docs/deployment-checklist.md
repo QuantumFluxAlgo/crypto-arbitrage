@@ -8,4 +8,4 @@ Use this list before promoting a new version to production.
 - [ ] Secrets sealed and committed.
 - [ ] `helm upgrade` executed with the correct release name.
 - [ ] Post-deploy checks: `kubectl get pods`, dashboard loads, no errors in logs.
-- [ ] Snapshot captured under `ops/snapshots/` for audit.
+- [ ] Snapshot captured under `/ops/snapshots/prism-prod-<version>/` for audit.

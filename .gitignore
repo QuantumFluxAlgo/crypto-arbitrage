@@ -27,3 +27,4 @@ __pycache__/
 # Gradle wrapper binary
 executor/gradle/wrapper/gradle-wrapper.jar
 .venv/
+ops/snapshots/

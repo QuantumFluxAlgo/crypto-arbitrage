@@ -196,19 +196,19 @@ kubectl apply -f sealed-secret.yaml
 
 ```bash
 cd infra/helm
-helm install prism-arbitrage . --namespace default
+helm install prism-prod . --namespace default
 ```
 
 To upgrade:
 
 ```bash
-helm upgrade prism-arbitrage . --namespace default
+helm upgrade prism-prod . --namespace default
 ```
 
 Rollback:
 
 ```bash
-helm rollback prism-arbitrage <revision>
+helm rollback prism-prod <revision>
 ```
 
 ---
