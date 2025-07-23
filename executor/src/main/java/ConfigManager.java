@@ -33,6 +33,10 @@ public class ConfigManager {
         this.maxLossPct = maxLossPct;
         this.latencyMaxMs = latencyMaxMs;
         this.coinExposureLimit = coinExposureLimit;
+
+        if (!verifyLiveSecrets()) {
+            System.exit(1);
+        }
     }
 
     public double getMaxLossPct() {
@@ -95,6 +99,54 @@ public class ConfigManager {
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
             logger.error("Failed to write rejection log: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Verify required secrets are present when running in live mode.
+     * Visible for tests.
+     *
+     * @return true if all required secrets exist or not running live
+     */
+    static boolean verifyLiveSecrets() {
+        return verifyLiveSecrets(System.getenv());
+    }
+
+    /** Visible for tests to allow injecting environment map. */
+    static boolean verifyLiveSecrets(java.util.Map<String, String> env) {
+        String modeProp = System.getProperty("EXECUTION_MODE");
+        String mode = modeProp != null ? modeProp
+                : env.getOrDefault("EXECUTION_MODE", "live");
+        if (!"live".equalsIgnoreCase(mode)) {
+            return true;
+        }
+
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        checkKey(env, missing, "BINANCE_KEY");
+        checkKey(env, missing, "BINANCE_SECRET");
+        checkKey(env, missing, "WALLET_ADDRESS");
+
+        boolean alertsActive = env.containsKey("ALERT_RECIPIENT")
+                || env.containsKey("SMTP_USER");
+        if (alertsActive) {
+            checkKey(env, missing, "SMTP_USER");
+        }
+
+        if (!missing.isEmpty()) {
+            logger.error("[FATAL] Missing required secrets in Live Mode. Aborting startup. Missing keys: {}",
+                    String.join(", ", missing));
+            return false;
+        }
+        return true;
+    }
+
+    private static void checkKey(java.util.Map<String, String> env,
+                                 java.util.List<String> missing,
+                                 String key) {
+        String val = env.get(key);
+        if (val == null || val.isBlank() || "dummy123".equalsIgnoreCase(val)
+                || "<REPLACE_ME>".equalsIgnoreCase(val)) {
+            missing.add(key);
         }
     }
 }
