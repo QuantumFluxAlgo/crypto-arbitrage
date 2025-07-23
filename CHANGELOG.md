@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+##Released
 - Add real-time panic brake and execution mode banner to operator dashboard
 - Enforce system health validation before allowing panic resume actions
 - Enforced system health check and confirmation step for resume logic (API + executor)
@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Redis client now auto-resubscribes on reconnect and logs channel restoration
 - Enforced slippage check before trade execution; configurable threshold via config
 - Rewrite documentation to reflect all audited system behavior and enforce operator clarity
+- ProfitTracker background thread now properly shut down to prevent leaks
 - Added audit logging for all trade attempts: success, fail, rejected, skipped
 
 ## [Batch 1] - 2025-07-02

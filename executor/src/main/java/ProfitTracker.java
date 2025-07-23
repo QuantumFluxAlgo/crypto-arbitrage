@@ -19,7 +19,12 @@ import org.slf4j.LoggerFactory;
 public class ProfitTracker {
     private static final Logger logger = LoggerFactory.getLogger(ProfitTracker.class);
     private static final HttpClient httpClient = HttpClient.newHttpClient();
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r);
+                t.setName("ProfitTrackerThread");
+                return t;
+            });
     private static final int MAX_RETRIES = 3;
     private static double globalTotal = 0.0;
     private static double dailyTotal = 0.0;
@@ -28,6 +33,10 @@ public class ProfitTracker {
 
     private static double startingBalance = 10_000.0;
     private static String analyticsUrl = "http://localhost:5000/trade";
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(ProfitTracker::shutdown));
+    }
 
     /**
      * Initialize the tracker with starting capital and analytics endpoint.
@@ -143,6 +152,14 @@ public class ProfitTracker {
      */
     public static double getStartingBalance() {
         return startingBalance;
+    }
+
+    /** Shutdown the scheduler to clean up background thread. */
+    public static void shutdown() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
+            logger.info("ProfitTracker scheduler shutdown.");
+        }
     }
 }
 
