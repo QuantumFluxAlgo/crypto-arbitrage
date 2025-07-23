@@ -1,13 +1,13 @@
 name: Release
 on:
-  push:
-    tags:
-      - '*'
-  release:
-    types: [created]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 jobs:
   release-build:
+    if: github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,7 +20,7 @@ jobs:
         # actions/setup-node@v3 SHA 3235b876344d2a9aa001b8d1453c930bba69e610
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Setup Python
         # actions/setup-python@v4 SHA 7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
