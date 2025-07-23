@@ -1,6 +1,6 @@
 export default {
   testEnvironment: 'jest-environment-node',
   transform: {
-    '^.+\\.js$': 'babel-jest',
+    '^.+\\.[jt]s$': 'babel-jest',
   }
 };
