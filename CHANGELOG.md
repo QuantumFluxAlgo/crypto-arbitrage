@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Redis client now auto-resubscribes on reconnect and logs channel restoration
 - Enforced slippage check before trade execution; configurable threshold via config
 - Rewrite documentation to reflect all audited system behavior and enforce operator clarity
+- Added audit logging for all trade attempts: success, fail, rejected, skipped
 
 ## [Batch 1] - 2025-07-02
 ### Added
