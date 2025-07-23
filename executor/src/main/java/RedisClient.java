@@ -15,6 +15,8 @@ import java.util.function.Consumer;
  */
 public class RedisClient extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
+    public static final String PAUSE_KEY = "arb:paused_state";
+    public static final String RESUME_ACK_KEY = "resume_ack";
 
     public interface MessageHandler {
         void onMessage(String channel, String message);
@@ -232,6 +234,26 @@ public class RedisClient extends Thread {
         } catch (Exception e) {
             logger.error("Redis read failed: {}", e.getMessage());
             return false;
+        }
+    }
+
+    /** Check if trading is paused */
+    public boolean isPaused() {
+        try (Jedis jedis = new Jedis(host, port)) {
+            String val = jedis.get(PAUSE_KEY);
+            return val != null && val.equalsIgnoreCase("true");
+        } catch (Exception e) {
+            logger.error("Redis read failed: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    /** Record resume acknowledgement */
+    public void setResumeAck() {
+        try (Jedis jedis = new Jedis(host, port)) {
+            jedis.setex(RESUME_ACK_KEY, 60, "true");
+        } catch (Exception e) {
+            logger.error("Redis write failed: {}", e.getMessage());
         }
     }
 

@@ -86,27 +86,30 @@ public class PanicBrake {
 
         boolean triggered = false;
         String reason = null;
+        double value = 0.0;
 
         if (dailyLossPct > lossCap) {
-            reason = "LOSS_CAP";
+            reason = "loss";
+            value = -dailyLossPct;
         } else if (avgLatencyMs > latencyCap) {
-            reason = "LATENCY_CAP";
+            reason = "latency";
+            value = avgLatencyMs;
         } else if (winRate < winRateThresh) {
-            reason = "WIN_RATE";
+            reason = "win_rate";
+            value = winRate;
         } else if (profitTarget > 0 && profitSoFar >= profitTarget) {
-            reason = "PROFIT_TARGET";
+            reason = "profit_target";
+            value = profitSoFar;
         }
 
         if (reason != null) {
             logger.error(
                     com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
                             .createObjectNode()
-                            .put("timestamp", java.time.Instant.now().toString())
-                            .put("event", "panic_triggered")
-                            .put("component", "executor")
-                            .put("source", "internal")
-                            .put("operator", "system")
+                            .put("event", "panic")
                             .put("reason", reason)
+                            .put("value", value)
+                            .put("ts", java.time.Instant.now().toString())
                             .toString());
             triggered = true;
         }

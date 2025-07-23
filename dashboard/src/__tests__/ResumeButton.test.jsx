@@ -27,6 +27,21 @@ test('button disabled with tooltip when resume blocked', async () => {
   expect(btn).toHaveAttribute('title', 'System not ready to resume \u2014 check logs');
 });
 
+test('shows resume failed message', async () => {
+  const refresh = jest.fn();
+  global.fetch = jest.fn(() => Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve({ resumed: true }) }));
+
+  await act(async () => {
+    render(
+      <SystemStatusContext.Provider value={{ panic: true, reason: 'loss', resumeFailed: true, refreshStatus: refresh }}>
+        <ResumeButton />
+      </SystemStatusContext.Provider>
+    );
+  });
+
+  expect(screen.getByTestId('resume-failed')).toBeInTheDocument();
+});
+
 test('shows confirmation modal and confirms resume', async () => {
   const refresh = jest.fn();
   global.fetch = jest
