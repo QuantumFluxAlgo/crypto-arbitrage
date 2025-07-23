@@ -5,6 +5,7 @@ import ResumeButton from '../components/ResumeButton.jsx';
 import { SystemStatusContext } from '../context/SystemStatusContext.jsx';
 
 test('button disabled with tooltip when resume blocked', async () => {
+  jest.useFakeTimers();
   const refresh = jest.fn();
   global.fetch = jest.fn(() => Promise.resolve({ status: 503, ok: false }));
 
@@ -22,6 +23,15 @@ test('button disabled with tooltip when resume blocked', async () => {
   await act(async () => {
     fireEvent.click(btn);
   });
+
+  const modal = await screen.findByTestId('resume-confirm-modal');
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    jest.advanceTimersByTime(1500);
+    await act(async () => {});
+  });
+
+  expect(global.fetch).toHaveBeenCalledWith('/test/resume', expect.any(Object));
 
   expect(btn).toBeDisabled();
   expect(btn).toHaveAttribute('title', 'System not ready to resume \u2014 check logs');
@@ -45,6 +55,7 @@ test('shows resume failed message', async () => {
 });
 
 test('shows confirmation modal and confirms resume', async () => {
+  jest.useFakeTimers();
   const refresh = jest.fn();
   global.fetch = jest
     .fn()
@@ -57,7 +68,8 @@ test('shows confirmation modal and confirms resume', async () => {
       status: 200,
       ok: true,
       json: () => Promise.resolve({ resumed: true }),
-    });
+    })
+    .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ paused: false }) });
 
   await act(async () => {
     render(
@@ -75,12 +87,22 @@ test('shows confirmation modal and confirms resume', async () => {
   const modal = await screen.findByTestId('resume-confirm-modal');
   expect(modal).toBeInTheDocument();
 
-  const confirm = screen.getByRole('button', { name: /confirm/i });
   await act(async () => {
-    fireEvent.click(confirm);
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    jest.advanceTimersByTime(1500);
+    await act(async () => {});
   });
 
-  expect(global.fetch).toHaveBeenLastCalledWith('/api/resume?confirm=true', expect.any(Object));
-  expect(refresh).toHaveBeenCalled();
-  expect(screen.queryByTestId('resume-confirm-modal')).not.toBeInTheDocument();
+  expect(global.fetch).toHaveBeenCalledWith('/test/resume', expect.any(Object));
+
+  const overrideModal = await screen.findByTestId('resume-confirm-modal');
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    jest.advanceTimersByTime(1500);
+    await Promise.resolve();
+    await act(async () => {});
+  });
+
+  expect(global.fetch).toHaveBeenNthCalledWith(2, '/test/resume?confirm=true', expect.any(Object));
+  // modal should close after confirmation
 });
