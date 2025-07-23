@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ##Released
+- **PR 27 – Redis Recovery Integration Test**
+  - Added automated test for Redis outage and reconnection handling
+  - Confirms system resumes processing pub/sub commands after Redis restarts
+  - Prevents regressions in infinite retry logic
 - Add real-time panic brake and execution mode banner to operator dashboard
 - Enforce system health validation before allowing panic resume actions
 - Enforced system health check and confirmation step for resume logic (API + executor)
