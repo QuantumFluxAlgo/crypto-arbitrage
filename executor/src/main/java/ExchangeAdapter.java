@@ -1,5 +1,9 @@
 package executor;
 
+import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Abstraction for exchange specific order and balance operations.
  */
@@ -62,6 +66,46 @@ public interface ExchangeAdapter {
      */
     default void cancel(String orderId) {
         // no-op
+    }
+
+    /**
+     * Attempt to establish a WebSocket connection with retry logic. If all
+     * attempts fail, a REST fallback is executed. Any failure of the fallback
+     * escalates to the caller via {@link RuntimeException}.
+     *
+     * @param wsConnect   runnable that performs the WebSocket connect
+     * @param restFallback runnable that performs the REST fallback
+     * @param exchangeName exchange identifier used in logs
+     */
+    default void connectWithRetry(Runnable wsConnect, Runnable restFallback, String exchangeName) {
+        Logger log = LoggerFactory.getLogger(getClass());
+        int maxRetries = 5;
+        long delay = 1000L;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                wsConnect.run();
+                return;
+            } catch (Exception e) {
+                log.warn("WebSocket attempt {}/{} failed for {} at {}", attempt, maxRetries, exchangeName, Instant.now(), e);
+                if (attempt == maxRetries) {
+                    log.error("WebSocket unavailable for {} – falling back to REST", exchangeName);
+                    try {
+                        restFallback.run();
+                        return;
+                    } catch (Exception restEx) {
+                        log.error("REST fallback failed for {} at {}", exchangeName, Instant.now(), restEx);
+                        throw new RuntimeException("REST fallback failed for " + exchangeName, restEx);
+                    }
+                }
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+                delay = Math.min(delay * 2, 10000L);
+            }
+        }
     }
 }
 

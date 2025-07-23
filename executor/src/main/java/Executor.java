@@ -244,6 +244,21 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
             return;
         }
 
+        // Pre-trade panic checks
+        dailyLossPct = ProfitTracker.getDailyLossPct();
+        if (dailyLossPct > config.getLossCapPct()) {
+            logger.error("[PANIC] Loss cap breached mode={} value={} cap={}",
+                    config.getExecutionMode(), dailyLossPct, config.getLossCapPct());
+            triggerPanic();
+            return;
+        }
+        if (averageLatencyMs > config.getLatencyMaxMs()) {
+            logger.error("[PANIC] Latency ceiling violated mode={} value={} cap={}",
+                    config.getExecutionMode(), averageLatencyMs, config.getLatencyMaxMs());
+            triggerPanic();
+            return;
+        }
+
         if (!redisClient.ping()) {
             logger.warn("[DRY-RUN ENFORCEMENT] Trade blocked: Redis unavailable");
             return;
@@ -268,11 +283,8 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
         recordMetrics(opp, result);
 
         if (!sandboxMode && PanicBrake.shouldHalt(redisClient, config, dailyLossPct, averageLatencyMs, winRate)) {
-            if (isPanic.compareAndSet(false, true)) {
-                logger.error("PANIC BRAKE TRIGGERED - trading paused");
-                AlertManager.sendAlert("PANIC", "BRAKE TRIGGERED");
-                redisClient.publish("alerts", "PANIC BRAKE TRIGGERED");
-            }
+            logger.error("[PANIC] Brake triggered mode={}", config.getExecutionMode());
+            triggerPanic();
         }
     }
 
@@ -496,6 +508,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
     public void resumeFromPanic() {
         if (sandboxMode) {
             logger.info("[DRY-RUN] resume ignored");
+            redisClient.setResumeAck();
             return;
         }
         if (isPanic.compareAndSet(true, false)) {
@@ -521,6 +534,21 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      */
     public boolean isPanicActive() {
         return isPanic.get();
+    }
+
+    /**
+     * Trigger a panic halt. In LIVE mode a pause command is broadcast so
+     * that all agents stop executing trades. Dry-run modes simply set the
+     * local flag to simulate panic without affecting other services.
+     */
+    private void triggerPanic() {
+        if (isPanic.compareAndSet(false, true)) {
+            if (!config.isDryRun()) {
+                redisClient.publish(controlChannel, "pause");
+            }
+            AlertManager.sendAlert("PANIC", "TRIGGERED");
+            redisClient.publish("alerts", "PANIC TRIGGERED");
+        }
     }
 
     /**
