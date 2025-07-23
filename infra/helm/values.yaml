@@ -20,13 +20,7 @@ api:
     limits:
       cpu: "500m"
       memory: "512Mi"
-  env:
-    # JWT_SECRET: "<your-secret>"
-    # PGHOST: "postgres"
-    # PGUSER: "arb_user"
-    # PGPASSWORD: "secret"
-    # PGDATABASE: "arbitrage"
-    # SANDBOX_MODE: "false"
+  env: {}
 
 analytics:
   image: arb-analytics
