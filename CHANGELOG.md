@@ -9,6 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Added automated test for Redis outage and reconnection handling
   - Confirms system resumes processing pub/sub commands after Redis restarts
   - Prevents regressions in infinite retry logic
+- Added 60s lockout to prevent duplicate sweep triggers
+- Sweep now returns structured status and timestamps
+- Logs sweep actions and rejects premature repeat requests
+- Makes `/sweep` safe for automation and UI feedback
+- PR 19 – Fix Sandbox Resume Auth Bypass
+  - Enforced JWT auth on `/resume` for all modes including sandbox
+  - Split out optional `/demo/resume` for UI-only testing (guarded by EXECUTION_MODE)
+  - Prevents unauthorized resume in test/demo environments
+  - Logs resume actions only after auth verification
 - Add real-time panic brake and execution mode banner to operator dashboard
 - Enforce system health validation before allowing panic resume actions
 - Enforced system health check and confirmation step for resume logic (API + executor)
@@ -40,6 +49,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Rewrite documentation to reflect all audited system behavior and enforce operator clarity
 - ProfitTracker background thread now properly shut down to prevent leaks
 - Added audit logging for all trade attempts: success, fail, rejected, skipped
+
+## PR 20 – Improve Redis Subscription Resilience
+- Replaced 10-retry loop with infinite backoff strategy for `control-feed`
+- Ensures executor never stops listening for panic/resume/sweep commands
+- Adds structured logs for downtime and recovery
+- Prevents silent failure of operator control channels
 
 ## [Batch 1] - 2025-07-02
 ### Added

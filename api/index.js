@@ -1,5 +1,6 @@
 // API service entrypoint for Fastify server and route wiring
 import Fastify from 'fastify';
+import { randomUUID } from 'crypto';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import logger from './services/logger.js';
@@ -64,6 +65,7 @@ const panicState = { reason: null, last: 0 };
 
 let redis;
 let pool;
+let lastSweepTime = 0;
 
 async function buildApp() {
   const app = Fastify();
@@ -158,12 +160,15 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   api.addHook('onRequest', async (req, reply) => {
     const openPaths = [
       ...baseOpenPaths,
-      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/demo/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
     try {
       await req.jwtVerify();
+      if (req.url === '/api/resume') {
+        req.log.info('[RESUME] Resume command received by authorized user');
+      }
     } catch {
       reply.code(401).send({ error: 'unauthorized' });
     }
@@ -174,7 +179,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return;
     const openPaths = [
       ...baseOpenPaths,
-      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/resume'] : []),
+      ...(process.env.EXECUTION_MODE === 'sandbox' ? ['/api/demo/resume'] : []),
       ...(isTest ? ['/api/test/panic', '/api/test/resume', '/api/test/sweep', '/api/test/alert'] : []),
     ];
     if (openPaths.includes(req.url)) return;
@@ -268,11 +273,11 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     api.register(panicRoutes, { redis, panicState });
   }
 
-    if (isTest) {
-      api.post('/test/resume', async (_req, reply) => {
-        if (process.env.SANDBOX_MODE !== 'true') {
-          return reply.code(403).send();
-        }
+  if (isTest) {
+    api.post('/test/resume', async (_req, reply) => {
+      if (process.env.SANDBOX_MODE !== 'true') {
+        return reply.code(403).send();
+      }
         const paused = await getPauseState(redis);
         if (!paused) {
           reply.code(409);
@@ -306,12 +311,28 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           return reply.code(403).send();
         }
 
+        const now = Date.now();
+        const since = now - lastSweepTime;
+        if (since < 60000) {
+          const elapsed = Math.floor(since / 1000);
+          const remaining = Math.ceil((60000 - since) / 1000);
+          reply.code(429);
+          return {
+            status: 'duplicate',
+            message: `Last sweep occurred ${elapsed}s ago. Try again in ${remaining}s.`,
+          };
+        }
+
+        logger.info('[SWEEP] Manual sweep triggered by operator');
+
         const actions = ['sweep-from:Binance', 'amount:12.5 USDT'];
         await redis.publish(getControlChannel(), 'sweep');
+        lastSweepTime = now;
         return {
           status: 'dry-run-complete',
           triggered: true,
           actions,
+          sweepId: randomUUID(),
         };
       });
 
@@ -324,8 +345,15 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           await sendAlert('email', 'Test panic alert', 'test');
         } catch {}
         return { status: 'sent', type: 'test', ts };
-      });
-    }
+    });
+  }
+
+  if (process.env.EXECUTION_MODE === 'sandbox') {
+    api.post('/demo/resume', async () => {
+      logger.info('[RESUME] Demo resume endpoint hit');
+      return { status: 'demo-only', mode: 'sandbox' };
+    });
+  }
 
   api.register(userRoutes, { prefix: '/users' });
   api.register(infraRoutes, { redis, pool });
