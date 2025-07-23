@@ -37,6 +37,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - ProfitTracker background thread now properly shut down to prevent leaks
 - Added audit logging for all trade attempts: success, fail, rejected, skipped
 
+## PR 20 – Improve Redis Subscription Resilience
+- Replaced 10-retry loop with infinite backoff strategy for `control-feed`
+- Ensures executor never stops listening for panic/resume/sweep commands
+- Adds structured logs for downtime and recovery
+- Prevents silent failure of operator control channels
+
 ## [Batch 1] - 2025-07-02
 ### Added
 - Local environment setup
