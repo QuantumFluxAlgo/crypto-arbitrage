@@ -52,8 +52,8 @@ describeLocal('API authentication', () => {
     expect(authRes.statusCode).toBe(200);
     expect(authRes.body).toEqual({
       opportunities: [],
-      dryRun: true,
-      timestamp: expect.any(String)
+      executionMode: 'sandbox',
+      lastUpdated: expect.any(String)
     });
   });
 
