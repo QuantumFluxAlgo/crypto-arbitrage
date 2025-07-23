@@ -4,6 +4,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,25 +53,34 @@ public class FillTracker {
         if (ctx == null) {
             return false;
         }
-        long start = System.currentTimeMillis();
-        while (System.currentTimeMillis() - start < timeoutMs) {
+        // TODO: integrate async exchange ACK once available
+        CompletableFuture<Boolean> fut = CompletableFuture.supplyAsync(() -> {
             double filled = 0.0;
             if (ctx.adapter instanceof MockExchangeAdapter) {
                 filled = ((MockExchangeAdapter) ctx.adapter).getLastFillSize();
             }
-            if (filled >= ctx.size) {
-                return true;
+            return filled >= ctx.size;
+        });
+        try {
+            boolean filled = fut.get(60, TimeUnit.MICROSECONDS);
+            if (!filled) {
+                ctx.adapter.cancel(orderId);
+                logger.warn("[IOC TIMEOUT] Cancelled order after 60\u03bcs wait");
+                logFailure(ctx.pair, orderId, ctx.size);
             }
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
+            return filled;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            ctx.adapter.cancel(orderId);
+            logger.warn("[IOC TIMEOUT] Cancelled order after 60\u03bcs wait");
+            logFailure(ctx.pair, orderId, ctx.size);
+            return false;
+        } catch (TimeoutException | ExecutionException e) {
+            ctx.adapter.cancel(orderId);
+            logger.warn("[IOC TIMEOUT] Cancelled order after 60\u03bcs wait");
+            logFailure(ctx.pair, orderId, ctx.size);
+            return false;
         }
-        ctx.adapter.cancel(orderId);
-        logFailure(ctx.pair, orderId, ctx.size);
-        return false;
     }
 
     private void logFailure(String pair, String orderId, double size) {
