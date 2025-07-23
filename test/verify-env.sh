@@ -62,6 +62,13 @@ fi
 
 echo "Environment verified"
 
+echo "Running full test suite..."
+
+(cd api && npm test) && echo "✅ API tests passed" || exit 1
+(cd dashboard && npm test) && echo "✅ Dashboard tests passed" || exit 1
+(cd analytics && pytest) && echo "✅ Analytics tests passed" || exit 1
+(cd executor && mvn test) && echo "✅ Executor tests passed" || exit 1
+
 curl -sf http://localhost:8080/api/metrics/live >/dev/null
 curl -sf http://localhost:8080/api/metrics/sandbox >/dev/null
 if [ "${PANIC:-}" = "true" ] && [ "${HEARTBEAT:-}" = "dead" ]; then

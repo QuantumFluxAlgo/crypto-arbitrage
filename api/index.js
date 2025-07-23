@@ -276,11 +276,12 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         }
 
         const timestamp = new Date().toISOString();
+        const actions = [];
 
         const redisOk = await redisReachable(redis);
         if (!redisOk) {
           logger.error('[SWEEP] Redis unavailable – aborting sweep for safety');
-          return { sweepInitiated: false, reason: 'Redis unavailable', timestamp };
+          return { status: 'dry-run-complete', triggered: false, actions };
         }
 
         const { balances, complete } = await fetchBalances(pool, redis);
@@ -293,8 +294,9 @@ async function apiRoutes(api, { redis, pool, panicState }) {
           logger.warn('[SWEEP WARNING] Balance source incomplete – operator review recommended');
         }
 
+        balances.forEach(b => actions.push({ asset: b.asset, amountUsd: b.usd_value }));
         await redis.publish(getControlChannel(), 'sweep');
-        return { sweepInitiated: true, timestamp };
+        return { status: 'dry-run-complete', triggered: true, actions };
       });
     }
 
