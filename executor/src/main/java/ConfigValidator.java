@@ -53,5 +53,26 @@ public class ConfigValidator {
 
         System.out.println("[VALIDATOR] Configs validated: OK");
     }
+
+    /**
+     * Validate live risk limits when reloading configuration at runtime.
+     *
+     * @param lossPct   new maximum loss percentage
+     * @param latencyMs new latency ceiling in milliseconds
+     * @param exposurePct new coin exposure percentage of NAV
+     * @return name of the parameter that violated limits, or null if all safe
+     */
+    public static String validateRiskLimits(double lossPct, double latencyMs, double exposurePct) {
+        if (lossPct > 5.0) {
+            return "maxLossPct";
+        }
+        if (latencyMs > 1000.0) {
+            return "latencyMaxMs";
+        }
+        if (exposurePct > 30.0) {
+            return "coinExposureLimit";
+        }
+        return null;
+    }
 }
 
