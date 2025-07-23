@@ -8,4 +8,5 @@ export default {
   moduleNameMapper: {
       '^.+\\.(svg)$': '<rootDir>/__mocks__/fileMock.js',
     },
+  testMatch: ['<rootDir>/src/__tests__/**/*.test.jsx'],
 };
