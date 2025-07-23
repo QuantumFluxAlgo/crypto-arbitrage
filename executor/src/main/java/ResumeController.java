@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Handles resume requests with safety checks.
@@ -13,7 +15,24 @@ public class ResumeController {
 
     private final Executor executor;
     private final SystemHealthChecker checker;
+    private final RedisClient redis;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Path resumeLog;
+
+    private void logAttempt(String event, String detail) {
+        try {
+            String entry = mapper.writeValueAsString(java.util.Map.of(
+                    "timestamp", java.time.Instant.now().toString(),
+                    "event", event,
+                    "detail", detail));
+            Files.createDirectories(resumeLog.getParent());
+            Files.writeString(resumeLog, entry + System.lineSeparator(),
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.APPEND);
+        } catch (Exception e) {
+            logger.error("Failed to write resume log", e);
+        }
+    }
 
     /** Simple container for HTTP-like responses. */
     public static class Response {
@@ -25,9 +44,12 @@ public class ResumeController {
         }
     }
 
-    public ResumeController(Executor executor, SystemHealthChecker checker) {
+    public ResumeController(Executor executor, SystemHealthChecker checker, RedisClient redis) {
         this.executor = executor;
         this.checker = checker == null ? new SystemHealthChecker() : checker;
+        this.redis = redis;
+        String dir = System.getenv().getOrDefault("LOG_DIR", "/var/log/prism-arbitrage");
+        this.resumeLog = java.nio.file.Paths.get(dir, "resume.log");
     }
 
     /**
@@ -59,12 +81,38 @@ public class ResumeController {
             }
         }
 
-        executor.resumeFromPanic();
-        try {
-            String body = mapper.writeValueAsString(java.util.Map.of("resumed", true));
-            return new Response(200, body);
-        } catch (Exception e) {
-            return new Response(200, "{\"resumed\":true}");
+        double lossPct = executor.getCurrentLossPct();
+        double latency = executor.getCurrentLatencyMs();
+        boolean breached = lossPct > executor.getConfig().getLossCapPct()
+                || latency > executor.getConfig().getLatencyMaxMs();
+
+        if (breached) {
+            logAttempt("risk_active", "loss=" + lossPct + ",latency=" + latency);
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < 60_000) {
+                if (redis != null && redis.isResumeConfirmed()) {
+                    executor.resumeFromPanic();
+                    logAttempt("resume_override", "confirmed");
+                    try {
+                        String body = mapper.writeValueAsString(java.util.Map.of("resumed", true));
+                        return new Response(200, body);
+                    } catch (Exception e) {
+                        return new Response(200, "{\"resumed\":true}");
+                    }
+                }
+                try { Thread.sleep(1000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+            }
+            logAttempt("resume_blocked", "risk breach");
+            return new Response(403, "{\"error\":\"Resume blocked due to active risk breach\"}");
+        } else {
+            executor.resumeFromPanic();
+            logAttempt("resume_success", "auto");
+            try {
+                String body = mapper.writeValueAsString(java.util.Map.of("resumed", true));
+                return new Response(200, body);
+            } catch (Exception e) {
+                return new Response(200, "{\"resumed\":true}");
+            }
         }
     }
 }

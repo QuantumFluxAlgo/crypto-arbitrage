@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 - Add real-time panic brake and execution mode banner to operator dashboard
 - Enforce system health validation before allowing panic resume actions
+- Enforced system health check and confirmation step for resume logic (API + executor)
 - Secure /resume endpoint with execution-mode-aware admin check
 
 - Downgrade numpy to 2.1.3 to resolve TensorFlow install conflict.
