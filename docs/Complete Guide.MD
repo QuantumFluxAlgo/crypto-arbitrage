@@ -1325,6 +1325,8 @@ CEX adapters (e.g., Binance, Kraken, Coinbase) connect via WebSockets and REST f
 
 DEX adapters (e.g., Uniswap V3, PancakeSwap) use on-chain price feeds or GraphQL APIs.
 
+Note: CEX/DEX adapters are stubbed for rollout sequencing. Full support will be implemented after sandbox validation. Currently stubbed adapters: Binance, Kraken, Uniswap V3.
+
 
 All feeds update bid/ask every 250 ms, parsed and pushed into a central Redis channel (spread-feed).
 
