@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ##Released
+- Added 60s lockout to prevent duplicate sweep triggers
+- Sweep now returns structured status and timestamps
+- Logs sweep actions and rejects premature repeat requests
+- Makes `/sweep` safe for automation and UI feedback
 - PR 19 – Fix Sandbox Resume Auth Bypass
   - Enforced JWT auth on `/resume` for all modes including sandbox
   - Split out optional `/demo/resume` for UI-only testing (guarded by EXECUTION_MODE)
