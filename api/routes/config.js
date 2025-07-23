@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { requireAdmin } from '../middleware/auth.js';
+import logger from '../services/logger.js';
 
 export const config = {
   maxLoss: 5,
@@ -20,6 +21,18 @@ export default async function configRoutes(app) {
   app.post('/config', { preHandler: requireAdmin }, async (req, reply) => {
     const result = schema.safeParse(req.body);
     if (!result.success || Object.keys(result.data).length === 0) {
+      const ts = new Date().toISOString();
+      for (const [field, value] of Object.entries(req.body || {})) {
+        logger.warn(
+          JSON.stringify({
+            event: 'unauthorized_config_change',
+            field,
+            value,
+            status: 'rejected',
+            ts,
+          })
+        );
+      }
       reply.code(400);
       return { error: 'invalid config' };
     }

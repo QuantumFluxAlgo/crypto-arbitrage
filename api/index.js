@@ -30,7 +30,7 @@ import { sendAlert } from '../alerts/alertAgent.js';
 import { sendEmail } from '../alerts/emailAlert.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
-import { getPauseState, setPauseState } from './services/pauseState.js';
+import { getPauseState, setPauseState, getResumeFailed } from './services/pauseState.js';
 import { redisReachable, fetchBalances } from './services/balances.js';
 
 const { Pool } = pg;
@@ -59,6 +59,7 @@ const panicState = { reason: null };
 
 let redis;
 let pool;
+let subscriber;
 
 async function buildApp() {
   const app = Fastify();
@@ -91,6 +92,21 @@ async function buildApp() {
         const { hostname, port } = new URL(redisUrl);
         redis = new Redis(redisUrl);
         logger.info(`[REDIS] Connected to ${hostname}:${port} via REDIS_URL`);
+        subscriber = redis.duplicate();
+        const channel = getControlChannel();
+        await subscriber.subscribe(channel);
+        subscriber.on('message', (ch, message) => {
+          if (['resume', 'halt', 'panic'].includes(message)) {
+            logger.info(
+              JSON.stringify({
+                event: 'redis_received',
+                channel: ch,
+                message,
+                ts: new Date().toISOString(),
+              })
+            );
+          }
+        });
       } catch (err) {
         logger.error(`[REDIS] Invalid REDIS_URL: ${err.message}`);
       }
@@ -105,6 +121,9 @@ async function buildApp() {
       await pool.end();
       if (redis && typeof redis.quit === 'function') {
         await redis.quit();
+      }
+      if (subscriber && typeof subscriber.quit === 'function') {
+        await subscriber.quit();
       }
     });
 
@@ -246,6 +265,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   api.get('/system/status', async () => ({
     paused: await getPauseState(redis),
     panic_reason: panicState.reason,
+    resume_failed: await getResumeFailed(redis),
   }));
 
   api.register(systemHealthRoutes, { redis, pool });

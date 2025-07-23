@@ -3,12 +3,12 @@ import { render, screen, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SystemStatusBanner from '../components/SystemStatusBanner.jsx';
 
-async function setup({ paused, mode }) {
+async function setup({ paused, mode, resumeFailed = false }) {
   global.fetch = jest
     .fn()
     .mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ paused, panic_reason: null }),
+      json: () => Promise.resolve({ paused, panic_reason: null, resume_failed: resumeFailed }),
     })
     .mockResolvedValueOnce({
       ok: true,
@@ -50,4 +50,10 @@ test('shows sandbox panic state', async () => {
   const banner = await screen.findByTestId('system-status-banner');
   expect(banner).toHaveTextContent('Sandbox Panic - Simulating Failure State');
   expect(banner).toHaveClass('bg-red-900');
+});
+
+test('shows resume failed banner', async () => {
+  await setup({ mode: 'live', paused: false, resumeFailed: true });
+  const banner = await screen.findByTestId('resume-failed-banner');
+  expect(banner).toHaveTextContent('Resume failed: Executor not responding');
 });

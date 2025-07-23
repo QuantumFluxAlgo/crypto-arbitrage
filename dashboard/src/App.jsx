@@ -12,6 +12,7 @@ import Alerts from './pages/Alerts';
 import Login from './pages/Login';
 import Infrastructure from './pages/Infrastructure';
 import AdminPanel from './pages/AdminPanel';
+import Config from './pages/Config';
 // Guard routes so only logged-in users see them
 
 function RequireAuth({ children }) {
@@ -32,6 +33,7 @@ function App() {
             <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
             <Route path="/infrastructure" element={<Infrastructure />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/config" element={<RequireAuth><Config /></RequireAuth>} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/login" element={<Login />} />
           </Routes>
