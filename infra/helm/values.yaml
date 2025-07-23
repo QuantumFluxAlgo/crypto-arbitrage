@@ -67,8 +67,7 @@ executor:
     limits:
       cpu: "500m"
   env:
-    # REDIS_HOST: "redis"
-    # REDIS_PORT: "6379"
+    # REDIS_URL: "redis://redis:6379"
     # ANALYTICS_URL: "http://analytics:5000/trade"
     # PERSONALITY_MODE: "REALISTIC"
     # STARTING_BALANCE: "10000"
@@ -85,8 +84,7 @@ feedAggregator:
       memory: "256Mi"
   env:
     # FEED_URL: "wss://example.com/feed"
-    # REDIS_HOST: "redis"
-    # REDIS_PORT: "6379"
+    # REDIS_URL: "redis://redis:6379"
     # ORDERBOOK_CHANNEL: "orderbook"
     # ALERT_CHANNEL: "alerts"
 

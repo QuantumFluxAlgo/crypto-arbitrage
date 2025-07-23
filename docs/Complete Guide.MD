@@ -870,7 +870,7 @@ dashboard:
     PUBLIC_URL: "https://arb.example.com"
 executor:
   env:
-    REDIS_HOST: "redis"
+    REDIS_URL: "redis://redis:6379"
 
 
 

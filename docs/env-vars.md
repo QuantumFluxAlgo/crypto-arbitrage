@@ -8,7 +8,7 @@ Lists environment variables used across services.
 | Name | Description |
 |------|-------------|
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Postgres connection settings |
-| `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL` | Redis host, port and pub/sub channel |
+| `REDIS_URL` / `REDIS_CHANNEL` | Redis connection URL and pub/sub channel |
 | `ORDERBOOK_CHANNEL` / `ALERT_CHANNEL` | Feed and alert Redis channels |
 | `JWT_SECRET` | Token signing key for the API (required in production) |
 | `ADMIN_TOKEN` | Required for admin-only API endpoints (set a strong value for production) |
@@ -76,7 +76,7 @@ Lists environment variables used across services.
 |------|---------|
 | `FEED_URL` | WebSocket endpoint for exchange data |
 | `ORDERBOOK_CHANNEL` | Redis channel for normalized books |
-| `REDIS_HOST` / `REDIS_PORT` | Redis connection details |
+| `REDIS_URL` | Redis connection URL |
 | `HEALTH_PORT` | Port for the `/health` endpoint |
 | `MAX_RECONNECT_ATTEMPTS` | Reconnect attempts before exit |
 | `ALERT_CHANNEL` | Redis channel for alerts |

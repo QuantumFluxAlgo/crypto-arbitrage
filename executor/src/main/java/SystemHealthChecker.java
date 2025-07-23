@@ -24,8 +24,17 @@ public class SystemHealthChecker {
 
     /** Check that heartbeat monitor is alive. */
     public boolean isHeartbeatAlive() {
-        String host = System.getenv().getOrDefault("REDIS_HOST", "localhost");
-        int port = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
+        String redisUrl = System.getenv().getOrDefault("REDIS_URL", "redis://localhost:6379");
+        String host = "localhost";
+        int port = 6379;
+        try {
+            java.net.URI uri = new java.net.URI(redisUrl);
+            if (uri.getHost() != null) host = uri.getHost();
+            if (uri.getPort() != -1) port = uri.getPort();
+            logger.info("[REDIS] Connected to {}:{} via REDIS_URL", host, port);
+        } catch (Exception e) {
+            logger.error("[REDIS] Invalid REDIS_URL: {}", e.getMessage());
+        }
         try (Jedis jedis = new Jedis(host, port)) {
             String ts = jedis.get("executor:heartbeat");
             if (ts == null) {

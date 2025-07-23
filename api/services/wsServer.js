@@ -2,10 +2,10 @@
 import { WebSocketServer } from 'ws';
 import Redis from 'ioredis';
 import logger from './logger.js';
+import { URL } from 'url';
 
 const WS_PORT = process.env.WS_PORT || 8070; // override via env for tests
-const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
 let wss;
 let redis;
@@ -22,7 +22,14 @@ function broadcast(message) {
 }
 
 function start() {
-  redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+  try {
+    const { hostname, port } = new URL(REDIS_URL);
+    redis = new Redis(REDIS_URL);
+    logger.info(`[REDIS] Connected to ${hostname}:${port} via REDIS_URL`);
+  } catch (err) {
+    logger.error(`[REDIS] Invalid REDIS_URL: ${err.message}`);
+    redis = new Redis();
+  }
   wss = new WebSocketServer({ port: WS_PORT });
 
   wss.on('connection', socket => {
