@@ -3,7 +3,8 @@ const axios = require('axios');
 const winston = require('winston');
 const createLogger = require('../lib/logger.js');
 
-const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+const logDir = process.env.LOG_DIR || '/var/log/prism';
+// TODO: handle log rotation with logrotate
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }

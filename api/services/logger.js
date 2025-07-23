@@ -3,7 +3,8 @@ import axios from 'axios';
 import winston from 'winston';
 import createLogger from '../../lib/logger.js';
 
-const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+const logDir = process.env.LOG_DIR || '/var/log/prism';
+// TODO: configure external log rotation
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
