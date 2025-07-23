@@ -21,7 +21,7 @@ public class ExecutorDryRunModeTest {
     static class DummyExecutor extends Executor {
         DummyRedisClient client;
         DummyExecutor(DummyRedisClient c) {
-            super(c, "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.SANDBOX));
+            super(c, "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.DRY_RUN));
             this.client = c;
         }
         @Override public void start() {}

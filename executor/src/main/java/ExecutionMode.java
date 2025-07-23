@@ -2,5 +2,6 @@ package executor;
 
 public enum ExecutionMode {
     LIVE,
-    SANDBOX
+    SANDBOX,
+    DRY_RUN
 }

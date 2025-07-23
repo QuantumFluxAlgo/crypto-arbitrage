@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ##Released
+- **PR 28 – Final Audit Cleanup (Modes + TODO)**
+  - Added `DRY_RUN` enum constant to ExecutionMode
+  - Updated config logic to separate dry-run from sandbox clearly
+  - Removed stale TODO from FillTracker and documented cancel fallback behavior
 - **PR 27 – Redis Recovery Integration Test**
   - Added automated test for Redis outage and reconnection handling
   - Confirms system resumes processing pub/sub commands after Redis restarts

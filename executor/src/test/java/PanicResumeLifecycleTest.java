@@ -22,7 +22,7 @@ public class PanicResumeLifecycleTest {
     static class DummyExecutor extends Executor {
         DummyRedis client;
         DummyExecutor(DummyRedis c) {
-            super(c, "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.SANDBOX));
+            super(c, "localhost", 6379, new RiskFilter(), new NearMissLogger(null), new Config(ExecutionMode.DRY_RUN));
             this.client = c;
             setSandboxMode(true);
         }

@@ -69,7 +69,7 @@ public class PanicBrakeTest {
     @Test
     void doesNotPublishPauseInDryRun() {
         DummyRedis redis = new DummyRedis();
-        Config config = new Config(ExecutionMode.SANDBOX);
+        Config config = new Config(ExecutionMode.DRY_RUN);
         assertTrue(PanicBrake.shouldHalt(redis, config, 6.0, 100.0, 0.8));
         assertNull(redis.channel);
         assertNull(redis.message);
