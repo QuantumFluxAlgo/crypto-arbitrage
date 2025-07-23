@@ -11,7 +11,15 @@ export default async function panicRoutes(app, { redis, panicState }) {
     await setPauseState(redis, true);
     panicState.reason = req.body?.type || null;
     await redis.publish(getControlChannel(), 'halt');
-    logger.warn('[PAUSE] Trading halted via panic brake');
+    logger.warn(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        event: 'panic_triggered',
+        component: 'api',
+        source: 'dashboard',
+        operator: req.user?.email || 'unknown',
+      }),
+    );
     try {
       await sendAlert('email', 'Panic brake triggered (test mode)');
     } catch (err) {
