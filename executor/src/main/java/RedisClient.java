@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import executor.AlertManager;
 import java.util.function.Consumer;
@@ -24,6 +26,7 @@ public class RedisClient extends Thread {
     private final MessageHandler handler;
     private final long baseDelayMs;
     private final long maxDelayMs;
+    private final Map<String, MessageHandler> subscriptionMap = new ConcurrentHashMap<>();
     private volatile boolean running = true;
 
     /**
@@ -46,7 +49,13 @@ public class RedisClient extends Thread {
         this.handler = handler;
         this.baseDelayMs = baseDelayMs;
         this.maxDelayMs = maxDelayMs;
+        subscriptionMap.put(channel, handler);
         setName("RedisClientSubscriber");
+    }
+
+    /** Register additional subscription for reconnect tracking */
+    public void addSubscription(String channel, MessageHandler handler) {
+        subscriptionMap.put(channel, handler);
     }
 
     static long getBaseDelayMs() {
@@ -61,11 +70,11 @@ public class RedisClient extends Thread {
 
     static long getMaxDelayMs() {
         String val = System.getProperty("REDIS_MAX_DELAY_MS",
-                System.getenv().getOrDefault("REDIS_MAX_DELAY_MS", "30000"));
+                System.getenv().getOrDefault("REDIS_MAX_DELAY_MS", "60000"));
         try {
             return Long.parseLong(val);
         } catch (NumberFormatException e) {
-            return 30000L;
+            return 60000L;
         }
     }
 
@@ -127,10 +136,28 @@ public class RedisClient extends Thread {
      */
     public void subscribe(JedisPubSub listener, String... channels) {
         new Thread(() -> {
-            try (Jedis jedis = new Jedis(host, port)) {
-                jedis.subscribe(listener, channels);
-            } catch (Exception e) {
-                logger.error("Redis subscribe failed: {}", e.getMessage());
+            int attempt = 0;
+            while (running && attempt < 10) {
+                try (Jedis jedis = new Jedis(host, port)) {
+                    if (attempt > 0) {
+                        logger.info("Redis reconnected — subscriptions restored: {}", Arrays.toString(channels));
+                    }
+                    jedis.subscribe(listener, channels);
+                    attempt = 0;
+                } catch (Exception e) {
+                    attempt++;
+                    if (attempt >= 10) {
+                        logger.error("Redis connection failed after 10 retries");
+                        break;
+                    }
+                    long delay = Math.min(maxDelayMs, (1L << (attempt - 1)) * baseDelayMs);
+                    logger.error("Redis subscribe failed: {}", e.getMessage());
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
         }, "RedisClientSubscribe-" + String.join(",", channels)).start();
     }
@@ -142,6 +169,7 @@ public class RedisClient extends Thread {
      * @param handler  callback invoked for each message
      */
     public void subscribe(String channel, MessageHandler handler) {
+        addSubscription(channel, handler);
         subscribe(new JedisPubSub() {
             @Override
             public void onMessage(String ch, String message) {
@@ -211,18 +239,33 @@ public class RedisClient extends Thread {
     @Override
     public void run() {
         int attempt = 0;
-        while (running) {
+        if (!subscriptionMap.containsKey(channel)) {
+            subscriptionMap.put(channel, handler);
+        }
+        while (running && attempt < 10) {
+            String[] channels = subscriptionMap.keySet().toArray(new String[0]);
             try (Jedis jedis = new Jedis(host, port)) {
-                logger.info("Subscribed to {}", channel);
-                jedis.subscribe(new JedisPubSub() {
+                if (attempt > 0) {
+                    logger.info("Redis reconnected \u2014 subscriptions restored: {}", Arrays.toString(channels));
+                } else {
+                    logger.info("Subscribed to {}", Arrays.toString(channels));
+                }
+                JedisPubSub pubSub = new JedisPubSub() {
                     @Override
                     public void onMessage(String ch, String message) {
-                        handler.onMessage(ch, message);
+                        MessageHandler h = subscriptionMap.get(ch);
+                        if (h != null) h.onMessage(ch, message);
                     }
-                }, channel);
+                };
+                jedis.subscribe(pubSub, channels);
                 attempt = 0;
             } catch (Exception e) {
-                long delay = Math.min(maxDelayMs, (1L << attempt) * baseDelayMs);
+                attempt++;
+                if (attempt >= 10) {
+                    logger.error("Redis connection failed after 10 retries");
+                    break;
+                }
+                long delay = Math.min(maxDelayMs, (1L << (attempt - 1)) * baseDelayMs);
                 logger.error("Redis connection failed: {}", e.getMessage());
                 AlertManager.sendAlert("REDIS", "connection lost: " + e.getMessage());
                 try {
@@ -231,7 +274,6 @@ public class RedisClient extends Thread {
                     Thread.currentThread().interrupt();
                     handler.onMessage(channel, "{}");
                 }
-                attempt++;
             }
         }
     }
