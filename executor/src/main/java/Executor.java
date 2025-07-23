@@ -561,6 +561,7 @@ public class Executor implements ResumeHandler.ResumeCapable, java.util.concurre
      */
     public void shutdown() {
         redisClient.shutdown();
+        ProfitTracker.shutdown();
         try {
             if (dbConnection != null && !dbConnection.isClosed()) {
                 dbConnection.close();

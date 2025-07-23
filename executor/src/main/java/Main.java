@@ -100,6 +100,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             arbDetector.stop();
             bookClient.shutdown();
+            ProfitTracker.shutdown();
         }));
 
         // Initialize background schedulers
