@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Added two-step confirmation for Resume trading action with Redis override signal
 - Added stub adapters for Binance, Kraken, and Uniswap-V3. Docs updated to reflect rollout plan.
 
+- API now persists risk cap settings (maxLossPct, latency, exposure) in Redis and reloads on startup
+
 - Downgrade numpy to 2.1.3 to resolve TensorFlow install conflict.
 - Store Postgres credentials in sealed secrets
 - Added feed-aggregator deployment manifest

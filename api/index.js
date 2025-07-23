@@ -24,6 +24,7 @@ import alertRoutes from './routes/alert.js';
 import configRoutes from './routes/config.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
+import { loadSettingsFromRedis } from './services/configManager.js';
 import { baseOpenPaths } from './lib/constants.js';
 import { sendAlert } from '../alerts/alertAgent.js';
 import { sendEmail } from '../alerts/emailAlert.js';
@@ -59,7 +60,7 @@ const panicState = { reason: null };
 let redis;
 let pool;
 
-function buildApp() {
+async function buildApp() {
   const app = Fastify();
   app.register(fastifyCookie);
   app.register(fastifyJwt, {
@@ -68,22 +69,23 @@ function buildApp() {
   });
     // Postgres connection via env vars for local or prod
 
-    pool = new Pool({
-      host: process.env.PGHOST || 'localhost',
-      port: process.env.PGPORT || 5432,
-      database: process.env.PGDATABASE || 'arbdb',
-      user: process.env.PGUSER || 'postgres',
-      password: process.env.PGPASSWORD || '',
-    });
-
     if (isTest) {
+      pool = { query: async () => ({ rows: [] }), end: async () => {} };
       const store = { 'arb:paused_state': 'false' };
       redis = {
         publish: async () => 1,
         get: async key => store[key],
-        set: async (key, val) => { store[key] = val; return 'OK'; }
+        set: async (key, val) => { store[key] = val; return 'OK'; },
+        ping: async () => 'PONG',
       };
     } else {
+      pool = new Pool({
+        host: process.env.PGHOST || 'localhost',
+        port: process.env.PGPORT || 5432,
+        database: process.env.PGDATABASE || 'arbdb',
+        user: process.env.PGUSER || 'postgres',
+        password: process.env.PGPASSWORD || '',
+      });
       const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
       try {
         const { hostname, port } = new URL(redisUrl);
@@ -93,6 +95,8 @@ function buildApp() {
         logger.error(`[REDIS] Invalid REDIS_URL: ${err.message}`);
       }
     }
+
+    await loadSettingsFromRedis(redis);
 
     app.register(apiRoutes, { prefix: '/api', redis, pool, panicState });
 
@@ -107,12 +111,30 @@ function buildApp() {
   return app;
 }
 
-const app = buildApp();
+let app;
 
-logger.info('API initialized');
-['BINANCE_KEY', 'SMTP_USER', 'SMTP_PASS'].forEach(key => {
-  logger.info(`${key} present: ${process.env[key] ? 'true' : 'false'}`);
-});
+async function start() {
+  app = await buildApp();
+  logger.info('API initialized');
+  ['BINANCE_KEY', 'SMTP_USER', 'SMTP_PASS'].forEach(key => {
+    logger.info(`${key} present: ${process.env[key] ? 'true' : 'false'}`);
+  });
+
+  if (!isTest) {
+    startWsServer();
+    app.listen({ port: 8080, host: '0.0.0.0' }, err => {
+      if (err) {
+        logger.error(err);
+        process.exit(1);
+      }
+      logger.info('API service started');
+    });
+  }
+}
+
+if (!isTest) {
+  start();
+}
 
 const alertSettings = {
   smtp_user: '',
@@ -284,17 +306,6 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   api.register(metricsRoutes, { redis });
   api.register(analyticsRoutes, { pool });
   api.register(cgtRoutes, { pool });
-}
-
-if (!isTest) {
-  startWsServer();
-  app.listen({ port: 8080, host: '0.0.0.0' }, err => {
-    if (err) {
-      logger.error(err);
-      process.exit(1);
-    }
-    logger.info('API service started');
-  });
 }
 
 export default app;
