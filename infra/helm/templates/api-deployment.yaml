@@ -22,9 +22,9 @@ spec:
           ports:
             - containerPort: {{ .Values.api.port }}
           resources: {{- toYaml .Values.api.resources | nindent 12 }}
+          # Validation: This pod mounts api-secrets via envFrom.secretRef
           envFrom:
-            - secretRef:
-                name: api-secrets
+{{- toYaml .Values.api.envFrom | nindent 12 }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism-arbitrage

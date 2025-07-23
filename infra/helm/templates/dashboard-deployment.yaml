@@ -22,9 +22,9 @@ spec:
           ports:
             - containerPort: {{ .Values.dashboard.port }}
           resources: {{- toYaml .Values.dashboard.resources | nindent 12 }}
+          # Validation: This pod mounts dashboard-secrets via envFrom.secretRef
           envFrom:
-            - secretRef:
-                name: prod-secrets
+{{- toYaml .Values.dashboard.envFrom | nindent 12 }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism-arbitrage

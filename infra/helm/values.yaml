@@ -20,6 +20,9 @@ api:
     limits:
       cpu: "500m"
       memory: "512Mi"
+  envFrom:
+    - secretRef:
+        name: api-secrets
   env:
     # JWT_SECRET: "<your-secret>"
     # PGHOST: "postgres"
@@ -40,6 +43,9 @@ analytics:
       cpu: "1000m"
       memory: "1Gi"
       nvidia.com/gpu: "1"
+  envFrom:
+    - secretRef:
+        name: analytics-secrets
   env:
     # MODEL_PATH: "/models/model.h5"
     # GPU_ENABLED: "true"
@@ -55,6 +61,9 @@ dashboard:
     limits:
       cpu: "200m"
       memory: "256Mi"
+  envFrom:
+    - secretRef:
+        name: dashboard-secrets
   env:
     # PUBLIC_URL: "https://arb.example.com"
     # NODE_ENV: "production"
@@ -66,6 +75,9 @@ executor:
       cpu: "250m"
     limits:
       cpu: "500m"
+  envFrom:
+    - secretRef:
+        name: executor-secrets
   env:
     # REDIS_URL: "redis://redis:6379"
     # ANALYTICS_URL: "http://analytics:5000/trade"

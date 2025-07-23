@@ -20,9 +20,9 @@ spec:
         - name: executor
           image: {{ .Values.executor.image }}
           resources: {{- toYaml .Values.executor.resources | nindent 12 }}
+          # Validation: This pod mounts executor-secrets via envFrom.secretRef
           envFrom:
-            - secretRef:
-                name: prod-secrets
+{{- toYaml .Values.executor.envFrom | nindent 12 }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism-arbitrage
