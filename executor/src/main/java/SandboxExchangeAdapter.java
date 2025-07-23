@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import java.util.Random;
 
@@ -124,6 +128,17 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
      * @return trade result
      */
     public TradeResult execute(SpreadOpportunity opp, double size, double price) {
+        String slipVal = System.getProperty("MAX_SLIPPAGE_PCT",
+                System.getenv().getOrDefault("MAX_SLIPPAGE_PCT", "0.2"));
+        double maxSlip = Double.parseDouble(slipVal);
+        try {
+            SlippageChecker.validate(opp.getGrossEdge(), opp.getNetEdge(), maxSlip);
+        } catch (IllegalArgumentException e) {
+            String msg = "Trade skipped due to slippage breach: " + e.getMessage();
+            logger.warn(msg);
+            logSlippage(msg);
+            return new TradeResult(false, 0.0, 0, "SLIPPAGE_BREACH");
+        }
         double predicted = predictor.predict(opp);
         long start = System.currentTimeMillis();
 
@@ -197,5 +212,16 @@ public class SandboxExchangeAdapter extends MockExchangeAdapter {
         }
 
         return new TradeResult(success, pnl, latency, status);
+    }
+
+    private void logSlippage(String message) {
+        try {
+            Path path = Path.of("logs", "slippage.log");
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, message + System.lineSeparator(),
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            logger.error("Failed to write slippage log", e);
+        }
     }
 }

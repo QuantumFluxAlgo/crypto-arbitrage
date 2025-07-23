@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - CVE scanning with Trivy
 - Split metrics endpoints by execution mode to support safe observability
 - Update documentation and config comments to match final audit-compliant platform behavior
+- Enforced slippage check before trade execution; configurable threshold via config
 - Rewrite documentation to reflect all audited system behavior and enforce operator clarity
 
 ## [Batch 1] - 2025-07-02
