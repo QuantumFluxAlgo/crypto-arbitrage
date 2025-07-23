@@ -44,8 +44,8 @@ public class ConfigValidator {
         if (winRateThreshold < 0.4) {
             throw new RuntimeException("WIN_RATE_THRESHOLD is too low: " + winRateThreshold + " < 0.4");
         }
-        if (maxSlippagePct > 5.0) {
-            throw new RuntimeException("MAX_SLIPPAGE_PCT exceeds safe limit: " + maxSlippagePct + " > 5%");
+        if (maxSlippagePct < 0.0 || maxSlippagePct > 5.0) {
+            throw new RuntimeException("MAX_SLIPPAGE_PCT out of range: " + maxSlippagePct + " (0-5%)");
         }
         if (profitTargetUsd > 20000.0) {
             throw new RuntimeException("PROFIT_TARGET_USD exceeds safe limit: " + profitTargetUsd + " > 20000");
