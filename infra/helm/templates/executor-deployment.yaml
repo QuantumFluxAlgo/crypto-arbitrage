@@ -26,8 +26,8 @@ spec:
             - secretRef:
                 name: prod-secrets
           volumeMounts:
-            - name: prism-logs
-              mountPath: /var/log/prism-arbitrage
+            - name: logs
+              mountPath: /var/log/prism
           readinessProbe:
             exec:
               command: ["pgrep", "-f", "Executor"]
@@ -39,7 +39,6 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
       volumes:
-        - name: prism-logs
+        - name: logs
           hostPath:
             path: /var/log/prism-arbitrage
-            type: DirectoryOrCreate

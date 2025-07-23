@@ -48,7 +48,8 @@ public class ResumeController {
         this.executor = executor;
         this.checker = checker == null ? new SystemHealthChecker() : checker;
         this.redis = redis;
-        String dir = System.getenv().getOrDefault("LOG_DIR", "/var/log/prism-arbitrage");
+        String dir = System.getenv().getOrDefault("LOG_DIR", "/var/log/prism");
+        // TODO: implement log rotation for files in this directory
         this.resumeLog = java.nio.file.Paths.get(dir, "resume.log");
     }
 

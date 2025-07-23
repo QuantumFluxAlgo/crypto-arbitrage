@@ -10,7 +10,7 @@ import { resumeCounter } from './metrics.js';
 
 export default async function resumeRoutes(app, opts) {
   const { redis, panicState } = opts;
-  const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+  const logDir = process.env.LOG_DIR || '/var/log/prism';
   const resumeLog = path.join(logDir, 'resume.log');
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
@@ -47,11 +47,17 @@ export default async function resumeRoutes(app, opts) {
     const confirm = req.query.confirm === 'true';
     if (!confirm && (panicState.reason === 'loss' || panicState.reason === 'latency')) {
       logAttempt('resume_needs_override', user, { reason: panicState.reason });
+      logger.info(
+        `[AUDIT] ${user} attempted override: ${JSON.stringify({ confirm: false, reason: panicState.reason })} \u2013 rejected`
+      );
       reply.code(403);
       return { override_required: true };
     }
 
     if (confirm) {
+      logger.info(
+        `[AUDIT] ${user} attempted override: ${JSON.stringify({ confirm: true, reason: panicState.reason })} \u2013 accepted`
+      );
       await redis.set('resume_confirmed', 'true', 'EX', 60);
     }
 
@@ -90,9 +96,8 @@ export default async function resumeRoutes(app, opts) {
     }
     logAttempt('resume_success', user);
     resumeCounter.inc();
-    logger.info(
-      JSON.stringify({ event: 'resume', ts: new Date().toISOString() })
-    );
+    const ts = new Date().toISOString();
+    logger.info(`[AUDIT] ${user} resumed trading at ${ts}`);
     return { resumed: true };
   }
   );

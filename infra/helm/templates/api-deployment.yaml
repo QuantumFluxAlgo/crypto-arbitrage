@@ -26,8 +26,8 @@ spec:
             - secretRef:
                 name: api-secrets
           volumeMounts:
-            - name: prism-logs
-              mountPath: /var/log/prism-arbitrage
+            - name: logs
+              mountPath: /var/log/prism
           readinessProbe:
             httpGet:
               path: /health
@@ -41,10 +41,9 @@ spec:
             failureThreshold: 3
             periodSeconds: 10
       volumes:
-        - name: prism-logs
+        - name: logs
           hostPath:
             path: /var/log/prism-arbitrage
-            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

@@ -3,7 +3,7 @@ import axios from 'axios';
 import winston from 'winston';
 import createLogger from '../../lib/logger.js';
 
-const logDir = process.env.LOG_DIR || '/var/log/prism-arbitrage';
+const logDir = process.env.LOG_DIR || '/var/log/prism';
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
@@ -23,6 +23,7 @@ class HttpTransport extends winston.Transport {
 
 const logger = createLogger(service);
 logger.add(new winston.transports.File({ filename: `${logDir}/${service}.log` }));
+// TODO: implement log rotation for logs in logDir
 const forwardUrl = process.env.LOKI_URL || process.env.LOG_FORWARD_URL;
 if (forwardUrl) {
   logger.add(new HttpTransport({ url: forwardUrl }));
