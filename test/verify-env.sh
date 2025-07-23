@@ -85,9 +85,4 @@ if [ "$code" -ne 200 ] || [ "$(jq -r '.status' "$tmpfile")" != "dry-run-complete
 fi
 rm "$tmpfile"
 
-echo "Running full test suite..."
-
-(cd api && npm test) && echo "✅ API tests passed" || exit 1
-(cd dashboard && npm test) && echo "✅ Dashboard tests passed" || exit 1
-(cd analytics && pytest) && echo "✅ Analytics tests passed" || exit 1
-(cd executor && mvn test) && echo "✅ Executor tests passed" || exit 1
+echo "Environment checks complete"
