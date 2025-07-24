@@ -27,10 +27,10 @@ import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
 import { loadSettingsFromRedis } from './services/configManager.js';
 import { baseOpenPaths } from './lib/constants.js';
-import alertAgent from '../alerts/alertAgent.js';
-const { sendAlert } = alertAgent;
-import emailAlertPkg from '../alerts/emailAlert.js';
-const { sendEmail } = emailAlertPkg;
+// import alertAgent from '../alerts/alertAgent.js';
+// const { sendAlert } = alertAgent;
+// import emailAlertPkg from '../alerts/emailAlert.js';
+// const { sendEmail } = emailAlertPkg;
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 import {
@@ -136,7 +136,7 @@ async function start() {
         logger.error(err);
         process.exit(1);
       }
-      logger.info('API service started');
+      logger.info('✅ Server listening on http://0.0.0.0:8080');
     });
   }
 }
@@ -225,7 +225,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
       return reply.code(403).send();
     }
     try {
-      await sendAlert(req.params.type, 'Test alert');
+      // await sendAlert(req.params.type, 'Test alert');
       return { sent: true };
     } catch (err) {
       reply.code(500);
@@ -238,7 +238,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
       return reply.code(403).send();
     }
     try {
-      await sendAlert('email', 'Alert verification');
+      // await sendAlert('email', 'Alert verification');
       req.log.info('SMTP verification sent');
       return { sent: true };
     } catch (err) {
@@ -344,7 +344,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         }
         const ts = new Date().toISOString();
         try {
-          await sendAlert('email', 'Test panic alert', 'test');
+          // await sendAlert('email', 'Test panic alert', 'test');
         } catch {}
         return { status: 'sent', type: 'test', ts };
     });

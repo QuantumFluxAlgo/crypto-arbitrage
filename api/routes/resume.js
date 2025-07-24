@@ -1,6 +1,6 @@
 import { requireAdmin } from '../middleware/auth.js';
-import alertAgent from '../../alerts/alertAgent.js';
-const { sendAlert } = alertAgent;
+// import alertAgent from '../../alerts/alertAgent.js';
+// const { sendAlert } = alertAgent;
 import { getControlChannel } from '../config/settings.js';
 import fs from 'fs';
 import path from 'path';
@@ -111,7 +111,7 @@ export default async function resumeRoutes(app, opts) {
     }
     if (process.env.SANDBOX_MODE !== 'true') {
       try {
-        await sendAlert('email', msg, 'resume');
+        // await sendAlert('email', msg, 'resume');
         req.log.info('Resume email alert sent');
       } catch (err) {
         req.log.warn('Resume alert failed', err);

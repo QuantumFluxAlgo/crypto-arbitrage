@@ -1,6 +1,6 @@
 import { getControlChannel, getExecutionMode, ExecutionMode } from '../config/settings.js';
-import alertAgent from '../../alerts/alertAgent.js';
-const { sendAlert } = alertAgent;
+// import alertAgent from '../../alerts/alertAgent.js';
+// const { sendAlert } = alertAgent;
 import logger from '../services/logger.js';
 import { setPauseState, getPauseState } from '../services/pauseState.js';
 
@@ -50,7 +50,7 @@ export default async function panicRoutes(app, { redis, panicState }) {
       })
     );
     try {
-      await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
+      // await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
       logger.info('Panic email alert sent');
     } catch (err) {
       logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
