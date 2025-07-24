@@ -1,6 +1,5 @@
 import { requireAdmin } from '../middleware/auth.js';
-// import alertAgent from '../../alerts/alertAgent.js';
-// const { sendAlert } = alertAgent;
+import { sendAlert } from '../services/alertManager.js';
 import { getControlChannel } from '../config/settings.js';
 import fs from 'fs';
 import path from 'path';
@@ -109,15 +108,10 @@ export default async function resumeRoutes(app, opts) {
     } catch (err) {
       logger.warn('Failed to publish resume notice', err);
     }
-    if (process.env.SANDBOX_MODE !== 'true') {
-      try {
-        // await sendAlert('email', msg, 'resume');
-        req.log.info('Resume email alert sent');
-      } catch (err) {
-        req.log.warn('Resume alert failed', err);
-      }
-    } else {
-      req.log.info(`[DRY-RUN] Resume alert: ${msg}`);
+    try {
+      await sendAlert('email', msg, 'resume');
+    } catch (err) {
+      req.log.warn('Resume alert failed', err);
     }
     logAttempt('resume_success', user, mode, { confirmed: confirm, source });
     resumeCounter.inc();

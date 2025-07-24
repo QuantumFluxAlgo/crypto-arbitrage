@@ -3,13 +3,10 @@ import Fastify from 'fastify';
 import panicRoutes from '../routes/panic.js';
 import resumeRoutes from '../routes/resume.js';
 import { getControlChannel } from '../config/settings.js';
-import alertAgent from '../../alerts/alertAgent.js';
-const { sendAlert } = alertAgent;
+import { sendAlert } from '../services/alertManager.js';
 
-jest.mock('../../alerts/alertAgent.js', () => ({
-  default: {
-    sendAlert: jest.fn(async () => {})
-  }
+jest.mock('../services/alertManager.js', () => ({
+  sendAlert: jest.fn(async () => {})
 }));
 
 const describeLocal = process.env.TEST_ENV === 'local' || !process.env.TEST_ENV ? describe : describe.skip;

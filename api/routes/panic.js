@@ -1,6 +1,5 @@
 import { getControlChannel, getExecutionMode, ExecutionMode } from '../config/settings.js';
-// import alertAgent from '../../alerts/alertAgent.js';
-// const { sendAlert } = alertAgent;
+import { sendAlert } from '../services/alertManager.js';
 import logger from '../services/logger.js';
 import {
   setPauseState,
@@ -58,9 +57,9 @@ export default async function panicRoutes(app, { redis, panicState }) {
         ts: new Date().toISOString(),
       })
     );
+    const msg = `Panic brake triggered by ${user} at ${new Date().toISOString()}`;
     try {
-      // await sendAlert('email', 'Panic brake triggered (test mode)', 'panic');
-      logger.info('Panic email alert sent');
+      await sendAlert('email', msg, 'panic');
     } catch (err) {
       logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
     }
