@@ -78,10 +78,10 @@ describeLocal("settings validation", () => {
     const res = await request(app.server)
       .patch("/api/settings")
       .set("Cookie", cookie)
-      .send({ maxLossPct: 99 });
+      .send({ maxLossPct: 150 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[SETTINGS-REJECTED] maxLossPct=99 exceeds limit"),
+      expect.stringContaining("field=maxLossPct"),
     );
   });
 
@@ -92,18 +92,29 @@ describeLocal("settings validation", () => {
       .send({ latencyMaxMs: 9999 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[SETTINGS-REJECTED] latencyMaxMs=9999 exceeds limit"),
+      expect.stringContaining("field=latencyMaxMs"),
     );
   });
 
-  test("rejects unsafe coinExposureLimit", async () => {
+  test("rejects unsafe exposureCapPct", async () => {
     const res = await request(app.server)
       .patch("/api/settings")
       .set("Cookie", cookie)
-      .send({ coinExposureLimit: 50 });
+      .send({ exposureCapPct: 150 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[SETTINGS-REJECTED] coinExposureLimit=50 exceeds limit"),
+      expect.stringContaining("field=exposureCapPct"),
+    );
+  });
+
+  test("rejects invalid mode", async () => {
+    const res = await request(app.server)
+      .patch("/api/settings")
+      .set("Cookie", cookie)
+      .send({ mode: "WRONG" });
+    expect(res.statusCode).toBe(400);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("field=mode"),
     );
   });
 
@@ -120,10 +131,10 @@ describeLocal("settings validation", () => {
       .patch("/api/settings")
       .set("Cookie", cookie)
       .send({
+        mode: "AUTO",
         maxLossPct: 10,
         latencyMaxMs: 500,
-        coinExposureLimit: 20,
-        personality_mode: "Aggressive",
+        exposureCapPct: 20,
         sweep_cadence: "Daily",
       });
     expect(res.statusCode).toBe(200);

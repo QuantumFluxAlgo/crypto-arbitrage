@@ -41,6 +41,8 @@ export default async function settingsRoutes(app, opts) {
       maxLossPct: z.number().optional(),
       latencyMaxMs: z.number().optional(),
       coinExposureLimit: z.number().optional(),
+      exposureCapPct: z.number().optional(),
+      mode: z.string().optional(),
     })
     .strict();
 
@@ -54,38 +56,72 @@ export default async function settingsRoutes(app, opts) {
     const operator = req.user?.email || req.user?.id || req.ip;
     const mode = getExecutionMode(req);
 
-    if (typeof data.maxLossPct === "number" && data.maxLossPct > 20) {
-      logger.warn(
-        `[SETTINGS-REJECTED] maxLossPct=${data.maxLossPct} exceeds limit mode=${mode} operator=${operator}`
-      );
-      reply.code(400);
-      return { error: "maxLossPct exceeds limit" };
+    if (typeof data.mode === "string") {
+      const modes = ["REALISTIC", "AGGRESSIVE", "AUTO"];
+      if (!modes.includes(data.mode)) {
+        logger.warn(
+          `[SETTINGS-REJECTED] user=${operator} field=mode value=${data.mode}`
+        );
+        reply.code(400);
+        return { error: "Invalid setting: mode" };
+      }
+      const map = {
+        REALISTIC: "Realistic",
+        AGGRESSIVE: "Aggressive",
+        AUTO: "Auto",
+      };
+      data.personality_mode = map[data.mode];
     }
 
-    if (typeof data.latencyMaxMs === "number" && data.latencyMaxMs > 1000) {
-      logger.warn(
-        `[SETTINGS-REJECTED] latencyMaxMs=${data.latencyMaxMs} exceeds limit mode=${mode} operator=${operator}`
-      );
-      reply.code(400);
-      return { error: "latencyMaxMs exceeds limit" };
+    if (typeof data.exposureCapPct === "number") {
+      data.coinExposureLimit = data.exposureCapPct;
+      if (data.exposureCapPct < 0 || data.exposureCapPct > 100) {
+        logger.warn(
+          `[SETTINGS-REJECTED] user=${operator} field=exposureCapPct value=${data.exposureCapPct}`
+        );
+        reply.code(400);
+        return { error: "Invalid setting: exposureCapPct" };
+      }
     }
 
-    if (typeof data.coinExposureLimit === "number" && data.coinExposureLimit > 30) {
-      logger.warn(
-        `[SETTINGS-REJECTED] coinExposureLimit=${data.coinExposureLimit} exceeds limit mode=${mode} operator=${operator}`
-      );
-      reply.code(400);
-      return { error: "coinExposureLimit exceeds limit" };
+    if (typeof data.maxLossPct === "number") {
+      if (data.maxLossPct < 0 || data.maxLossPct > 100) {
+        logger.warn(
+          `[SETTINGS-REJECTED] user=${operator} field=maxLossPct value=${data.maxLossPct}`
+        );
+        reply.code(400);
+        return { error: "Invalid setting: maxLossPct" };
+      }
+    }
+
+    if (typeof data.latencyMaxMs === "number") {
+      if (data.latencyMaxMs < 50 || data.latencyMaxMs > 5000) {
+        logger.warn(
+          `[SETTINGS-REJECTED] user=${operator} field=latencyMaxMs value=${data.latencyMaxMs}`
+        );
+        reply.code(400);
+        return { error: "Invalid setting: latencyMaxMs" };
+      }
+    }
+
+    if (typeof data.coinExposureLimit === "number") {
+      if (data.coinExposureLimit < 0 || data.coinExposureLimit > 100) {
+        logger.warn(
+          `[SETTINGS-REJECTED] user=${operator} field=coinExposureLimit value=${data.coinExposureLimit}`
+        );
+        reply.code(400);
+        return { error: "Invalid setting: coinExposureLimit" };
+      }
     }
 
     if (typeof data.personality_mode === "string") {
       const modes = ["Realistic", "Aggressive", "Auto"];
       if (!modes.includes(data.personality_mode)) {
         logger.warn(
-          `[SETTINGS-REJECTED] personality_mode=${data.personality_mode} invalid mode=${mode} operator=${operator}`
+          `[SETTINGS-REJECTED] user=${operator} field=personality_mode value=${data.personality_mode}`
         );
         reply.code(400);
-        return { error: "invalid personality_mode" };
+        return { error: "Invalid setting: personality_mode" };
       }
     }
 
@@ -140,6 +176,14 @@ export default async function settingsRoutes(app, opts) {
         settings.sandbox_mode = req.body.sandbox_mode;
       }
     }
+    if (typeof req.body.mode === "string") {
+      const map = {
+        REALISTIC: "Realistic",
+        AGGRESSIVE: "Aggressive",
+        AUTO: "Auto",
+      };
+      req.body.personality_mode = map[req.body.mode];
+    }
     if (typeof req.body.personality_mode === "string") {
       if (req.body.personality_mode !== settings.personality_mode) {
         settings.personality_mode = req.body.personality_mode;
@@ -176,7 +220,9 @@ export default async function settingsRoutes(app, opts) {
         logger.error('Failed to publish latency update', err);
       }
     }
-    if (typeof req.body.coinExposureLimit === "number") {
+    if (typeof req.body.exposureCapPct === "number") {
+      settings.coinExposureLimit = req.body.exposureCapPct;
+    } else if (typeof req.body.coinExposureLimit === "number") {
       settings.coinExposureLimit = req.body.coinExposureLimit;
     }
 
