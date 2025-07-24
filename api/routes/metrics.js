@@ -69,7 +69,12 @@ export default async function metricsRoutes(app, { redis } = {}) {
     const paused = await getPauseState(redis);
     panicGauge.set(paused ? 1 : 0);
     systemPausedGauge.set({ source: 'api' }, paused ? 1 : 0);
-    reply.header('Content-Type', register.contentType);
-    reply.send(await register.metrics());
+    try {
+      reply.header('Content-Type', register.contentType);
+      reply.send(await register.metrics());
+    } catch {
+      reply.header('Content-Type', 'text/plain');
+      reply.send('# No Prometheus metrics available in this environment');
+    }
   });
 }
