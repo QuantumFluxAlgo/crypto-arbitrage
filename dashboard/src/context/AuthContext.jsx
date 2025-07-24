@@ -22,13 +22,31 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('/api/login', { email, password });
+      const res = await axios.post(
+        '/api/login',
+        { email, password },
+        {
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
       localStorage.setItem('token', res.data.token);
       setIsLoggedIn(true);
-      navigate('/dashboard');
+      return res.data;
     } catch (error) {
-      console.error('Login failed', error);
-      throw error;
+      let message = 'Network error';
+      if (error.response) {
+        if (error.response.status === 401) {
+          message = 'Invalid email or password';
+        } else if (error.response.status >= 500) {
+          message = 'Server error. Try again later.';
+        } else if (error.response.data?.message) {
+          message = error.response.data.message;
+        } else {
+          message = 'Login failed';
+        }
+      }
+      throw new Error(message);
     }
   };
 

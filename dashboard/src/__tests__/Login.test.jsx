@@ -61,10 +61,17 @@ test('sends credentials to /api/login and stores token', async () => {
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
   });
 
-  expect(axios.post).toHaveBeenCalledWith('/api/login', {
-    email: 'user@example.com',
-    password: 'secret',
-  });
+  expect(axios.post).toHaveBeenCalledWith(
+    '/api/login',
+    {
+      email: 'user@example.com',
+      password: 'secret',
+    },
+    {
+      withCredentials: true,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
 
   await waitFor(() => {
     expect(localStorage.getItem('token')).toBe('abc123');

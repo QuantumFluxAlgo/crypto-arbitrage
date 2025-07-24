@@ -22,8 +22,7 @@ export default function Login() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      // Display a friendly error if login fails
-      setError(err?.message || "Invalid email or password");
+      setError(err.message);
     }
   };
 
