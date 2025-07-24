@@ -70,7 +70,7 @@ describeLocal('API authentication', () => {
       .post('/api/resume')
       .set('Cookie', cookie);
     expect(authRes.statusCode).toBe(200);
-    expect(authRes.body).toEqual({ resumed: true });
+    expect(authRes.body).toEqual({ resumed: true, wasPaused: true });
   });
 
   test('GET /settings returns expected settings', async () => {

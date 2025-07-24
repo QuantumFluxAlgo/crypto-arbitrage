@@ -37,6 +37,7 @@ test('resume only works when paused', async () => {
   await request(app.server).post('/api/test/panic');
   const res = await request(app.server).post('/api/test/resume');
   expect(res.statusCode).toBe(200);
+  expect(res.body).toEqual({ resumed: true, wasPaused: true });
   const status = await request(app.server)
     .get('/api/system/status')
     .set('Cookie', cookie);

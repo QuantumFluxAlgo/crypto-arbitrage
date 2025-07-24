@@ -8,6 +8,7 @@ import * as Sentry from '@sentry/node';
 import Redis from 'ioredis';
 import { URL } from 'url';
 import pg from 'pg';
+const pkgVersion = '1.0.0';
 
 import loginRoute from './routes/login.js';
 import authRoute from './routes/auth.js';
@@ -21,6 +22,7 @@ import cgtRoutes from './routes/cgt.js';
 import resumeRoutes from './routes/resume.js';
 import systemHealthRoutes from './routes/systemHealth.js';
 import panicRoutes from './routes/panic.js';
+import testOpsRoutes from './routes/testOps.js';
 import alertRoutes from './routes/alert.js';
 import configRoutes from './routes/config.js';
 import opportunitiesRoutes from './routes/opportunities.js';
@@ -255,11 +257,22 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   });
 
 
-  api.get('/system/status', async () => ({
-    paused: await getPauseState(redis),
-    panic_reason: panicState.reason,
-    resume_failed: (await redis.get(RESUME_FAILED_KEY)) === 'true',
-  }));
+  api.get('/system/status', async () => {
+    const resp = {
+      paused: await getPauseState(redis),
+      version: pkgVersion,
+      uptime: process.uptime(),
+      redisHealthy: true,
+      warnings: [],
+    };
+    try {
+      await redis.ping();
+    } catch {
+      resp.redisHealthy = false;
+      resp.warnings.push('redis_unreachable');
+    }
+    return resp;
+  });
 
   api.register(systemHealthRoutes, { redis, pool });
 
@@ -276,67 +289,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
   }
 
   if (isTest) {
-    api.post('/test/resume', async (_req, reply) => {
-      if (process.env.SANDBOX_MODE !== 'true') {
-        return reply.code(403).send();
-      }
-        const paused = await getPauseState(redis);
-        if (!paused) {
-          reply.code(409);
-          return { error: 'System is not paused' };
-        }
-        await redis.set(RESUME_FAILED_KEY, 'false');
-        await setPauseState(redis, false);
-        panicState.reason = null;
-        logger.info('[RESUME SIGNAL RECEIVED]');
-        await redis.publish(getControlChannel(), 'resume');
-
-        let ack = false;
-        const start = Date.now();
-        while (Date.now() - start < 5000) {
-          const val = await redis.get(RESUME_ACK_KEY);
-          if (val === 'true') { ack = true; break; }
-          await new Promise(r => setTimeout(r, 500));
-        }
-        if (!ack) {
-          await redis.publish(getControlChannel(), 'resume');
-          await redis.set(RESUME_FAILED_KEY, 'true');
-        } else {
-          await redis.del(RESUME_FAILED_KEY);
-        }
-        logger.info('[RESUME] Trading re-enabled by operator');
-        return { paused: false, source: 'manual' };
-      });
-
-      api.post('/test/sweep', async (_req, reply) => {
-        if (process.env.SANDBOX_MODE !== 'true') {
-          return reply.code(403).send();
-        }
-
-        const now = Date.now();
-        const since = now - lastSweepTime;
-        if (since < 60000) {
-          const elapsed = Math.floor(since / 1000);
-          const remaining = Math.ceil((60000 - since) / 1000);
-          reply.code(429);
-          return {
-            status: 'duplicate',
-            message: `Last sweep occurred ${elapsed}s ago. Try again in ${remaining}s.`,
-          };
-        }
-
-        logger.info('[SWEEP] Manual sweep triggered by operator');
-
-        const actions = ['sweep-from:Binance', 'amount:12.5 USDT'];
-        await redis.publish(getControlChannel(), 'sweep');
-        lastSweepTime = now;
-        return {
-          status: 'dry-run-complete',
-          triggered: true,
-          actions,
-          sweepId: randomUUID(),
-        };
-      });
+    api.register(testOpsRoutes, { redis, panicState });
 
       api.post('/test/alert', async (_req) => {
         if (process.env.SANDBOX_MODE !== 'true') {

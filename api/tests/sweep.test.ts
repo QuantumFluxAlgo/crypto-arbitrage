@@ -20,7 +20,5 @@ afterAll(async () => {
 test('cold sweep dry-run endpoint', async () => {
   const res = await request(app.server).post('/api/test/sweep');
   expect(res.statusCode).toBe(200);
-  expect(res.body.status).toBe('dry-run-complete');
-  expect(typeof res.body.triggered).toBe('boolean');
-  expect(Array.isArray(res.body.actions)).toBe(true);
+  expect(res.body).toEqual({ status: 'dry-run', triggered: true });
 });
