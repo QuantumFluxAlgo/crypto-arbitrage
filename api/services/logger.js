@@ -1,7 +1,7 @@
 import fs from 'fs';
 import axios from 'axios';
 import winston from 'winston';
-import createLogger from '../../lib/logger.js';
+import createLogger from '../lib/logger.js';
 
 const logDir = process.env.LOG_DIR || '/var/log/prism';
 // Log rotation is handled externally via logrotate
