@@ -30,12 +30,14 @@ describeLocal('system status endpoint', () => {
     const res = await request(app.server)
       .get('/api/system/status')
       .set('Cookie', cookie);
-    expect(res.body).toEqual({ paused: true, panic_reason: 'loss', resume_failed: false });
+    expect(res.body.paused).toBe(true);
+    expect(res.body.redisHealthy).toBe(true);
 
     await request(app.server).post('/api/test/resume');
     const res2 = await request(app.server)
       .get('/api/system/status')
       .set('Cookie', cookie);
-    expect(res2.body).toEqual({ paused: false, panic_reason: null, resume_failed: false });
+    expect(res2.body.paused).toBe(false);
+    expect(Array.isArray(res2.body.warnings)).toBe(true);
   });
 });

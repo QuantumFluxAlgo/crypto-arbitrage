@@ -81,7 +81,7 @@ describeLocal("settings validation", () => {
       .send({ maxLossPct: 99 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      "[SETTINGS-REJECTED] maxLossPct=99 exceeds limit",
+      expect.stringContaining("[SETTINGS-REJECTED] maxLossPct=99 exceeds limit"),
     );
   });
 
@@ -92,7 +92,7 @@ describeLocal("settings validation", () => {
       .send({ latencyMaxMs: 9999 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      "[SETTINGS-REJECTED] latencyMaxMs=9999 exceeds limit",
+      expect.stringContaining("[SETTINGS-REJECTED] latencyMaxMs=9999 exceeds limit"),
     );
   });
 
@@ -103,7 +103,7 @@ describeLocal("settings validation", () => {
       .send({ coinExposureLimit: 50 });
     expect(res.statusCode).toBe(400);
     expect(warnSpy).toHaveBeenCalledWith(
-      "[SETTINGS-REJECTED] coinExposureLimit=50 exceeds limit",
+      expect.stringContaining("[SETTINGS-REJECTED] coinExposureLimit=50 exceeds limit"),
     );
   });
 

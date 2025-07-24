@@ -3,6 +3,7 @@ import logger from './logger.js';
 export const PAUSE_KEY = 'arb:paused_state';
 export const RESUME_FAILED_KEY = 'resume_failed';
 export const RESUME_ACK_KEY = 'resume_ack';
+export const PANIC_TRIGGER_KEY = 'panic_trigger';
 
 export async function setPauseState(redis, value) {
   try {

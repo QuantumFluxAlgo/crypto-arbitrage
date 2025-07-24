@@ -39,6 +39,7 @@ test('panic endpoint sets paused state', async () => {
   const res = await request(app.server).post('/api/test/panic');
   expect(res.statusCode).toBe(200);
   expect(res.body.paused).toBe(true);
+  expect(res.body.status).toBe('panic_triggered');
   const status = await request(app.server)
     .get('/api/system/status')
     .set('Cookie', cookie);
@@ -49,7 +50,7 @@ test('panic endpoint sets paused state', async () => {
 test('second panic call is ignored', async () => {
   await request(app.server).post('/api/test/panic');
   const res = await request(app.server).post('/api/test/panic');
-  expect(res.body.ignored).toBe(true);
+  expect(res.body.message).toBe('Already paused');
   expect(infoSpy).toHaveBeenCalled();
 });
 

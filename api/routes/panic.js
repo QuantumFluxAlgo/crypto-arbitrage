@@ -2,7 +2,11 @@ import { getControlChannel, getExecutionMode, ExecutionMode } from '../config/se
 // import alertAgent from '../../alerts/alertAgent.js';
 // const { sendAlert } = alertAgent;
 import logger from '../services/logger.js';
-import { setPauseState, getPauseState } from '../services/pauseState.js';
+import {
+  setPauseState,
+  getPauseState,
+  PANIC_TRIGGER_KEY,
+} from '../services/pauseState.js';
 
 export default async function panicRoutes(app, { redis, panicState }) {
   app.post('/test/panic', async (req, reply) => {
@@ -24,7 +28,11 @@ export default async function panicRoutes(app, { redis, panicState }) {
     }
     const user = req.user?.email || req.user?.id || req.ip || 'unknown';
     panicState.last = now;
-    await redis.set('panic_last_ts', String(now));
+    try {
+      await redis.set('panic_last_ts', String(now));
+    } catch (err) {
+      logger.warn('Redis unavailable for panic timestamp');
+    }
     await setPauseState(redis, true);
     const reason = req.body?.type || 'manual override';
     const source = req.body?.source || 'api';
@@ -34,10 +42,11 @@ export default async function panicRoutes(app, { redis, panicState }) {
     );
     panicState.reason = req.body?.type || null;
     try {
+      await redis.publish(PANIC_TRIGGER_KEY, reason);
       await redis.publish(getControlChannel(), 'halt');
       logger.info('Published panic halt to control-feed');
     } catch (err) {
-      logger.error('Failed to publish panic halt', err);
+      logger.warn('Failed to publish panic event', err);
     }
     logger.warn(
       JSON.stringify({
@@ -55,6 +64,6 @@ export default async function panicRoutes(app, { redis, panicState }) {
     } catch (err) {
       logger.error(`[ALERT FAILURE] Panic alert email failed to send: ${err.message}`);
     }
-    return { status: 'panic_triggered', mode, reason };
+    return { status: 'panic_triggered', paused: true, mode, reason };
   });
 }
