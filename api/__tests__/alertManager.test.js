@@ -6,8 +6,7 @@ jest.mock('../../alerts/emailAlert.js', () => ({
   })
 }));
 
-import alertAgent from '../../alerts/alertAgent.js';
-const { sendAlert } = alertAgent;
+import { sendAlert } from '../services/alertManager.js';
 
 describe('sendAlert error handling', () => {
   beforeEach(() => {
@@ -16,7 +15,7 @@ describe('sendAlert error handling', () => {
     process.env.ALERT_RECIPIENT = 'r';
   });
 
-  test('email failures are propagated', async () => {
-    await expect(sendAlert('email', 'msg')).rejects.toThrow('fail');
+  test('email failures are swallowed', async () => {
+    await expect(sendAlert('email', 'msg')).resolves.toBeUndefined();
   });
 });

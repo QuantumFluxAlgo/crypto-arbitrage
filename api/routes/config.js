@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requireAdmin } from '../middleware/auth.js';
 import logger from '../services/logger.js';
+import { sendAlert } from '../services/alertManager.js';
 
 export const MAX_LOSS_LIMIT = 15;
 export const MIN_LATENCY_MS = 200;
@@ -48,6 +49,11 @@ export default async function configRoutes(app) {
     }
 
     Object.assign(config, result.data);
+    try {
+      await sendAlert('email', `Config updated by ${user}`, 'config');
+    } catch (err) {
+      logger.warn('Config alert failed', err);
+    }
     return { saved: true };
   });
 }

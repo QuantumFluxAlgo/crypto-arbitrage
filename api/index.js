@@ -29,10 +29,7 @@ import opportunitiesRoutes from './routes/opportunities.js';
 import { getControlChannel } from './config/settings.js';
 import { loadSettingsFromRedis } from './services/configManager.js';
 import { baseOpenPaths } from './lib/constants.js';
-// import alertAgent from '../alerts/alertAgent.js';
-// const { sendAlert } = alertAgent;
-// import emailAlertPkg from '../alerts/emailAlert.js';
-// const { sendEmail } = emailAlertPkg;
+import { sendAlert, sendEmail } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
 import { start as startWsServer } from './services/wsServer.js';
 import {
@@ -227,7 +224,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
       return reply.code(403).send();
     }
     try {
-      // await sendAlert(req.params.type, 'Test alert');
+      await sendAlert(req.params.type, 'Test alert');
       return { sent: true };
     } catch (err) {
       reply.code(500);
@@ -240,7 +237,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
       return reply.code(403).send();
     }
     try {
-      // await sendAlert('email', 'Alert verification');
+      await sendEmail('Alert Verify', 'verify');
       req.log.info('SMTP verification sent');
       return { sent: true };
     } catch (err) {
@@ -297,7 +294,7 @@ async function apiRoutes(api, { redis, pool, panicState }) {
         }
         const ts = new Date().toISOString();
         try {
-          // await sendAlert('email', 'Test panic alert', 'test');
+          await sendAlert('email', 'Test panic alert', 'test');
         } catch {}
         return { status: 'sent', type: 'test', ts };
     });
