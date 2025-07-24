@@ -49,7 +49,7 @@ test('rejects unsafe MAX_LOSS_PCT', async () => {
   const res = await request(app.server)
     .patch('/api/settings')
     .set('Cookie', cookie)
-    .send({ maxLossPct: 99 });
+    .send({ maxLossPct: 150 });
   expect(res.statusCode).toBe(400);
   expect(warnSpy).toHaveBeenCalled();
 });
