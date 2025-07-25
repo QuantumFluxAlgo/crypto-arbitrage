@@ -20,6 +20,7 @@ const tokenSchema = z.object({
 export default async function loginRoutes(app) {
   // In demo mode use static creds
   const sandboxMode = process.env.SANDBOX_MODE === 'true';
+  const dryRun = process.env.DRY_RUN === 'true';
 
   app.post('/login', async (req, reply) => {
     const ts = new Date().toISOString();
@@ -49,6 +50,12 @@ export default async function loginRoutes(app) {
     const cookieOpts = { httpOnly: true };
     if (process.env.NODE_ENV === 'production') {
       cookieOpts.secure = true;
+    }
+
+    if (dryRun && email === 'admin@prism.one' && password === 'test123') {
+      const token = app.jwt.sign({ email, role: 'admin', dryRun: true });
+      reply.setCookie('token', token, cookieOpts);
+      return { token };
     }
 
     if (sandboxMode && email === SANDBOX_EMAIL && password === SANDBOX_PASS) {

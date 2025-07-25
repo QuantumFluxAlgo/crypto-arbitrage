@@ -4,6 +4,7 @@ import {
   setPauseState,
   RESUME_ACK_KEY,
 } from '../services/pauseState.js';
+import { settings as currentSettings } from './settings.js';
 
 export default async function testOpsRoutes(app, opts) {
   const { redis, panicState } = opts;
@@ -38,5 +39,27 @@ export default async function testOpsRoutes(app, opts) {
     }
     req.log.info('Dry-run sweep triggered');
     return { status: 'dry-run', triggered: true };
+  });
+
+  app.post('/test/reset', async (req) => {
+    if (process.env.DRY_RUN !== 'true') {
+      return { status: 'forbidden' };
+    }
+    Object.assign(currentSettings, {
+      schema_version: 1,
+      canary_mode: false,
+      useEnsemble: true,
+      shadowOnly: false,
+      ghost_mode: false,
+      sandbox_mode: process.env.SANDBOX_MODE === 'true',
+      personality_mode: 'Realistic',
+      sweep_cadence: 'None',
+      maxLoss: 0,
+      maxLossPct: 0,
+      latencyMaxMs: 250,
+      coinExposureLimit: 10,
+    });
+    req.log.info('✅ Test state reset');
+    return { status: 'reset' };
   });
 }
