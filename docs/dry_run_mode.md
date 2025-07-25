@@ -19,7 +19,7 @@ Send a POST request to `/api/login` with:
 { "email": "admin@prism.one", "password": "test123" }
 ```
 
-The response includes a JWT for subsequent requests.
+The response includes a JWT for subsequent requests. The same credentials work in sandbox mode.
 
 ## Reset Test State
 

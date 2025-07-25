@@ -39,16 +39,16 @@
 - **SANDBOX** – Kubernetes deploy with sealed secrets but no live orders.
 - **LIVE** – Real trades; startup aborts if any required secrets are missing.
 
-### Dry Run Login
+### Test Login (Dry Run & Sandbox)
 
-When `DRY_RUN=true`, the API exposes a fake login for local testing.
+When `DRY_RUN=true` or running the sandbox, the API exposes a fake login for testing.
 
 ```text
 POST /api/login
 { "email": "admin@prism.one", "password": "test123" }
 ```
 
-Use the returned JWT token for authenticated endpoints during dry runs.
+Use the returned JWT token for authenticated endpoints when testing locally or in the sandbox.
 
 `EXECUTION_MODE` controls the mode for every service.
 
