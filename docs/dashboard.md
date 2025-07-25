@@ -8,7 +8,7 @@ The dashboard is a mobile‑friendly React single‑page app served from the `/a
 
 1. Browse to the dashboard URL and you will be redirected to **/login**.
 2. Enter your email and password. The form posts to `/api/login` and the API returns a JWT which is stored in a secure cookie.
-3. In sandbox mode the demo account `demo@prismarbitrage.ai` with password `demo1234` is accepted as shown in the [login route](/api/routes/login.js) lines 7‑9.
+3. In sandbox mode use the same test account `admin@prism.one` with password `test123` as shown in the [login route](/api/routes/login.js).
 4. After a successful login the token is also stored in `localStorage` to keep you logged in across refreshes.
 5. If the token becomes invalid the next API call returns HTTP `401` and the app routes back to `/login`.
 

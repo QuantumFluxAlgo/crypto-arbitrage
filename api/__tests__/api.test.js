@@ -30,13 +30,13 @@ describeLocal('API authentication', () => {
     expect(res.statusCode).toBe(401);
   });
     
-  test('sandbox login works with demo credentials', async () => {
+  test('sandbox login works with test credentials', async () => {
     const res = await request(app.server)
       .post('/api/login')
-      .send({ email: 'demo@prismarbitrage.ai', password: 'demo1234' });
-     expect(res.statusCode).toBe(200);
-     expect(res.body).toEqual({ token: 'demo-token' });
-    });
+      .send({ email: 'admin@prism.one', password: 'test123' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('token');
+  });
 
   test('/opportunities requires auth', async () => {
     const unauth = await request(app.server).get('/api/opportunities');

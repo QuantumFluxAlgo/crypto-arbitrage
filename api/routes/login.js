@@ -1,12 +1,11 @@
-// Login endpoint handling sandbox demo credentials
+// Login endpoint handling test credentials for sandbox or dry run
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { findByEmail } from './userStore.js';
 import logger from '../services/logger.js';
 
-const SANDBOX_EMAIL = 'demo@prismarbitrage.ai';
-const SANDBOX_PASS = 'demo1234';
-const HARD_CODED_JWT = 'demo-token';
+const TEST_EMAIL = 'admin@prism.one';
+const TEST_PASS = 'test123';
 
 const loginSchema = z.object({
   email: z.string(),
@@ -20,6 +19,7 @@ const tokenSchema = z.object({
 export default async function loginRoutes(app) {
   // In demo mode use static creds
   const sandboxMode = process.env.SANDBOX_MODE === 'true';
+  const dryRun = process.env.DRY_RUN === 'true';
 
   app.post('/login', async (req, reply) => {
     const ts = new Date().toISOString();
@@ -51,12 +51,17 @@ export default async function loginRoutes(app) {
       cookieOpts.secure = true;
     }
 
-    if (sandboxMode && email === SANDBOX_EMAIL && password === SANDBOX_PASS) {
-      reply.setCookie('token', HARD_CODED_JWT, cookieOpts);
+    if ((dryRun || sandboxMode) && email === TEST_EMAIL && password === TEST_PASS) {
+      const token = app.jwt.sign({
+        email,
+        role: 'admin',
+        dryRun: dryRun || sandboxMode,
+      });
+      reply.setCookie('token', token, cookieOpts);
       logger.info(
         JSON.stringify({ event: 'login_attempt', status: 'success', user: email, ts })
       );
-      return { token: HARD_CODED_JWT };
+      return { token };
     }
 
     const user = findByEmail(email);

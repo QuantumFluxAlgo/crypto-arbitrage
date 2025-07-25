@@ -31,6 +31,7 @@ import { loadSettingsFromRedis } from './services/configManager.js';
 import { baseOpenPaths } from './lib/constants.js';
 import { sendAlert, sendEmail } from './services/alertManager.js';
 import auditLogger, { logReplayCLI } from './middleware/auditLogger.js';
+import { verifyJwt } from './middleware/auth.js';
 import { start as startWsServer } from './services/wsServer.js';
 import {
   getPauseState,
@@ -56,6 +57,24 @@ if (process.env.NODE_ENV === 'production') {
   }
   if (process.env.SANDBOX_MODE === 'true') {
     console.error('SANDBOX_MODE must be disabled in production');
+    process.exit(1);
+  }
+}
+
+const requiredSecrets = [
+  'BINANCE_KEY',
+  'BINANCE_SECRET',
+  'JWT_SECRET',
+  'SMTP_USER',
+  'SMTP_PASS',
+];
+
+if (process.env.DRY_RUN === 'true') {
+  console.log('🧪 DRY_RUN mode enabled');
+} else {
+  const missing = requiredSecrets.filter(k => !process.env[k]);
+  if (missing.length) {
+    console.error(`Missing required secrets: ${missing.join(', ')}`);
     process.exit(1);
   }
 }
@@ -166,12 +185,12 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     ];
     if (openPaths.includes(req.url)) return;
     try {
-      await req.jwtVerify();
+      await verifyJwt(req, reply);
       if (req.url === '/api/resume') {
         req.log.info('[RESUME] Resume command received by authorized user');
       }
     } catch {
-      reply.code(401).send({ error: 'unauthorized' });
+      return; // verifyJwt already handled response
     }
   });
 
@@ -196,10 +215,10 @@ async function apiRoutes(api, { redis, pool, panicState }) {
     }
 
     try {
-      await req.jwtVerify();
+      await verifyJwt(req, reply);
     } catch {
       logger.warn(`[UNAUTHORIZED] ${req.method} ${req.url} rejected`);
-      return reply.code(401).send({ error: 'Unauthorized' });
+      return;
     }
 
     if (!req.user || (!req.user.id && !req.user.email)) {

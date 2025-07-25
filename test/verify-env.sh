@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+if [ "$DRY_RUN" != "true" ]; then
+  echo "❌ DRY_RUN must be enabled for local test" >&2
+  exit 1
+fi
+
 # fail fast if any development secrets are committed
 for dir in api executor dashboard; do
   if [ -f "$dir/.env" ]; then
