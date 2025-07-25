@@ -39,6 +39,17 @@
 - **SANDBOX** – Kubernetes deploy with sealed secrets but no live orders.
 - **LIVE** – Real trades; startup aborts if any required secrets are missing.
 
+### Dry Run Login
+
+When `DRY_RUN=true`, the API exposes a fake login for local testing.
+
+```text
+POST /api/login
+{ "email": "admin@prism.one", "password": "test123" }
+```
+
+Use the returned JWT token for authenticated endpoints during dry runs.
+
 `EXECUTION_MODE` controls the mode for every service.
 
 ---
