@@ -19,6 +19,9 @@ spec:
       containers:
         - name: api
           image: {{ .Values.api.image }}
+          {{- if eq .Values.global.mode "sandbox" }}
+          imagePullPolicy: Never
+          {{- end }}
           securityContext:
             runAsUser: 1000
             runAsGroup: 3000
