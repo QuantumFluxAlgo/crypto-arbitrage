@@ -1,4 +1,7 @@
 # Changelog
+## [batch-3] - Documentation Rewrite
+- Replaced README and docs for local deployment and secrets
+
 
 All notable changes to this project will be documented in this file.
 

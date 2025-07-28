@@ -1,53 +1,54 @@
-# Local Sandbox Deployment
+# Local Deployment Guide
 
-This guide walks through running the Prism platform entirely locally using Kind inside a Multipass VM.
+These instructions run the entire stack in sandbox mode inside a Multipass Ubuntu VM. The Kubernetes cluster uses [kind](https://kind.sigs.k8s.io/) and the services are installed with [Helm](https://helm.sh/).
 
-## 1. Build Docker Images
+## 1. Install Prerequisites
 
-```bash
-# from repository root
-podman build -t api-local ./api
-podman build -t arb-dashboard ./dashboard
-podman build -t arb-executor ./executor
-podman build -t arb-feed-aggregator ./feed-aggregator
-podman build -t arb-analytics ./analytics
-```
+Inside the VM install Docker, kind, kubectl and Helm. Use your package manager or download the official binaries.
 
-## 2. Load Images into Kind
+## 2. Build Images
+
+Run these commands from the repository root:
 
 ```bash
-kind load docker-image api-local arb-dashboard arb-executor arb-feed-aggregator arb-analytics --name prism
+docker build -t arb-api ./api
+docker build -t arb-dashboard ./dashboard
+docker build -t arb-executor ./executor
+docker build -t arb-feed-aggregator ./feed-aggregator
+docker build -t arb-analytics ./analytics
 ```
 
-## 3. Apply Dummy Secrets
+## 3. Create the Cluster
 
-Create a file `prod-secret.yaml` with the Redis password and any other dummy values you require. Apply it before installing the chart:
+```bash
+kind create cluster --name prism
+```
+
+## 4. Load Images
+
+```bash
+kind load docker-image arb-api arb-dashboard arb-executor arb-feed-aggregator arb-analytics --name prism
+```
+
+## 5. Apply Secrets
+
+Edit `prod-secret.yaml` and replace each value with a safe dummy string. Then apply it:
 
 ```bash
 kubectl apply -f prod-secret.yaml
 ```
 
-## 4. Deploy the Helm Chart
+## 6. Deploy with Helm
 
 ```bash
-helm install arb ./infra/helm --values infra/helm/values.yaml
+helm install prism ./infra/helm --values infra/helm/values.yaml
 ```
 
-The services will start in dry-run sandbox mode. The dashboard is available at `http://localhost:3000` on the VM.
+After a short wait the dashboard will be reachable at `http://localhost:3000`. Services run with low resource requests so they fit easily on the kind node.
 
-### API Sandbox Boot
+To remove everything:
 
-- When running in Kind, the API logs:
-  `[sandbox] API starting in dry-run mode (no DB, no trades)`
-- Redis must be available at:
-  `redis://default:testpassword@redis:6379`
-- Postgres is not required in this mode
-
-### Test Login
-
-To use the UI in sandbox:
-
-Email: admin@prism.one
-Password: test123
-
-Token returned: `test-token`
+```bash
+helm uninstall prism
+kind delete cluster --name prism
+```
