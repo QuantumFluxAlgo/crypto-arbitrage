@@ -19,12 +19,19 @@ spec:
       containers:
         - name: executor
           image: {{ .Values.executor.image }}
+          imagePullPolicy: {{ .Values.executor.imagePullPolicy }}
           ports:
             - containerPort: {{ .Values.executor.metricsPort }}
           resources: {{- toYaml .Values.executor.resources | nindent 12 }}
+          {{- if eq .Values.global.mode "sandbox" }}
+          env:
+            - name: REDIS_URL
+              value: {{ printf "redis://default:%s@redis:6379" .Values.redis.auth.password }}
+          {{- else }}
           envFrom:
             - secretRef:
                 name: prod-secrets
+          {{- end }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism

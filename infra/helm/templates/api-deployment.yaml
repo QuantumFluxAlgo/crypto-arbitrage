@@ -19,9 +19,7 @@ spec:
       containers:
         - name: api
           image: {{ .Values.api.image }}
-          {{- if eq .Values.global.mode "sandbox" }}
-          imagePullPolicy: Never
-          {{- end }}
+          imagePullPolicy: {{ .Values.api.imagePullPolicy }}
           securityContext:
             runAsUser: 1000
             runAsGroup: 3000
@@ -30,9 +28,15 @@ spec:
           ports:
             - containerPort: {{ .Values.api.port }}
           resources: {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- if eq .Values.global.mode "sandbox" }}
+          env:
+            - name: REDIS_URL
+              value: {{ printf "redis://default:%s@redis:6379" .Values.redis.auth.password }}
+          {{- else }}
           envFrom:
             - secretRef:
                 name: prod-secrets
+          {{- end }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism

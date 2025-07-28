@@ -29,7 +29,16 @@
    ```bash
    ./scripts/start-sandbox.sh
    ```
-   Open <http://localhost:5173> for the dashboard.
+  Open <http://localhost:5173> for the dashboard.
+
+---
+
+## Local Sandbox Deployment
+
+For a full local cluster using Kind in Multipass, follow the guide in
+[docs/local-deployment.md](docs/local-deployment.md). It covers building the
+Docker images, loading them into your Kind node, and installing the Helm chart
+in dry-run mode.
 
 ---
 

@@ -18,12 +18,19 @@ spec:
       serviceAccountName: {{ .Release.Name }}-postgres
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: {{ .Values.postgres.image }}
+          imagePullPolicy: {{ .Values.postgres.imagePullPolicy }}
           ports:
             - containerPort: 5432
+          {{- if eq .Values.global.mode "sandbox" }}
+          env:
+            - name: POSTGRES_URL
+              value: mocked
+          {{- else }}
           envFrom:
             - secretRef:
                 name: postgres-secrets
+          {{- end }}
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres"]
@@ -34,13 +41,7 @@ spec:
               command: ["pg_isready", "-U", "postgres"]
             failureThreshold: 3
             periodSeconds: 10
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "256Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
+          resources: {{- toYaml .Values.postgres.resources | nindent 12 }}
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

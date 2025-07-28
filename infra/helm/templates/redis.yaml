@@ -18,7 +18,8 @@ spec:
       serviceAccountName: {{ .Release.Name }}-redis
       containers:
         - name: redis
-          image: redis:7.2-alpine
+          image: {{ .Values.redis.image }}
+          imagePullPolicy: {{ .Values.redis.imagePullPolicy }}
           ports:
             - containerPort: 6379
           readinessProbe:
@@ -31,13 +32,7 @@ spec:
               command: ["redis-cli", "ping"]
             failureThreshold: 3
             periodSeconds: 10
-          resources:
-            requests:
-              cpu: "50m"
-              memory: "64Mi"
-            limits:
-              cpu: "100m"
-              memory: "128Mi"
+          resources: {{- toYaml .Values.redis.resources | nindent 12 }}
           volumeMounts:
             - name: redis-data
               mountPath: /data
