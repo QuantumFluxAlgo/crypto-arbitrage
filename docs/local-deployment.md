@@ -34,3 +34,20 @@ helm install arb ./infra/helm --values infra/helm/values.yaml
 ```
 
 The services will start in dry-run sandbox mode. The dashboard is available at `http://localhost:3000` on the VM.
+
+### API Sandbox Boot
+
+- When running in Kind, the API logs:
+  `[sandbox] API starting in dry-run mode (no DB, no trades)`
+- Redis must be available at:
+  `redis://default:testpassword@redis:6379`
+- Postgres is not required in this mode
+
+### Test Login
+
+To use the UI in sandbox:
+
+Email: admin@prism.one
+Password: test123
+
+Token returned: `test-token`

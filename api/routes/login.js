@@ -51,6 +51,14 @@ export default async function loginRoutes(app) {
       cookieOpts.secure = true;
     }
 
+    if (
+      process.env.EXECUTION_MODE === 'sandbox' &&
+      email === TEST_EMAIL &&
+      password === TEST_PASS
+    ) {
+      return reply.send({ token: 'test-token' });
+    }
+
     if ((dryRun || sandboxMode) && email === TEST_EMAIL && password === TEST_PASS) {
       const token = app.jwt.sign({
         email,

@@ -106,13 +106,18 @@ async function buildApp() {
         ping: async () => 'PONG',
       };
     } else {
-      pool = new Pool({
-        host: process.env.PGHOST || 'localhost',
-        port: process.env.PGPORT || 5432,
-        database: process.env.PGDATABASE || 'arbdb',
-        user: process.env.PGUSER || 'postgres',
-        password: process.env.PGPASSWORD || '',
-      });
+      if (process.env.EXECUTION_MODE === 'sandbox') {
+        console.log('[sandbox] API starting in dry-run mode (no DB, no trades)');
+        pool = { query: async () => ({ rows: [] }), end: async () => {} };
+      } else {
+        pool = new Pool({
+          host: process.env.PGHOST || 'localhost',
+          port: process.env.PGPORT || 5432,
+          database: process.env.PGDATABASE || 'arbdb',
+          user: process.env.PGUSER || 'postgres',
+          password: process.env.PGPASSWORD || '',
+        });
+      }
       const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
       try {
         const { hostname, port } = new URL(redisUrl);
