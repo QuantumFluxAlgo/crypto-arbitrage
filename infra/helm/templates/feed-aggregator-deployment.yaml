@@ -19,12 +19,19 @@ spec:
       containers:
         - name: feed-aggregator
           image: {{ .Values.feedAggregator.image }}
+          imagePullPolicy: {{ .Values.feedAggregator.imagePullPolicy }}
           ports:
             - containerPort: {{ .Values.feedAggregator.port }}
           resources: {{- toYaml .Values.feedAggregator.resources | nindent 12 }}
+          {{- if eq .Values.global.mode "sandbox" }}
+          env:
+            - name: REDIS_URL
+              value: {{ printf "redis://default:%s@redis:6379" .Values.redis.auth.password }}
+          {{- else }}
           envFrom:
             - secretRef:
                 name: prod-secrets
+          {{- end }}
           volumeMounts:
             - name: prism-logs
               mountPath: /var/log/prism-arbitrage

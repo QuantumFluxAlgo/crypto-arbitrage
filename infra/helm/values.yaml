@@ -1,6 +1,7 @@
 # Helm default values for Kubernetes deployment
 global:
   mode: sandbox
+executionMode: sandbox
 replicaCount: 1
 gitCommit: "unset"
 environment: "unset"
@@ -19,24 +20,23 @@ api:
   resources:
     requests:
       cpu: "10m"
-      memory: "256Mi"
+      memory: "64Mi"
     limits:
       cpu: "100m"
-      memory: "512Mi"
+      memory: "128Mi"
   env: {}
 
 analytics:
   image: arb-analytics
+  imagePullPolicy: Never
   port: 5000
   resources:
     requests:
-      cpu: "500m"
-      memory: "512Mi"
-      nvidia.com/gpu: "1"
+      cpu: "10m"
+      memory: "64Mi"
     limits:
-      cpu: "1000m"
-      memory: "1Gi"
-      nvidia.com/gpu: "1"
+      cpu: "100m"
+      memory: "128Mi"
   env:
     # MODEL_PATH: "/models/model.h5"
     # GPU_ENABLED: "true"
@@ -44,26 +44,30 @@ analytics:
 
 dashboard:
   image: arb-dashboard
+  imagePullPolicy: Never
   port: 3000
   resources:
     requests:
+      cpu: "10m"
+      memory: "64Mi"
+    limits:
       cpu: "100m"
       memory: "128Mi"
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
   env:
     # PUBLIC_URL: "https://arb.example.com"
     # NODE_ENV: "production"
 
 executor:
   image: arb-executor
+  imagePullPolicy: Never
   metricsPort: 9100
   resources:
     requests:
-      cpu: "250m"
+      cpu: "10m"
+      memory: "64Mi"
     limits:
-      cpu: "500m"
+      cpu: "100m"
+      memory: "128Mi"
   env:
     # REDIS_URL: "redis://redis:6379"
     # ANALYTICS_URL: "http://analytics:5000/trade"
@@ -72,14 +76,15 @@ executor:
 
 feedAggregator:
   image: arb-feed-aggregator
+  imagePullPolicy: Never
   port: 8090
   resources:
     requests:
+      cpu: "10m"
+      memory: "64Mi"
+    limits:
       cpu: "100m"
       memory: "128Mi"
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
   env:
     # FEED_URL: "wss://example.com/feed"
     # REDIS_URL: "redis://redis:6379"
@@ -87,9 +92,29 @@ feedAggregator:
     # ALERT_CHANNEL: "alerts"
 
 redis:
+  auth:
+    password: testpassword
+  image: redis:7.2-alpine
+  imagePullPolicy: Never
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
   # uses emptyDir for non-persistent storage
 
 postgres:
+  image: postgres:16-alpine
+  imagePullPolicy: Never
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
   # uses emptyDir for non-persistent storage
 
 logForwarder:
