@@ -14,5 +14,11 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --reporter=verbose"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "5.4.5",
+    "vitest": "^3.2.4"
   }
 }
