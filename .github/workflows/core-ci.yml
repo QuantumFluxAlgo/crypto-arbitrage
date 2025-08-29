@@ -1,0 +1,54 @@
+name: core-ci
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "apps/**"
+      - "configs/**"
+      - ".github/workflows/core-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: core-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: ${{ matrix.pkg }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - "@prism-apex-tool/metrics"
+          - "@prism-apex-tool/api"
+          - "@prism-apex-tool/runtime"
+          - "@prism-apex-tool/rules"
+          - "@prism-apex-tool/accounts"
+          - "@prism-apex-tool/strategies"
+          - "@prism-apex-tool/ui-consistency"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: Typecheck (${{ matrix.pkg }})
+        run: pnpm --filter "${{ matrix.pkg }}" run typecheck
+
+      - name: Test (${{ matrix.pkg }})
+        run: pnpm --filter "${{ matrix.pkg }}" run test
